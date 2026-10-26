@@ -170,3 +170,16 @@ def test_advertised_thinking_is_disabled_for_bounded_json_output(monkeypatch, ca
         assert payload["think"] is False
     else:
         assert "think" not in payload
+
+
+@pytest.mark.parametrize("capabilities", [1, "thinking", [1]])
+def test_malformed_capabilities_fail_before_chat(monkeypatch, capabilities):
+    client = LocalModel(model="fixture")
+    paths = []
+    def request(path, payload=None, runner=None):
+        paths.append(path)
+        return {"capabilities": capabilities}
+    monkeypatch.setattr(client, "request", request)
+    with pytest.raises(ValueError, match="invalid model capabilities"):
+        client.analyze([], {}, "", {}, Runner())
+    assert paths == ["/api/show"]

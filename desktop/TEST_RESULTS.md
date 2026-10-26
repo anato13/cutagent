@@ -1,5 +1,15 @@
 # Test results and verification history
 
+## Version 0.3.0a5 focused bug fixes
+
+Workspace suite: **102 passed, 0 failed, 0 skipped in 30.76 seconds**. Ruff passed.
+New regressions cover project saves targeting source paths/hardlinks, ordinary
+project overwrite/reopen, and malformed model capabilities rejected before chat.
+Source ZIP rebuilt and archive integrity checked; no separate extracted-package
+suite was run for this patch. Windows/GPU and semantic quality were not retested.
+No additional model benchmark or paid service was used.
+
+
 ## Version 0.3.0a4 real inference and cancellation
 
 Final extracted-package suite: **96 passed, 0 failed, 0 skipped in 30.76 seconds**.

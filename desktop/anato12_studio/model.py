@@ -116,6 +116,12 @@ class Project:
         return item
 
     def save(self, path: Path) -> None:
+        path = Path(path)
+        for media in self.media.values():
+            source = Path(media.path)
+            if (source.resolve() == path.resolve() or
+                    (source.exists() and path.exists() and source.samefile(path))):
+                raise ValueError("Choose a different project filename. A project cannot replace a source recording.")
         data = {"version": 1, **asdict(self)}
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
                                          prefix=".anato12-project-", suffix=".tmp", delete=False) as f:

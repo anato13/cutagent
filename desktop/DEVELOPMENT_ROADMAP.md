@@ -1,5 +1,8 @@
 # Development roadmap
 
+Version 0.3.0a5 fixes two reproducible persistence/metadata defects. Continue semantic evidence and boundary evaluation before claiming automatic humor selection is reliable. Medium remains appropriate for focused bug fixes; no extra model downloads or inference benchmarks were required for this pass.
+
+
 Continue the existing app. Phase 2A is a reliability milestone, not completion of
 the entire master request. Statuses apply to this milestone; see TEST_RESULTS.md
 for exact checks and NOT_TESTED cases.

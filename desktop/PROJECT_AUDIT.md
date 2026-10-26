@@ -1,5 +1,8 @@
 # Project audit — 2026-10-26
 
+Version 0.3.0a5 continues from 2cc680f. Adds source-file protection to project saving and explicit malformed model-capability errors. No dependency or schema changes. AI quality remains PARTIALLY_IMPLEMENTED; Windows/GPU acceptance remains NOT_TESTED.
+
+
 Version 0.3.0a4 continues from 1c1246c. The published network change now permits
 official Ollama/runtime downloads; the previous network blocker is resolved.
 Ollama 0.40.11 runs explicitly on loopback with cloud features disabled. Runtime

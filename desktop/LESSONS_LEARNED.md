@@ -1,5 +1,8 @@
 # Engineering lessons
 
+Source protection belongs in project persistence as well as video export. File-dialog filters cannot protect API callers, unusual extensions or hardlink aliases. Validate optional model metadata before using membership operations.
+
+
 A real model can cite valid transcript IDs while inventing the explanation.
 Inspect the reason against its evidence and preserve raw rejected proposals.
 Successful HTTP/schema tests establish mechanics, not story comprehension or

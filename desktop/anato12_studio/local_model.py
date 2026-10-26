@@ -74,7 +74,10 @@ class LocalModel:
         payload = {"model": self.model, "stream": False, "format": "json",
                    "options": {"temperature": .1, "num_ctx": CONTEXT_TOKENS, "num_predict": OUTPUT_TOKENS},
                    "messages": messages}
-        if "thinking" in (details.get("capabilities") or []):
+        capabilities = details.get("capabilities") or []
+        if not isinstance(capabilities, list) or any(not isinstance(c, str) for c in capabilities):
+            raise ValueError("The local server returned invalid model capabilities. Reconnect or update Ollama.")
+        if "thinking" in capabilities:
             # Keep the bounded output budget for the review JSON. This is local
             # model inference behavior, unrelated to the user's Codex setting.
             payload["think"] = False

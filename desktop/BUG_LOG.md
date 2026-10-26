@@ -1,5 +1,12 @@
 # Bug log
 
+B21 — VERIFIED_WORKING: project saving now rejects a source recording path or hardlink alias before writing. Direct/alias preservation and normal save/reopen regressions added.
+
+B22 — VERIFIED_WORKING: malformed nonempty model capabilities now produce an actionable validation error before inference. Scalar, string and mixed-list regressions added.
+
+B20 remains OPEN: unsupported model explanations are not solved by these fixes.
+
+
 | ID | Severity / reproduction | Cause and correction | Evidence / limit |
 | --- | --- | --- | --- |
 | B19 | Medium: cancel during local-model inference | Cancellation was checked only after a blocking response. The transport now shuts down the active socket and enforces a total deadline | Stalled headers/body HTTP regressions; actual Ollama returned at 1.035s for a cancellation at 1s, compared with 5.109s before the fix |
