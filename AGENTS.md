@@ -19,3 +19,5 @@ This repository is designed for AI-agent command execution. Follow these invaria
    - Use `--dry-run` before mutating operations
    - Use `--sanitize-output basic` when relaying content to downstream LLM reasoning
 6. Never rely on human-formatted stdout. CutAgent stdout is JSON/NDJSON only.
+
+Desktop application work must also follow [desktop/AGENTS.md](desktop/AGENTS.md).

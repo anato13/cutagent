@@ -13,6 +13,8 @@ from .model import Clip, Project, PROFILES, parse_time, timestamp
 from .panels import Inspector, MomentsPanel, RangeBar, TranscriptPanel, table
 from .player import Player
 from .speech_ui import SpeechActions
+from .finder_ui import FinderPanel, DataPanel
+from .finder_controller import FinderController
 
 
 class MainWindow(Actions, SpeechActions, QMainWindow):
@@ -102,6 +104,10 @@ class MainWindow(Actions, SpeechActions, QMainWindow):
         self.tabs.addTab(clips_panel, "Clips")
         self.tabs.addTab(self.transcript, "Dialogue & captions")
         self.tabs.addTab(self.moments_panel, "Potential moments")
+        self.finder = FinderPanel()
+        self.data_panel = DataPanel()
+        self.tabs.addTab(self.finder, "AI Clip Finder")
+        self.tabs.addTab(self.data_panel, "Jobs & clip feedback")
         upper = QWidget()
         upper_layout = QVBoxLayout(upper)
         upper_layout.setContentsMargins(0, 0, 0, 0)
@@ -126,6 +132,7 @@ class MainWindow(Actions, SpeechActions, QMainWindow):
         progress_row.addWidget(self.cancel_button)
         column.addLayout(progress_row)
         self._menus()
+        self.finder_controller = FinderController(self)
         self.statusBar().showMessage("Ready · FFmpeg exports H.264 MP4 at 30 fps")
         self.refresh_title()
 
@@ -191,6 +198,8 @@ class MainWindow(Actions, SpeechActions, QMainWindow):
             row = next((i for i in range(self.library.count()) if
                         self.library.item(i).data(Qt.ItemDataRole.UserRole) == wanted), 0)
             self.library.setCurrentRow(row)
+        elif hasattr(self, "finder_controller"):
+            self.finder_controller.select_source(None)
         self.refresh_title()
 
     def _library_selected(self, item, previous=None):
@@ -208,6 +217,8 @@ class MainWindow(Actions, SpeechActions, QMainWindow):
         self.refresh_transcript()
         self.moments = []
         self.moments_panel.list.clear()
+        if hasattr(self, "finder_controller"):
+            self.finder_controller.select_source(media)
 
     def framing_changed(self):
         if self.loading:
@@ -303,6 +314,7 @@ class MainWindow(Actions, SpeechActions, QMainWindow):
             return
         clip = self.project.clips[row]
         media = self.project.media[clip.media_id]
+        changed_source = self.current_id != media.id
         if self.current_id != media.id:
             self.moments = []
             self.moments_panel.list.clear()
@@ -324,6 +336,8 @@ class MainWindow(Actions, SpeechActions, QMainWindow):
         self.player.load(media, clip.start)
         self.range_changed()
         self.refresh_transcript()
+        if changed_source:
+            self.finder_controller.select_source(media)
 
     def move_clip(self, offset):
         row = self.clips.currentRow()

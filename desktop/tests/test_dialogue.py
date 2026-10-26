@@ -85,3 +85,24 @@ def test_reject_invalid_project_range(tmp_path):
     project.save(path)
     with pytest.raises(ValueError, match="one video frame"):
         Project.load(path)
+
+
+def test_transcription_ignores_blank_audio_marker_preserves_reaction(tmp_path, recording, binaries, monkeypatch):
+    """Exercise real audio preparation with a controlled recognizer result."""
+    import json
+    from types import SimpleNamespace
+    sherpa = pytest.importorskip("sherpa_onnx")
+    from anato12_studio.speech import transcribe
+    from anato12_studio.video import probe
+    class Recognizer:
+        def create_stream(self):
+            return SimpleNamespace(accept_waveform=lambda *a: None, result=json.dumps({
+                "segment_timestamps": [0, 1, 2], "segment_durations": [.5, .5, .5],
+                "segment_texts": ["[BLANK_AUDIO]", "Actual dialogue", "[LAUGHTER]"]}))
+        def decode_stream(self, stream):
+            pass
+    monkeypatch.setattr(sherpa.OfflineRecognizer, "from_whisper", lambda **k: Recognizer())
+    monkeypatch.setattr("anato12_studio.speech.ensure_model", lambda *a: tmp_path)
+    media = Media("m", str(recording), **probe(str(recording), binaries[1]))
+    result = transcribe(media, binaries[0], "tiny.en", Runner(), lambda *a: None)
+    assert [s.text for s in result] == ["Actual dialogue", "[LAUGHTER]"]

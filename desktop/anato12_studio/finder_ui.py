@@ -1,0 +1,149 @@
+"""Reviewable highlight and local data/job pages."""
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import (
+    QCheckBox, QComboBox, QDoubleSpinBox, QHBoxLayout, QLabel, QLineEdit,
+    QHeaderView, QPushButton, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget,
+)
+from .panels import table
+
+
+class FinderPanel(QScrollArea):
+    analyze = Signal()
+    search = Signal()
+    connect_model = Signal()
+    refresh = Signal()
+    selected = Signal()
+    action = Signal(str)
+
+    def __init__(self):
+        super().__init__()
+        body = QWidget()
+        body.setMinimumHeight(460)
+        self.setWidget(body)
+        self.setWidgetResizable(True)
+        self.setMinimumHeight(60)
+        self.setToolTip("Scroll this panel or drag the divider above the tabs for more review space.")
+        column = QVBoxLayout(body)
+        top = QHBoxLayout()
+        self.engine = QComboBox()
+        self.engine.addItems(["Context cues · limited", "Local Ollama · contextual"])
+        self.url = QLineEdit("http://127.0.0.1:11434")
+        self.url.setMaximumWidth(240)
+        self.model = QComboBox()
+        self.model.setMinimumWidth(140)
+        for w in (QLabel("Analysis"), self.engine, self.url, self.model):
+            top.addWidget(w)
+        b = QPushButton("Connect local model")
+        b.clicked.connect(self.connect_model)
+        top.addWidget(b)
+        b = QPushButton("Analyze recording")
+        b.setObjectName("primary")
+        b.clicked.connect(self.analyze)
+        top.addWidget(b)
+        column.addLayout(top)
+        row = QHBoxLayout()
+        self.query = QLineEdit()
+        self.query.setPlaceholderText("Search dialogue, e.g. my friend pretends he's on a date")
+        self.query.returnPressed.connect(self.search)
+        row.addWidget(self.query, 1)
+        b = QPushButton("Search")
+        b.clicked.connect(self.search)
+        row.addWidget(b)
+        self.status = QComboBox()
+        self.status.addItems(["All decisions", "unreviewed", "approved", "rejected"])
+        self.order = QComboBox()
+        self.order.addItems(["Review rank", "Recording time", "Duration"])
+        for w in (self.status, self.order):
+            row.addWidget(w)
+        b = QPushButton("All saved highlights")
+        b.clicked.connect(self.refresh)
+        row.addWidget(b)
+        column.addLayout(row)
+        self.notice = QLabel("LOCAL processing · cue ranks are not confidence scores. "
+                             "A configured local model is needed for semantic analysis/search.")
+        self.notice.setWordWrap(True)
+        column.addWidget(self.notice)
+        split = QSplitter()
+        self.table = table(["Title", "Start", "End", "Length", "Category", "Decision", "Method"])
+        self.table.horizontalHeader().setStretchLastSection(False)
+        for index in range(7):
+            self.table.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.Stretch
+                if index == 0 else QHeaderView.ResizeMode.ResizeToContents)
+        self.table.itemSelectionChanged.connect(self.selected)
+        split.addWidget(self.table)
+        details = QWidget()
+        detail = QVBoxLayout(details)
+        self.thumbnail = QLabel("Select a highlight")
+        self.thumbnail.setMinimumSize(260, 100)
+        self.thumbnail.setMaximumHeight(160)
+        self.details = QTextEdit()
+        self.details.setReadOnly(True)
+        detail.addWidget(self.thumbnail)
+        detail.addWidget(self.details)
+        split.addWidget(details)
+        split.setSizes([850, 330])
+        column.addWidget(split, 1)
+        row = QHBoxLayout()
+        self.start, self.end = QDoubleSpinBox(), QDoubleSpinBox()
+        for spin in (self.start, self.end):
+            spin.setRange(0, 1_000_000)
+            spin.setDecimals(3)
+        self.title = QLineEdit()
+        row.addWidget(QLabel("In seconds"))
+        row.addWidget(self.start)
+        row.addWidget(QLabel("Out seconds"))
+        row.addWidget(self.end)
+        row.addWidget(self.title, 1)
+        b = QPushButton("Save adjustment")
+        b.clicked.connect(lambda: self.action.emit("save"))
+        row.addWidget(b)
+        column.addLayout(row)
+        row = QHBoxLayout()
+        for text, action in (("Preview", "preview"), ("Approve", "approve"), ("Reject", "reject"),
+                             ("Export MP4", "export"), ("Add to main video", "main"),
+                             ("Add to Shorts", "shorts")):
+            b = QPushButton(text)
+            b.clicked.connect(lambda checked=False, a=action: self.action.emit(a))
+            row.addWidget(b)
+        column.addLayout(row)
+        self.feedback = QLineEdit()
+        self.feedback.setPlaceholderText("Optional feedback: longer setup, keep the silence, not my kind of humor…")
+        self.personalize = QCheckBox("Use this feedback to personalize future ranks")
+        row = QHBoxLayout()
+        row.addWidget(self.feedback, 1)
+        row.addWidget(self.personalize)
+        b = QPushButton("Save feedback")
+        b.clicked.connect(lambda: self.action.emit("feedback"))
+        row.addWidget(b)
+        column.addLayout(row)
+
+
+class DataPanel(QScrollArea):
+    action = Signal(str)
+
+    def __init__(self):
+        super().__init__()
+        body = QWidget()
+        body.setMinimumHeight(360)
+        self.setWidget(body)
+        self.setWidgetResizable(True)
+        self.setMinimumHeight(60)
+        column = QVBoxLayout(body)
+        column.addWidget(QLabel("Jobs survive restarts. Interrupted work resumes only when you choose Resume."))
+        self.jobs = table(["Job", "Recording", "State", "Progress", "Message"])
+        column.addWidget(self.jobs)
+        row = QHBoxLayout()
+        for text, action in (("Refresh", "refresh"), ("Resume selected", "resume"),
+                             ("Clear processing caches", "cache"), ("Delete current recording's app data", "source"),
+                             ("Export application data", "export_data")):
+            b = QPushButton(text)
+            b.clicked.connect(lambda checked=False, a=action: self.action.emit(a))
+            row.addWidget(b)
+        column.addLayout(row)
+        column.addWidget(QLabel("Clip feedback · user-confirmed only. Preference weights are derived counts, "
+                                "not model retraining or general personal memory."))
+        self.feedback = table(["Category", "Decision", "Use for personalization", "Feedback"])
+        column.addWidget(self.feedback)
+        b = QPushButton("Delete selected feedback")
+        b.clicked.connect(lambda: self.action.emit("delete_feedback"))
+        column.addWidget(b)

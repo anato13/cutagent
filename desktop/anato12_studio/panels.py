@@ -36,6 +36,8 @@ class Inspector(QWidget):
         self.zoom.setSingleStep(.05)
         self.zoom.setDecimals(2)
         self.zoom.setSuffix(" ×")
+        for control in (self.profile, self.fit, self.zoom):
+            control.setMinimumHeight(30)
         self.x = QSlider(Qt.Orientation.Horizontal)
         self.y = QSlider(Qt.Orientation.Horizontal)
         for slider in (self.x, self.y):

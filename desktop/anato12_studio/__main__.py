@@ -1,5 +1,7 @@
 import sys
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QLockFile
+from PySide6.QtWidgets import QApplication, QMessageBox
+from .store import data_folder
 from .window import MainWindow
 
 STYLE = """
@@ -32,7 +34,22 @@ def main():
     application.setOrganizationName("Anato12")
     application.setStyle("Fusion")
     application.setStyleSheet(STYLE)
-    window = MainWindow()
+    try:
+        folder = data_folder()
+        folder.mkdir(parents=True, exist_ok=True)
+        lock = QLockFile(str(folder / "studio.lock"))
+        lock.setStaleLockTime(30_000)
+        if not lock.tryLock(0):
+            QMessageBox.information(None, "Anato12 Studio", "Another Studio instance is using this data folder.")
+            return 1
+        application._studio_lock = lock
+        application.aboutToQuit.connect(lock.unlock)
+        window = MainWindow()
+    except Exception as error:
+        QMessageBox.critical(None, "Cannot open Studio data",
+                             f"No existing application data was overwritten.\n\n{error}\n\n"
+                             "Check app-data folder permissions or set ANATO12_DATA_DIR to a writable folder.")
+        return 1
     window.show()
     return application.exec()
 

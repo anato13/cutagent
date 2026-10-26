@@ -4,7 +4,7 @@ Anato12 Studio edits recordings **on your own computer**. There is no 32 MB uplo
 limit, paid API, subscription, or account requirement. Keep your original recording:
 the app exports a new MP4.
 
-This is a first working version, supplied as a Python desktop project with Windows
+This is version 0.2 alpha, supplied as a Python desktop project with Windows
 launchers. It is not a prebuilt or signed Windows installer.
 
 ## 1. Put the app in a folder
@@ -117,13 +117,73 @@ Check **Show & burn captions** to put captions onto the video. Check **Also save
 captions across the selected clips. Burned captions require FFmpeg with libass;
 the app reports it clearly if the installed build lacks it.
 
-## 7. Optional: find possible moments
+## 7. Find and review possible clips
 
-After transcription or SRT import, click **Suggest moments**. The app looks for
-text cues such as laughter, “no way,” or “what just happened,” and keeps some setup
-around each hit. These are suggestions to review, not a guarantee that a clip is
-funny. It does not yet understand gameplay, music, facial expressions, or speaker
-intent. Preview a suggestion, then add the ones you want to your clip list.
+1. Select a recording, then open **AI Clip Finder**.
+   Scroll that panel or drag the divider above the tabs upward for more space.
+2. Start with **Context cues · limited**, then click **Analyze recording**. Existing
+   edited/imported dialogue is used; if none exists, optional local transcription
+   runs first. For recordings without speech tools, import a matching SRT first.
+3. Select a result to see its source frame, exact source evidence and timestamps.
+   Cue analysis combines context or repeated phrases. It does not prove something
+   is funny and can miss good moments. An empty result is valid.
+4. Click **Preview** to play that range. Adjust the start/end seconds and title,
+   then click **Save adjustment**. Click **Approve** or **Reject** to retain your
+   decision. Reanalysis preserves saved decisions and adjustments.
+5. **Export MP4** in this tab exports only that highlighted candidate, using the
+   current framing/caption options. **Add to main video** or **Add to Shorts**
+   appends it to the existing editor and changes the project's output ratio.
+   Use separate saved projects for separate main/Shorts edits.
+6. Enter optional feedback. Personalization is **off by default**; check the box
+   only when you want that approved/rejected category to affect future ordering.
+   This is a simple, reversible preference adjustment, not AI retraining.
+
+**Search** matches transcript words in cue mode. It cannot infer which exchange
+is “weirdest” or verify a story claim. A configured local model is required for
+semantic search. **All saved highlights** clears the current search-result filter.
+The older **Potential moments** tab remains available with its original text cues.
+
+### Optional: connect a downloaded local model
+
+This step is separate from speech recognition. The app does not install or start
+Ollama for you, and you can keep editing without it.
+
+1. Install Ollama for Windows from <https://ollama.com/download/windows>.
+2. Open Windows Terminal. For example, `ollama pull qwen2.5:3b` downloads a small
+   local conversational model (several GB of disk space may be needed). This is
+   an example to try, not a model-quality or GPU-performance guarantee.
+3. Start Ollama. Leave the app URL at `http://127.0.0.1:11434`. Click
+   **Connect local model** and choose an installed model name.
+4. Choose **Local Ollama · contextual** and analyze or search. Transcript windows
+   go to that local server. Use downloaded models; known cloud-backed Ollama
+   models and non-loopback endpoints are rejected. There is no cloud fallback.
+5. Review every result. Semantic humor quality has **not** been validated here.
+   The model may make mistakes even though timestamps/evidence use actual lines.
+
+Ollama controls its own hardware use. The editor's FFmpeg and speech paths
+currently use CPU; RTX acceleration is not verified. If connection fails, check
+that Ollama is running and a local model has finished downloading, or use cue mode.
+A model request can take up to 60 seconds to time out after cancellation.
+
+### Jobs, storage and your data
+
+Open **Jobs & clip feedback** to inspect processing state, resume an interrupted
+job, view/delete feedback, clear processing caches or export local application
+data as JSON. Resume is manual. Completed transcript chunks/model windows are
+reused; a partial transcription currently prepares temporary audio again.
+The complete prepared WAV is on disk, with small chunks read into RAM.
+For two hours, the temporary WAV alone needs about 220 MiB free space.
+
+The app stores its database under `%LOCALAPPDATA%\Anato12Studio` on Windows.
+Models are separate. `ANATO12_DATA_DIR` can select another writable app-data
+folder. Saved project files and finished exports stay where you chose to save them.
+
+**Clear processing caches** keeps highlights, feedback and source recordings.
+**Delete current recording's app data** removes its cached dialogue, highlights,
+feedback, job history and thumbnails. Original recordings, saved project files and
+finished exports stay. Save your project before closing to retain the editor timeline.
+The JSON data export contains local paths, evidence and feedback; keep it private.
+Close the app before backing up the complete app-data folder.
 
 ## Common problems
 

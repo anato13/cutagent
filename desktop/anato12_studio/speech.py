@@ -18,6 +18,7 @@ from .video import Runner
 
 MODELS = {"tiny.en": "~110 MB", "base.en": "~200 MB", "small.en": "~640 MB"}
 MODEL_HOST = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models"
+TRANSCRIPT_VERSION = "transcript-v3"
 
 
 def model_folder() -> Path:
@@ -111,7 +112,15 @@ def ensure_model(name: str, root: Path, runner: Runner, progress) -> Path:
 
 
 def transcribe(media: Media, ffmpeg: str, name: str, runner: Runner, progress,
-               root: Path | None = None) -> list[Segment]:
+               root: Path | None = None, cache=None) -> list[Segment]:
+    runner.check()
+    source_key = cache.source(media) if cache else ""
+    cache_key = f"{TRANSCRIPT_VERSION}:{source_key}:{name}"
+    if cache:
+        saved = cache.cache_get(cache_key)
+        if saved is not None:
+            progress(1, "Using cached transcript")
+            return [Segment(**s) for s in saved]
     if importlib.util.find_spec("sherpa_onnx") is None:
         if getattr(sys, "frozen", False):
             raise RuntimeError("This EXE was built without optional speech tools. Use the source app, "
@@ -147,6 +156,13 @@ def transcribe(media: Media, ffmpeg: str, name: str, runner: Runner, progress,
             count = math.ceil(duration / 27)
             for index in range(count):
                 runner.check()
+                checkpoint = f"{cache_key}:chunk:{index}"
+                previous = cache.cache_get(checkpoint) if cache else None
+                if previous is not None:
+                    segments.extend(Segment(**s) for s in previous)
+                    progress(.25 + .75*(index+1)/count, f"Resumed chunk {index+1}/{count}")
+                    continue
+                segment_count = len(segments)
                 start = index * 27.0
                 length = min(28.0, duration - start)
                 audio.setpos(round(start * rate))
@@ -156,6 +172,8 @@ def transcribe(media: Media, ffmpeg: str, name: str, runner: Runner, progress,
                     continue
                 rms = float(np.sqrt(np.mean(samples * samples)))
                 if rms < .001:
+                    if cache:
+                        cache.cache_put(checkpoint, source_key, "transcript_chunk", [])
                     continue
                 stream = recognizer.create_stream()
                 stream.accept_waveform(rate, samples)
@@ -168,7 +186,8 @@ def transcribe(media: Media, ffmpeg: str, name: str, runner: Runner, progress,
                 for offset, spoken, text in zip(times, lengths, texts):
                     a, b = start + float(offset), min(duration, start + float(offset) + float(spoken))
                     text = str(text).strip()
-                    if not text or b <= a:
+                    if (not text or b <= a or text.upper() in
+                            {"[BLANK_AUDIO]", "[SILENCE]", "(SILENCE)", "[NO_SPEECH]", "[NO SPEECH]"}):
                         continue
                     # Ignore overlap-only phrases already recognized in the previous window.
                     if index and (a + b) / 2 < start + .5:
@@ -180,7 +199,13 @@ def transcribe(media: Media, ffmpeg: str, name: str, runner: Runner, progress,
                     a = max(a, segments[-1].end if segments else 0)
                     if b > a:
                         segments.append(Segment(round(a, 3), round(b, 3), text))
+                if cache:
+                    cache.cache_put(checkpoint, source_key, "transcript_chunk",
+                                    [vars(s) for s in segments[segment_count:]])
                 progress(.25 + .75 * (index+1)/count,
                          f"Transcribing {index+1}/{count} · local CPU")
+    runner.check()
     progress(1, f"Transcription complete · {len(segments)} lines")
+    if cache:
+        cache.cache_put(cache_key, source_key, "transcript", [vars(s) for s in segments])
     return segments

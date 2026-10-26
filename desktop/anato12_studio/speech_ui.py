@@ -1,7 +1,7 @@
 """Optional dialogue and moment actions; the core editor needs no speech packages."""
 from pathlib import Path
 from PySide6.QtCore import Qt, QSignalBlocker
-from PySide6.QtWidgets import QFileDialog, QListWidgetItem, QTableWidgetItem
+from PySide6.QtWidgets import QFileDialog, QListWidgetItem, QTableWidgetItem, QMessageBox
 
 from .captions import read_srt
 from .model import timestamp
@@ -60,6 +60,13 @@ class SpeechActions:
         media = self.current_media()
         if not media or not media.has_audio:
             self.fail("Choose a recording with an audio track.")
+            return
+        if hasattr(self, "finder_controller"):
+            if media.transcript and QMessageBox.question(
+                    self, "Replace dialogue?", "Replace the active dialogue with a cached or newly recognized "
+                    "transcript? Saved project files are not changed until you save.") != QMessageBox.StandardButton.Yes:
+                return
+            self.finder_controller.start(transcribe_only=True)
             return
         try:
             ffmpeg, _ = self.tools()

@@ -307,6 +307,8 @@ class Actions:
         self.editor.setEnabled(True)
         self.menuBar().setEnabled(True)
         self.cancel_button.setEnabled(False)
+        if hasattr(self, "finder_controller"):
+            self.finder_controller.refresh_data()
         if old:
             old.deleteLater()
         if self.close_pending:

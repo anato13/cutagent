@@ -16,9 +16,17 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
 - Optional local English Whisper transcription with timestamped, editable dialogue.
 - UTF-8 SRT import/export and optional burned captions.
 - Reviewable moment suggestions based on explicit transcript cues.
+- Persistent AI Clip Finder: contextual cue candidates, actual frame thumbnails,
+  preview, manual ranges, approvals/rejections, selected-clip export and editor insertion.
+- Durable SQLite jobs/caches, restart recovery, literal transcript search and
+  explicitly opted-in category feedback with view/delete/export controls.
+- Optional loopback Ollama adapter for downloaded local models. HTTP behavior is
+  tested; real semantic-model inference and humor quality are still unverified.
 
 The core editor does not depend on speech packages, credentials or a model. The app
-uses CPU encoding/inference and works without a GPU. It never uploads recordings.
+uses CPU encoding/speech inference and works without a GPU. Recordings stay local.
+The optional model adapter sends transcript windows to the configured loopback
+server only; use downloaded models. Known cloud-backed models are rejected.
 Model/package downloads need internet access on first use.
 
 ## Development
@@ -67,10 +75,19 @@ Run `python package_source.py` to recreate the source ZIP in `dist`.
 
 See [VALIDATION.md](VALIDATION.md) for the completed checks and platform limits.
 
-## First-version limits
+See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
+[DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) for the current milestone.
+
+## Current limits
 
 - English transcription, approximate phrase timestamps, no speaker diarization.
-- Moment ranking is an explainable text heuristic, not a trained humor detector.
+- Default moment ranking is a text heuristic, not a validated humor detector.
+  Semantic analysis requires an installed local Ollama model; actual model quality
+  has not been established in this environment.
+- Add to main/Shorts appends to one editor timeline and switches its output ratio.
+  Save separate projects for separate timelines. There is no automatic story
+  assembly, batch Shorts editor or general personal assistant yet.
+- Feedback is bounded category reordering, not model training.
 - Hard cuts and fixed per-clip zoom; no animated keyframes, transitions, waveform
   editor, multitrack compositing or automatic face tracking yet.
 - Output is 30 fps at the two fixed 1080p aspect-ratio presets. Export cannot add
@@ -86,5 +103,11 @@ See [VALIDATION.md](VALIDATION.md) for the completed checks and platform limits.
 `window.py`, `panels.py`, `actions.py` — editing UI and background jobs  
 `speech.py` — optional Whisper ONNX model download/inference  
 `moments.py` — conservative, reviewable transcript cues
+
+`finder.py`, `local_model.py` — overlapping context, evidence validation and local-model adapter
+
+`store.py`, `finder_jobs.py` — transactional reviews, caches and resumable jobs
+
+`finder_ui.py`, `finder_controller.py` — clip finder and feedback/job controls
 
 See [THIRD_PARTY.md](THIRD_PARTY.md) for open-source dependencies.

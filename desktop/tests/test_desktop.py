@@ -79,7 +79,8 @@ def test_desktop_import_decodes_preview_and_exports(tmp_path, recording, binarie
     from anato12_studio.video import probe
     destination = tmp_path / "desktop-short.mp4"
     root = Path(__file__).resolve().parents[1]
-    env = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_MEDIA_BACKEND="ffmpeg", PYTHONPATH=str(root))
+    env = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_MEDIA_BACKEND="ffmpeg", PYTHONPATH=str(root),
+               ANATO12_DATA_DIR=str(tmp_path / "app-data"))
     result = subprocess.run([sys.executable, str(Path(__file__).resolve()), str(recording), str(destination)],
                             cwd=root, env=env, capture_output=True, text=True, timeout=40)
     assert result.returncode == 0, result.stdout + result.stderr

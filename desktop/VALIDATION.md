@@ -1,4 +1,10 @@
-# Validation of version 0.1.0
+# Validation history
+
+Current version **0.2.0a1**: see [TEST_RESULTS.md](TEST_RESULTS.md) for the
+53-test clip-review milestone, long synthetic media, actual two-hour chunk/resume
+measurement, feature statuses and explicit NOT_TESTED cases.
+
+## Version 0.1.0 baseline
 
 Verified in the Linux cloud workspace using Python 3.12.14, PySide6 6.8.3 and
 FFmpeg/FFprobe 7.1.5:

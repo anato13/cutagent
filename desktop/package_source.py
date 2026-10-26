@@ -8,6 +8,8 @@ FILES = [
     "VALIDATION.md", "LICENSE", "pyproject.toml", "uv.lock", "requirements.txt",
     "requirements-speech.txt", "SETUP.bat", "START_ANATO12.bat", "INSTALL_SPEECH.bat",
     "BUILD_WINDOWS.bat", "Anato12Studio.spec", "launch.py", ".gitignore", "package_source.py",
+    "AGENTS.md", "PROJECT_AUDIT.md", "LESSONS_LEARNED.md", "BUG_LOG.md",
+    "TEST_RESULTS.md", "DEVELOPMENT_ROADMAP.md",
 ]
 
 
