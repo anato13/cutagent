@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.verification/
+build/
+dist/
+*.mp4
+*.wav
+*.onnx
+*.tar.bz2

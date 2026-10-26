@@ -448,6 +448,13 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 - Adding new operations
 - The JSON output contract
 
+## Windows desktop editor
+
+[Anato12 Studio](desktop/README.md) adds a local desktop workflow for importing,
+previewing, trimming, and exporting recordings with FFmpeg. It supports YouTube
+and Shorts layouts, optional captions and local transcription. Beginners can
+start with [the Windows setup guide](desktop/START_HERE.md).
+
 ## License
 
 [MIT](LICENSE)

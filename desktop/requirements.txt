@@ -1,0 +1,2 @@
+# Tested Qt version; import, preview and export do not need speech packages.
+PySide6==6.8.3

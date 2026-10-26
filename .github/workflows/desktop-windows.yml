@@ -1,0 +1,41 @@
+name: Anato12 Studio Windows
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ["desktop/**", ".github/workflows/desktop-windows.yml"]
+  pull_request:
+    paths: ["desktop/**", ".github/workflows/desktop-windows.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    env:
+      QT_QPA_PLATFORM: offscreen
+      QT_MEDIA_BACKEND: ffmpeg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: desktop/requirements*.txt
+      - name: Install FFmpeg
+        run: choco install ffmpeg --no-progress -y
+      - name: Install desktop, test and optional speech tools
+        run: python -m pip install -e ".[dev,speech]"
+      - name: Test desktop and video export
+        run: python -m pytest -q
+      - name: Build Windows application
+        run: python -m PyInstaller --noconfirm --clean Anato12Studio.spec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Anato12Studio-Windows
+          path: desktop/dist/Anato12Studio/
+          if-no-files-found: error

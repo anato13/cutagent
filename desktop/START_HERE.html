@@ -1,0 +1,133 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anato12 Studio — beginner guide</title><style>body{font:17px/1.7 system-ui,Segoe UI,sans-serif;max-width:880px;margin:40px auto;padding:0 24px;color:#1b2331;background:#f8fafc}h1{color:#182338;font-size:2.2em}h2{margin-top:2em;border-bottom:2px solid #e8b94b;padding-bottom:8px}h3{margin-top:1.8em}a{color:#145cb5}pre{background:#17202d;color:#f5f7fa;padding:18px;overflow:auto;border-radius:8px}code{font-family:Consolas,monospace}li{margin:8px 0}strong{color:#122338}</style></head><body><h1>Anato12 Studio — start here</h1>
+<p>Anato12 Studio edits recordings <strong>on your own computer</strong>. There is no 32 MB upload
+limit, paid API, subscription, or account requirement. Keep your original recording:
+the app exports a new MP4.</p>
+<p>This is a first working version, supplied as a Python desktop project with Windows
+launchers. It is not a prebuilt or signed Windows installer.</p>
+<h2>1. Put the app in a folder</h2>
+<p>If you downloaded a ZIP, right-click it and choose <strong>Extract All</strong>. Do not run the
+app from inside the ZIP. Put the extracted folder somewhere simple, such as
+<code>Documents\Anato12 Studio</code>. It must contain <code>SETUP.bat</code>, <code>START_ANATO12.bat</code>,
+and the <code>anato12_studio</code> folder.</p>
+<h2>2. Install Python once</h2>
+<p>Download <strong>64-bit Python 3.12 or 3.13 for Windows</strong> from
+<a href="https://www.python.org/downloads/windows/">https://www.python.org/downloads/windows/</a>.</p>
+<p>Run the installer. On its first screen, check <strong>Add python.exe to PATH</strong>, then
+choose <strong>Install Now</strong>. Close the installer when finished.</p>
+<h2>3. Double-click SETUP.bat</h2>
+<p>The setup window installs the free desktop components in a private <code>.venv</code> folder.
+This first install needs an internet connection and can download several hundred
+megabytes. It does not upload your recordings. Leave the window open until it says
+setup has finished.</p>
+<p>If prompted to install <strong>FFmpeg</strong>, press <strong>Y</strong>. Windows Package Manager downloads
+the Gyan FFmpeg build. Accept any normal Windows installation prompts.</p>
+<h3>FFmpeg: if the automatic step cannot run</h3>
+<p>Open <strong>Windows Terminal</strong> or <strong>PowerShell</strong>, paste this, and press Enter:</p>
+<pre><code class="language-powershell">winget install --id Gyan.FFmpeg --exact
+</code></pre>
+<p>After installation, close and reopen Anato12 Studio. It checks both <code>ffmpeg.exe</code>
+and <code>ffprobe.exe</code>, including the standard WinGet links folder.</p>
+<p>For a portable download, use a Windows build linked from
+<a href="https://ffmpeg.org/download.html">https://ffmpeg.org/download.html</a>, extract it, and find the <code>bin</code> folder containing
+<strong>both</strong> executables. In the app, choose <strong>Settings → Choose FFmpeg folder</strong> and
+select that folder. You can also place them in <code>tools\ffmpeg\bin</code> beside the app.</p>
+<h2>4. Open the app</h2>
+<p>Double-click <strong>START_ANATO12.bat</strong>.</p>
+<p>The small console window belongs to the launcher. Keep it open while editing. If
+an error appears, leave the message visible so you can read it. Running
+<code>SETUP.bat</code> again safely refreshes the dependencies.</p>
+<h2>5. Make your first edit — no AI needed</h2>
+<ol>
+<li>Click <strong>Import recordings</strong>, or drag an MP4 into the window.</li>
+<li>Click <strong>Play / pause</strong> and move the seek slider to find a moment.</li>
+<li>Click <strong>Mark in</strong> at the beginning and <strong>Mark out</strong> at the end. You can also
+type a time such as <code>35.5</code> or <code>00:01:12.500</code>.</li>
+<li>Choose <strong>YouTube · 16:9</strong> for a regular video, or <strong>Shorts · 9:16</strong>.</li>
+<li>Choose framing:
+<ul>
+<li><strong>Fit whole video</strong> keeps the full recording visible, with bars when needed.</li>
+<li><strong>Fill frame</strong> crops edges. Move the framing sliders to keep the action or
+facecam visible.</li>
+<li><strong>Zoom</strong> adds a fixed punch-in to that clip. Watch the preview before exporting.</li>
+</ul>
+</li>
+<li>Give the range a name and click <strong>Add clip</strong>. Add more ranges if you like.
+Reorder clips with the up/down buttons. Only checked clips export.</li>
+<li>To change an existing clip, select it, adjust its range/framing, and click
+<strong>Update selected</strong>.</li>
+<li>Click <strong>Export MP4</strong>, choose a folder such as <code>Videos</code>, and choose a <strong>new filename</strong>.</li>
+</ol>
+<p>The app joins checked clips into one MP4 in list order. If the clip list is empty,
+it exports the current range. Export produces H.264 video at 30 fps with AAC audio:
+1920×1080 for YouTube or 1080×1920 for Shorts. You can cancel an export.</p>
+<p>Use <strong>File → Save project</strong> to save your clip list. Projects end in <code>.anato12.json</code>.
+They contain edit decisions and captions, not copies of your recordings. Add your
+chosen range to the clip list before saving. If a recording moves, use
+<strong>Relink selected</strong> to locate the same recording again.</p>
+<h2>6. Optional: transcription</h2>
+<p>You can keep using import, preview, trim, and export without installing this.</p>
+<ol>
+<li>Close the app and double-click <strong>INSTALL_SPEECH.bat</strong>.</li>
+<li>Reopen the app, select a recording, and open <strong>Dialogue &amp; captions</strong>.</li>
+<li>Pick an English speech model:
+<ul>
+<li><strong>tiny.en</strong>: smallest download, about 110 MB; fastest, less accurate.</li>
+<li><strong>base.en</strong>: about 200 MB; a sensible starting choice.</li>
+<li><strong>small.en</strong>: about 640 MB; slower and generally more accurate.</li>
+</ul>
+</li>
+<li>Click <strong>Transcribe locally</strong>. The first use downloads the chosen free model
+from the official sherpa-onnx GitHub release. Inference then runs on your CPU.</li>
+<li>Review the timestamped lines. Double-click a dialogue cell to correct its text.
+Select a line and click <strong>Use selected line</strong> to frame a clip with some context.</li>
+</ol>
+<p>Models are kept in <code>%LOCALAPPDATA%\Anato12Studio\models</code>. Once cached, they can
+run offline. <strong>Settings → Choose speech-model folder</strong> lets you keep them on
+another drive. Leave room for the model download and temporary audio.</p>
+<p>No speech recognition is perfect. Quiet, overlapping voices and game audio can
+produce mistakes; timestamps are approximate. Review and correct captions before
+publishing. This version transcribes English; it does not identify speakers.</p>
+<h3>Use captions you already have</h3>
+<p>Click <strong>Import SRT</strong> and select a UTF-8 <code>.srt</code> whose timestamps match the original
+recording. An exported clip's SRT has already been retimed to the clip; do not import
+that as though it were the full recording's transcript.</p>
+<p>Check <strong>Show &amp; burn captions</strong> to put captions onto the video. Check <strong>Also save
+.srt captions</strong> for a separate subtitle file that YouTube can import. Exports retime
+captions across the selected clips. Burned captions require FFmpeg with libass;
+the app reports it clearly if the installed build lacks it.</p>
+<h2>7. Optional: find possible moments</h2>
+<p>After transcription or SRT import, click <strong>Suggest moments</strong>. The app looks for
+text cues such as laughter, “no way,” or “what just happened,” and keeps some setup
+around each hit. These are suggestions to review, not a guarantee that a clip is
+funny. It does not yet understand gameplay, music, facial expressions, or speaker
+intent. Preview a suggestion, then add the ones you want to your clip list.</p>
+<h2>Common problems</h2>
+<ul>
+<li><strong>Python opens Microsoft Store:</strong> install Python from python.org and enable
+its PATH option; rerun setup.</li>
+<li><strong>The preview stays black:</strong> pause/play once, seek to another point, and try a
+standard H.264 MP4. Windows needs working graphics/media drivers; some unusual
+source codecs may export with FFmpeg but not preview in Qt.</li>
+<li><strong>No preview sound:</strong> check the app volume, Windows Volume Mixer, and output device.</li>
+<li><strong>Export looks cropped:</strong> choose Fit whole video or adjust Fill frame's sliders.</li>
+<li><strong>Export looks blurry:</strong> cropping or zooming cannot restore detail absent in the source.</li>
+<li><strong>Speech model download fails:</strong> check internet access and free space. Downloads use
+verified HTTPS; do not disable certificate verification. If a manually copied
+model folder is incomplete, move it aside and retry.</li>
+<li><strong>My video moved:</strong> select it and use Relink selected. Choose the same recording,
+not a different edit of it.</li>
+<li><strong>Export is slow:</strong> CPU encoding/transcription takes time, particularly with Shorts,
+captions, or long recordings. Start with a 10-second range.</li>
+<li><strong>A file already exists:</strong> choose a new name or confirm replacing the export.
+The app refuses to overwrite imported recordings.</li>
+</ul>
+<h2>Optional: make an EXE on Windows</h2>
+<p>Once the source app works, double-click <strong>BUILD_WINDOWS.bat</strong>. If you want speech
+inside the EXE, run <code>INSTALL_SPEECH.bat</code> first.</p>
+<p>The result is <code>dist\Anato12Studio\Anato12Studio.exe</code>. Keep the <strong>whole</strong>
+<code>Anato12Studio</code> folder together. The EXE does not need a separate Python installation,
+but still needs FFmpeg. Speech models are downloaded separately and are not bundled.
+To add speech to an EXE built without it, rebuild after installing speech support.</p>
+<p>An EXE must be built and tested on Windows; the provided build script and Windows
+CI workflow do that on a Windows machine. No prebuilt Windows EXE is included here.</p>
+</body></html>
