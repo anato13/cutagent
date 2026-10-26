@@ -44,7 +44,8 @@ def endpoint():
                 self.respond({"remote_model": "remote"} if self.remote else {})
             else:
                 self.respond({"message": {"content": json.dumps({"highlights": [
-                    {"first_id": 0, "last_id": 1, "evidence_ids": [0, 1], "category": "banter"}]})}})
+                    {"first_id": 0, "last_id": 1, "evidence_ids": [0, 1], "category": "banter",
+                     "setup_ids": [0], "payoff_ids": [1], "reaction_ids": [], "needs_context": False}]})}})
         def respond(self, value):
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -78,6 +79,10 @@ def test_real_http_contract_and_cloud_backends_rejected(endpoint):
     payload = handler.requests[-1][1]
     assert json.loads(payload["messages"][1]["content"])["segments"] == rows
     assert payload["stream"] is False
+    schema = payload['format']['properties']['highlights']['items']
+    assert schema['properties']['setup_ids']['items']['enum'] == [0, 1]
+    assert schema['properties']['setup_ids']['maxItems'] == 8
+    assert 'needs_context' in schema['required']
     handler.remote = True
     with pytest.raises(ValueError, match="remote backend"):
         client.analyze(rows, {}, "", {}, Runner())
@@ -172,7 +177,7 @@ def test_advertised_thinking_is_disabled_for_bounded_json_output(monkeypatch, ca
         assert "think" not in payload
 
 
-@pytest.mark.parametrize("capabilities", [1, "thinking", [1]])
+@pytest.mark.parametrize("capabilities", [1, "thinking", [1], 0, False, {}, ""])
 def test_malformed_capabilities_fail_before_chat(monkeypatch, capabilities):
     client = LocalModel(model="fixture")
     paths = []
@@ -183,3 +188,14 @@ def test_malformed_capabilities_fail_before_chat(monkeypatch, capabilities):
     with pytest.raises(ValueError, match="invalid model capabilities"):
         client.analyze([], {}, "", {}, Runner())
     assert paths == ["/api/show"]
+
+
+def test_oversized_candidate_list_is_rejected_instead_of_silently_truncated(monkeypatch):
+    client = LocalModel(model='fixture')
+    def request(path, payload=None, runner=None):
+        if path == '/api/show':
+            return {}
+        return {'message': {'content': json.dumps({'highlights': [{}] * 5})}}
+    monkeypatch.setattr(client, 'request', request)
+    with pytest.raises(ValueError, match='four-candidate limit'):
+        client.analyze([], {}, '', {}, Runner())

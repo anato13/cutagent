@@ -1,4 +1,4 @@
-# Auto Edit and the learning library — 0.4 alpha 1
+# Auto Edit and the learning library — 0.4 alpha 2
 
 This extends the existing editor. Import, preview, trim, manual projects, clip
 review, transcription and approved draft bundles remain available.
@@ -10,6 +10,21 @@ output limits and a folder, then start one run. Studio transcribes if necessary,
 requests clip suggestions, selects whole exchanges, builds a chronological main
 video and independent portrait Shorts, renders them and checks each output.
 You do not need to mark or approve each clip for this experimental workflow.
+
+Alpha 2 requires a model-suggested map of setup, payoff and optional reaction
+lines, with an explicit indication of whether more context is needed. Requests
+use a constrained JSON response format with allowed source IDs; Studio independently
+checks the response. It derives quoted evidence directly from validated role IDs
+and any additional evidence IDs, so duplicate bookkeeping is not required from the
+model. New list labels quote source snippets. Free-form model explanations remain
+visible as **unverified**, and role labels themselves can still be wrong.
+
+Auto Edit skips unreviewed legacy suggestions without a current map, suggestions
+requesting more context, and heavily overlapping ranges after boundary expansion.
+Rerunning analysis refreshes untouched unreviewed suggestions; approved, rejected
+and manually adjusted suggestions remain intact. Older approved ranges remain
+usable. This conservative dialogue path requires distinct setup/payoff lines;
+it does not detect purely visual or single-line jokes automatically.
 
 Model suggestions are not human approvals. Automatic selection preserves that
 distinction, respects rejected ranges, validates quoted source evidence against
@@ -95,13 +110,13 @@ source-identity check pass. Ordinary failure/cancellation removes staged files;
 original media, earlier exports, reviews and the open editor timeline stay intact.
 The manifest records choices, skips, original/expanded ranges, model identity,
 shared preference context, tested operations and per-output quality results.
-It contains private source paths and dialogue-related preferences; share it deliberately.
+It contains private source paths, quoted dialogue and preferences; share it deliberately.
 
 ## Persistence and recovery
 
-SQLite schema 3 adds learning documents/examples/events and technique-test
-history in the same local profile. Migration preserves schema-2 reviews, feedback
-and note-sharing consent. The migration transaction is tested with an injected
+SQLite schema 4 retains learning documents/examples/events and technique-test
+history, and adds a persisted exchange map to highlights. Migration preserves
+reviews, feedback, learning records and note-sharing consent. The migration transaction is tested with an injected
 failure. Older Studio versions refuse this newer profile; use the new version.
 Back up the profile with Studio closed before moving it between machines.
 

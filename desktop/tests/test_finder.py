@@ -87,6 +87,7 @@ def test_job_restart_recovery_and_source_change(review):
 def test_model_times_and_quotes_only_come_from_supplied_evidence():
     rows = rows_for([Segment(3601, 3604, "setup"), Segment(3606, 3610, "reaction")])
     item = {"first_id": 0, "last_id": 1, "evidence_ids": [0, 1], "category": "banter",
+            "setup_ids": [0], "payoff_ids": [1], "reaction_ids": [], "needs_context": False,
             "title": "Review this exchange", "reason": "Potential contrast", "start": -99, "end": 999999}
     proposal = model_proposals([item], rows, {}, 7200)[0]
     assert (proposal.start, proposal.end) == (3597, 3615)
@@ -103,7 +104,8 @@ def test_overlapping_windows_sparse_absolute_timestamps_and_dedup():
     chunks = list(windows(rows))
     assert len(chunks) == 4 and chunks[-1][0]["start"] == 7190
     assert set(r["id"] for r in chunks[0]) & set(r["id"] for r in chunks[1])
-    raw = {"first_id": 0, "last_id": 1, "evidence_ids": [0]}
+    raw = {"first_id": 0, "last_id": 1, "evidence_ids": [0, 1],
+           "setup_ids": [0], "payoff_ids": [1], "reaction_ids": [], "needs_context": False}
     proposals = model_proposals([raw, raw], rows[:2], {}, 7200)
     assert len(deduplicate(proposals)) == 1
 
@@ -241,8 +243,10 @@ def test_interrupted_model_analysis_reuses_completed_windows_and_separates_endpo
             self.calls.append(window[0]["id"])
             if self.fail and len(self.calls) == 2:
                 raise RuntimeError("fixture connection interrupted")
-            return [{"first_id": window[0]["id"], "last_id": window[0]["id"],
-                     "evidence_ids": [window[0]["id"]], "category": "other"}]
+            return [{"first_id": window[0]["id"], "last_id": window[1]["id"],
+                     "evidence_ids": [window[0]["id"], window[1]["id"]], "category": "other",
+                     "setup_ids": [window[0]["id"]], "payoff_ids": [window[1]["id"]],
+                     "reaction_ids": [], "needs_context": False}]
     initial = ControlledModel(fail=True)
     with pytest.raises(RuntimeError, match="interrupted"):
         analyze(store, source, segments, 150, Runner(), lambda *a: None, initial)

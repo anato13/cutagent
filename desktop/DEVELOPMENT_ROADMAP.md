@@ -1,5 +1,19 @@
 # Development roadmap
 
+## 0.4.0a2 — grounded reference maps
+
+Reference-map validation, transcript-derived candidate labels and safe reanalysis
+refresh are implemented and tested. A final real-model sample completed checked
+Auto Edit exports with persisted setup/payoff/reaction references. Model reasoning
+still needs labeled acceptance; there is no demonstrated general humor accuracy.
+
+Next: evaluate setup completeness and explanation support across more genuine
+conversations, including long-range callbacks and full recordings. Do not replace
+semantic acceptance with schema success or a second model's unsupported vote.
+Native Windows/RTX acceptance, semantic story/hook planning and advanced visual
+learning remain separate priorities in the alpha-1 roadmap below. High remains
+appropriate for evidence/selection work; Medium suits small UI/documentation fixes.
+
 ## 0.4.0a1 learning-system expansion
 
 The existing editor now has an experimental Auto Edit path and persistent

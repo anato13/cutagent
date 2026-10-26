@@ -1,5 +1,26 @@
 # Project audit — 2026-10-26
 
+## 0.4.0a2 — exchange references and reanalysis reliability
+
+Continues from 484b867; a pre-change branch and complete recovery bundle preserve
+alpha 1. SQLite schema 4 adds highlight exchange maps in the existing migration
+transaction; project JSON and dependencies are unchanged. Old reviewed and manually
+adjusted rows are preserved. Untouched unreviewed rows now refresh on reanalysis.
+
+New local-model requests include a JSON response schema constrained to supplied
+IDs, with independent client-side checks for role references, order and context
+assessment. New labels use source transcript snippets. Unverified model prose is
+explicitly labeled in the UI. Auto Edit skips legacy/stale maps, requests for more
+context and substantial overlap after boundary expansion. The manifest includes
+actual setup/payoff/reaction quotes without certifying their semantic labels.
+
+Reference validation, persistence, migration rollback and the real Qt/FFmpeg flow
+are VERIFIED_WORKING in Linux tests. Actual qwen3:8b inference with the final
+contract produced checked 55-second main and portrait videos from one genuine
+sample. Broad semantic quality remains PARTIALLY_IMPLEMENTED: a valid map can
+still contain a mistaken interpretation, and two other samples produced no
+candidates. See TEST_RESULTS.md for exact measurements and remaining limits.
+
 ## 0.4.0a1 — autonomous editing and persistent learning foundation
 
 Continues from b7c03d7; the prior state is preserved in branch

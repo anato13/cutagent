@@ -1,5 +1,20 @@
 # Engineering lessons
 
+Use structured output for shape, then independently validate source references.
+An actual model can obey the JSON schema and still misidentify the payoff or
+invent the reason. Keep raw interpretations visible as unverified, use quoted
+transcript labels, and leave human quality fields unset until reviewed.
+
+Avoid asking a model to maintain redundant citation lists. A validated setup,
+payoff or reaction ID is already a citation; derive its saved evidence from the
+supplied source row. Do not invent text, accept unknown IDs, or rewrite the raw
+response to hide what the model actually returned.
+
+Reanalysis must refresh untouched suggestions without erasing decisions. Preserve
+identity and all reviewed/manual changes while updating stale, unreviewed rows.
+Overlapping dialogue boundaries can create duplicate Shorts after initial model
+deduplication, so check overlap again after expanding the selected ranges.
+
 Automatic selection is not approval. Keep its provenance distinct, validate
 evidence against the current transcript, preserve complete boundary lines, and
 reject a callback when the cited setup is absent. Budget limits should skip whole

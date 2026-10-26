@@ -27,6 +27,14 @@ uploaded to YouTube. First-run operation checks and local inference can take tim
 Cancel is available; **Jobs & clip feedback → Resume** retries using analysis
 caches, with rendering starting again. See LEARNING_SYSTEM.md for recovery limits.
 
+In alpha 2, **AI Clip Finder** shows the quoted setup, payoff and reaction behind
+new suggestions. Model explanations are labeled unverified. Auto Edit skips
+suggestions missing those references or asking for more context. If an older
+unreviewed suggestion has no exchange map, run analysis again. Your approvals,
+rejections and manually changed clips stay intact. New automatic clip labels
+quote your transcript rather than using the model's headline. Transcription errors
+can still appear in those quotes.
+
 For **Learning library**, import a tutorial, authorized creator video or your own
 finished video; select its type and click **Index selected recording**. Search
 its dialogue, inspect sampled frames and possible scene changes, preview examples,

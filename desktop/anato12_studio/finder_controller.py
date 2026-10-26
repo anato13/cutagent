@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 
 from .finder_jobs import make_thumbnail, run_pipeline, thumbnail_path
 from .drafts import DraftOptions, create_bundle
+from .exchange import describe_exchange
 from .finder_ui import DraftDialog
 from .local_model import LocalModel
 from .model import Clip, Segment, timestamp
@@ -95,10 +96,12 @@ class FinderController:
         p.end.setValue(item["end"])
         p.title.setText(item["title"])
         evidence = json.loads(item["evidence"])
+        explanation_label = 'Model explanation (unverified)' if item['method'] == 'local model order' else 'Reason'
         text = (f'Recording: {Path(self.store.get_source(item["source"])["path"]).name}\n'
                 f'Method: {item["method"]} (uncalibrated review order)\n'
-                f'Reason: {item["reason"]}\n'
-                f'Approved category preference adjustment: {self.store.preferences().get(item["category"], 0)}\n\n'
+                f'{explanation_label}: {item["reason"]}\n')
+        text += (f'Category preference adjustment: {self.store.preferences().get(item["category"], 0)}\n\n'
+                + (describe_exchange(item) + '\n\n' if item['method'] == 'local model order' else '') +
                 f'Selected transcript:\n{item["excerpt"]}\n\nSource evidence:\n')
         text += "\n".join(f'{timestamp(r["start"])} · {r["text"]}' for r in evidence)
         p.details.setPlainText(text)

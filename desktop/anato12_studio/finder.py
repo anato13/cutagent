@@ -1,14 +1,15 @@
 """Absolute-time analysis windows, evidence validation and real transcript search."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import bisect
 import hashlib
 import json
 import re
-from .model_context import bounded_windows, PROMPT_VERSION
+from .model_context import bounded_windows, HIGHLIGHT_CATEGORIES, PROMPT_VERSION
+from .exchange import ROLES, quote_title, validate_structure
 
 
-ANALYSIS_VERSION = "finder-feedback-1"
-CATEGORIES = {"misunderstanding", "argument", "surprise", "banter", "callback", "awkward", "gameplay", "other"}
+ANALYSIS_VERSION = "finder-exchange-2"
+CATEGORIES = set(HIGHLIGHT_CATEGORIES)
 
 
 @dataclass
@@ -21,6 +22,7 @@ class Proposal:
     evidence: list[dict]
     rank: float
     method: str
+    structure: dict = field(default_factory=dict)
 
 
 def rows_for(segments):
@@ -108,13 +110,20 @@ def model_proposals(raw, window, repeats, duration):
         if not isinstance(item, dict):
             continue
         first, last = item.get("first_id"), item.get("last_id")
-        ids = item.get("evidence_ids")
+        ids = item.get("evidence_ids", [])
         if (type(first) is not int or type(last) is not int or first not in current or last not in current
-                or first > last or not isinstance(ids, list) or not ids
+                or first > last or not isinstance(ids, list)
                 or any(type(i) is not int or i not in allowed for i in ids)):
             continue
-        if not any(first <= i <= last for i in ids):
+        try:
+            structure = validate_structure(item, allowed)
+        except ValueError:
             continue
+        # Role IDs are themselves citations. Copy their real source rows instead of
+        # requiring the model to repeat every citation in a redundant second list.
+        role_ids = {i for role in ROLES for i in structure[role]}
+        structure['role_evidence_added'] = sorted(role_ids - set(ids))
+        ids = sorted(set(ids) | role_ids)
         category = item.get("category", "other")
         if not isinstance(category, str) or category not in CATEGORIES:
             category = "other"
@@ -122,8 +131,9 @@ def model_proposals(raw, window, repeats, duration):
         evidence = [allowed[i] for i in dict.fromkeys(ids)]
         candidate = proposal(current[first], current[last], evidence, duration, category,
                              str(item.get("reason", ""))[:1500], 10-index, "local model order",
-                             str(item.get("title", current[first]["text"]))[:180])
+                             quote_title(structure, allowed))
         if candidate:
+            candidate.structure = {**structure, 'model_title': str(item.get('title', ''))[:180]}
             proposals.append(candidate)
     return proposals
 
@@ -196,6 +206,7 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
                 valid = model_proposals(raw, window, relevant, duration)
                 if raw and not valid:
                     raise ValueError("The model proposed clips without valid source evidence. "
+                                     "Each needs ordered setup/payoff references and a context assessment. "
                                      "Try another model or review the transcript; this is not a no-match result.")
                 if fresh:
                     store.cache_put(key, source, "analysis_window", raw)
@@ -211,5 +222,5 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
             [item.method, query.casefold(), round(item.start, 2), round(item.end, 2)]).encode()).hexdigest()
         excerpt = "\n".join(r["text"] for r in rows if r["end"] > item.start and r["start"] < item.end)
         identifiers.append(store.upsert_highlight(source, signature, item.start, item.end, item.title,
-                           item.category, item.reason, excerpt, item.evidence, item.method, item.rank))
+                           item.category, item.reason, excerpt, item.evidence, item.method, item.rank, item.structure))
     return identifiers

@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 
 from .finder import callbacks, deduplicate, model_proposals, rows_for
-from .model_context import bounded_windows, MAX_INPUT_BYTES, CONTEXT_TOKENS, OUTPUT_TOKENS, PROMPT_VERSION
+from .model_context import bounded_windows, response_schema, MAX_INPUT_BYTES, CONTEXT_TOKENS, OUTPUT_TOKENS, PROMPT_VERSION
 from .local_model import LocalModel
 from .model import Project
 from .video import Runner
@@ -64,6 +64,8 @@ def evaluate(project_path, output, client, media_id=None, query="", progress=pri
             report["windows"].append({"first_segment_id": window[0]["id"],
                 "last_segment_id": window[-1]["id"], "wall_seconds": round(elapsed, 3),
                 "content_bytes": chunk.content_bytes, "omitted_callback_links": chunk.omitted_callback_links,
+                "response_schema_bytes": len(json.dumps(response_schema(window, context),
+                    ensure_ascii=False, separators=(',', ':')).encode('utf-8')),
                 "server_metrics": dict(getattr(client, "last_metrics", {})),
                 "raw_proposals": raw,
                 "outcome": "invalid_evidence" if raw and not valid else "candidates" if valid else "no_proposals",
@@ -72,6 +74,8 @@ def evaluate(project_path, output, client, media_id=None, query="", progress=pri
             report["windows_with_invalid_evidence"] = sum(
                 w["outcome"] == "invalid_evidence" for w in report["windows"])
             report["candidates"] = [{**asdict(p), "human_decision": None,
+                "human_checks": {name: None for name in ('setup_complete', 'payoff_complete',
+                    'reaction_complete', 'explanation_supported', 'worth_keeping')},
                 "human_notes": "", "excerpt": "\n".join(r["text"] for r in rows
                     if r["end"] > p.start and r["start"] < p.end)}
                 for p in deduplicate(candidates)]

@@ -94,7 +94,12 @@ See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
 
 ## Current limits
 
-Version 0.4.0a1 adds experimental Auto Edit and the learning foundation described
+Version 0.4.0a2 adds source-derived candidate labels, explicit setup/payoff/reaction
+references, constrained local-model JSON responses and conservative context checks.
+Role meanings and free-form explanations are still unverified. Untouched unreviewed
+suggestions can refresh during reanalysis; reviewed or manually adjusted ones stay.
+
+Version 0.4.0a1 added experimental Auto Edit and the learning foundation described
 in LEARNING_SYSTEM.md. It does not yet understand tutorial demonstrations,
 reliably learn comedic structure, or construct semantic hooks/stories. Saved URLs
 are unviewed references. Native Windows acceptance remains outstanding.

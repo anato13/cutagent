@@ -1,5 +1,68 @@
 # Test results and verification history
 
+## Version 0.4.0a2 — exchange reference checks
+
+Final extracted-package suite: **177 passed, 0 failed, 0 skipped in 81.69 seconds**.
+The tests ran from the extracted directory with its code first on PYTHONPATH and
+an isolated data profile. The final 78-file source ZIP matches that tested package
+except for this updated verification note. Private recordings, evaluation reports,
+model weights and user profiles are excluded.
+
+Workspace suite before the final citation-union adjustment: **176 passed,
+0 failed, 0 skipped in 86.45 seconds**. After that adjustment, the affected exchange,
+local-model, context-budget and evaluation tests passed: **63 passed in 4.12 seconds**.
+Ruff, Git whitespace and the offline dependency-lock check passed.
+
+New regressions cover invalid/missing/unknown/out-of-order role IDs, missing
+context assessments, source-transcript changes, valid callback references versus
+omitted references, substantial expanded-range overlap, and deriving exact source
+evidence from role citations without rewriting the raw response. Reviewed and
+manually adjusted fields remain unchanged by reanalysis; untouched
+unreviewed rows refresh in place. Schema-3 migration failure rolls back the new
+column/version while preserving legacy approvals. The real desktop test checks
+the displayed unverified explanation and quoted setup information. Legacy
+approved highlights remain usable; legacy unreviewed ones require reanalysis.
+
+The evaluator now includes unset setup/payoff/reaction/explanation/keep-quality
+fields for later human review, and reports response-schema bytes separately from
+the 6,000-byte message-content budget. Neither is an exact tokenizer measurement.
+The server's actual token/time counters remain separate from editorial quality.
+
+### Actual model behavior
+
+All runs used local qwen3:8b Q4_K_M, digest
+`500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`,
+on the cloud CPU, using the existing genuine transcript samples. No human
+decisions or humor scores were fabricated.
+
+An initial role-only prompt returned an overlong setup list and overlapping
+payoff/reaction references for the photo sample; the app rejected it. Adding
+the response schema produced an ordered map but a targeted result omitted
+reaction IDs from its redundant extra-evidence list. The final contract derives
+evidence directly from all validated citations and still rejects unknown IDs.
+
+With final prompt/schema `evidence-roles-schema-6`, **Auto Edit completed a
+55-second main MP4 and a 55-second portrait Short in 91.010 seconds**, using source
+461.100–516.100 seconds. The original proposed range was 478.108–516.092 seconds;
+whole-line boundary preservation included earlier intersecting dialogue. Both
+outputs passed dimensions, duration, audio stream, full decode and exact SRT
+checks. Source fingerprint and unreviewed status were unchanged. The manifest
+retained actual setup/payoff/reaction text and semantic quality NOT_EVALUATED.
+
+The final date-claim and ending evaluations returned no candidates (19.485 and
+5.440 seconds); the targeted photo query returned one valid candidate (48.066
+seconds). No invalid-evidence windows occurred in those final evaluations. These
+are bounded mechanics results, not a labeled precision/recall comparison. In
+particular, earlier structured responses still described questionable causal
+connections and agreement; B20 remains open. Model-suggested roles can also be
+wrong despite referencing real dialogue.
+
+Private reports are in `.verification/exchange-final-real/`; exploratory failures
+are retained separately in `.verification/exchange-real/` and
+`.verification/exchange-schema-real/`. None are shipped in the source ZIP.
+Native Windows/RTX, genuine full-recording acceptance, calibrated humor quality
+and semantic story planning remain NOT_TESTED or NOT_IMPLEMENTED as appropriate.
+
 ## Version 0.4.0a1 — Auto Edit and learning foundation
 
 Final extracted-package suite: **144 passed, 0 failed, 0 skipped in 83.04 seconds**.

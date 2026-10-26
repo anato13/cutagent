@@ -68,6 +68,13 @@ def run_learning(recording, output, url):
         assert len(list(output.glob('Anato12-auto-*'))) == 1
         assert asdict(w.project) == before and w.dirty == was_dirty
         assert learning.store.jobs()[0]['status'] == 'completed'
+        w.finder_controller.refresh_all()
+        w.finder.table.selectRow(0)
+        app.processEvents()
+        evidence_text = w.finder.details.toPlainText()
+        assert 'Model explanation (unverified)' in evidence_text
+        assert 'Model-suggested roles' in evidence_text and 'Setup:' in evidence_text
+        assert 'Keep this whole setup with captions' in evidence_text
         w.grab().save(str(output / 'auto-ui.png'))
     finally:
         if w.job:

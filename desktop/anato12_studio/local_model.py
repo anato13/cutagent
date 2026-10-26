@@ -2,7 +2,7 @@
 import json
 import hashlib
 import urllib.parse
-from .model_context import checked_messages, CONTEXT_TOKENS, OUTPUT_TOKENS
+from .model_context import checked_messages, response_schema, CONTEXT_TOKENS, OUTPUT_TOKENS
 from .local_transport import request_json
 
 
@@ -71,10 +71,12 @@ class LocalModel:
         details = self.request("/api/show", {"model": self.model}, runner)
         if details.get("remote_host") or details.get("remote_model"):
             raise ValueError("This model declares a remote backend. Only downloaded local models are enabled.")
-        payload = {"model": self.model, "stream": False, "format": "json",
+        payload = {"model": self.model, "stream": False, "format": response_schema(rows, callbacks),
                    "options": {"temperature": .1, "num_ctx": CONTEXT_TOKENS, "num_predict": OUTPUT_TOKENS},
                    "messages": messages}
-        capabilities = details.get("capabilities") or []
+        capabilities = details.get("capabilities")
+        if capabilities is None:
+            capabilities = []
         if not isinstance(capabilities, list) or any(not isinstance(c, str) for c in capabilities):
             raise ValueError("The local server returned invalid model capabilities. Reconnect or update Ollama.")
         if "thinking" in capabilities:
@@ -91,9 +93,11 @@ class LocalModel:
         value = json.loads(message["content"])
         if not isinstance(value, dict) or not isinstance(value.get("highlights"), list):
             raise ValueError("The model did not return the expected highlight schema.")
+        if len(value['highlights']) > 4:
+            raise ValueError('The model exceeded the four-candidate limit; this response was not cached.')
         # Server-reported measurements, not estimates of quality or GPU usage.
         self.last_metrics = {key: response[key] for key in (
             "total_duration", "load_duration", "prompt_eval_count", "prompt_eval_duration",
             "eval_count", "eval_duration")
             if type(response.get(key)) is int and response[key] >= 0}
-        return value["highlights"][:4]
+        return value["highlights"]

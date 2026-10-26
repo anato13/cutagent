@@ -25,6 +25,9 @@ def test_http_evaluation_report_retains_evidence_without_claiming_quality(tmp_pa
     assert report["humor_quality"] == "NOT_EVALUATED"
     assert report["model_identity"]["digest"] == "fixture-sha256"
     assert report["candidates"] and report["candidates"][0]["evidence"][0]["text"] == "dialogue 0"
+    assert report['candidates'][0]['structure']['setup_ids'] == [0]
+    assert all(value is None for value in report['candidates'][0]['human_checks'].values())
+    assert report['windows'][0]['response_schema_bytes'] > 0
     assert report["windows"][1]["rejected_proposals"] == 1  # fixture's old IDs are invalid in second window
     assert report["windows"][1]["raw_proposals"][0]["first_id"] == 0
     assert report["windows"][1]["server_metrics"] == {}  # fixture supplied no timing/token counts
@@ -45,7 +48,8 @@ def test_failure_report_preserves_completed_windows(tmp_path):
             self.count += 1
             if self.count == 2:
                 raise RuntimeError("fixture outage")
-            return [{"first_id": 0, "last_id": 1, "evidence_ids": [0, 1]}]
+            return [{"first_id": 0, "last_id": 1, "evidence_ids": [0, 1],
+                     "setup_ids": [0], "payoff_ids": [1], "reaction_ids": [], "needs_context": False}]
     with pytest.raises(RuntimeError, match="outage"):
         evaluate(make_project(tmp_path), tmp_path / "report", Failing(), progress=lambda *a: None)
     report = json.loads((tmp_path / "report/model-evaluation.json").read_text())

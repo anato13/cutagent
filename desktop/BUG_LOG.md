@@ -1,5 +1,27 @@
 # Bug log
 
+B31 — VERIFIED_WORKING: reanalysis previously returned stale unreviewed rows even
+after the transcript/model response changed. It now refreshes only untouched
+unreviewed suggestions, keeping their IDs and preserving all reviewed or manually
+adjusted data. Regression exercises approved, rejected and manually adjusted rows.
+
+B32 — VERIFIED_WORKING: new model-generated labels could present an invented
+headline as a clip name. Labels now use quoted transcript snippets; raw model
+headlines remain in provenance, and the explanation is explicitly unverified.
+This avoids presenting generated headlines as facts; it does not solve B20.
+
+B33 — VERIFIED_WORKING: Auto Edit now rejects missing/stale exchange maps and
+explicitly context-dependent proposals, and removes substantial overlap after
+boundary expansion. Roles cite source rows directly; a missing duplicate in the
+extra evidence list does not discard an otherwise valid source reference.
+
+B34 — VERIFIED_WORKING: falsy malformed model capability metadata (0, false,
+empty object/string) no longer masquerades as an empty capability list. Responses
+over the four-candidate limit are rejected instead of silently truncated.
+
+Still OPEN: B20, unsupported explanations and wrong role meanings despite valid
+references. Structured JSON controls shape, not truth, humor or story quality.
+
 B27 — VERIFIED_WORKING (Linux regression): Auto Edit now extends boundaries to
 retain intersecting transcript lines, rejects stale/missing evidence and absent
 callback setup, and respects rejected overlaps. This prevents those structural

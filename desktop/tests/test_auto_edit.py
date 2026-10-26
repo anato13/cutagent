@@ -15,8 +15,11 @@ from test_local_model import endpoint  # noqa: F401
 
 
 def candidate(media, identifier='h', start=2, end=8, **overrides):
+    last = len(media.transcript) - 1
     return {'id': identifier, 'source': 's', 'status': 'unreviewed', 'start': start, 'end': end,
             'rank': 10, 'category': 'banter', 'title': 'Complete exchange', 'method': 'local model order',
+            'structure': json.dumps({'version': 1, 'first_id': 0, 'last_id': last,
+                'setup_ids': [0], 'payoff_ids': [last], 'reaction_ids': [], 'needs_context': False}),
             'evidence': json.dumps(rows_for(media.transcript)), **overrides}
 
 
@@ -42,13 +45,15 @@ def test_selection_expands_whole_lines_keeps_evidence_and_budget():
     ({'status': 'rejected'}, 'rejected'),
 ])
 def test_auto_selection_rejects_missing_context_and_untrusted_evidence(change, reason):
-    media = Media('m', 'source.mp4', 100, 320, 180, transcript=[Segment(3, 7, 'real dialogue')])
+    media = Media('m', 'source.mp4', 100, 320, 180,
+                  transcript=[Segment(3, 4, 'real setup'), Segment(5, 7, 'real payoff')])
     selected, skipped = select_ranges(media, 's', [candidate(media, **change)], [], {}, AutoOptions())
     assert not selected and reason in skipped[0]['reason']
 
 
 def test_rejected_ranges_apply_even_to_new_model_candidates():
-    media = Media('m', 'source.mp4', 100, 320, 180, transcript=[Segment(3, 7, 'real dialogue')])
+    media = Media('m', 'source.mp4', 100, 320, 180,
+                  transcript=[Segment(3, 4, 'real setup'), Segment(5, 7, 'real payoff')])
     selected, skipped = select_ranges(media, 's', [candidate(media)], [{'start': 7, 'end': 8}], {}, AutoOptions())
     assert not selected and 'rejected' in skipped[0]['reason']
 

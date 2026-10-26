@@ -46,8 +46,8 @@ suitable setting; do not claim to see/change the selected setting or live allowa
 Image generation is last, after higher-priority milestones have been tested and
 accepted. Do not add unrelated optional features ahead of clip-finder reliability.
 
-Schema 3 adds learning evidence/events and capability tests without changing
-schema-2 feedback consent. Imported tutorial/creator text is never executable.
+Schema 4 retains schema-3 learning evidence/events and capability tests, and adds
+highlight.structure without changing schema-2 feedback consent. Imported tutorial/creator text is never executable.
 Keep scene-change measurements and exact text matches explicitly unverified as
 editing/comedy judgments. Only confirmed own-video notes with separate use_note
 consent enter the shared eight-note context; revocation/deletion clears caches.
@@ -57,6 +57,16 @@ overlaps, test the required built-in operations against the current engine, and
 validate every staged output before publishing the bundle. Never equate these
 checks with story quality. Resume retries analysis from caches and rerenders;
 it does not resume encoded batches or guarantee recovery after power loss.
+
+New model candidates require ordered setup/payoff/reaction references and an
+explicit needs_context boolean. Role IDs are citations: derive their saved evidence
+from supplied rows even if the redundant evidence_ids list omits them. Never invent
+quotes or role meaning. New displayed labels use source snippets; model prose is
+explicitly unverified. Auto Edit must reject stale maps, requested extra context,
+and substantially overlapping expanded exchanges. Refresh only untouched unreviewed
+rows during reanalysis; preserve reviewed or manually adjusted rows. Changes to
+the response schema or prompt must update PROMPT_VERSION; schema metadata bytes
+are separate from the message-content budget and are not tokenizer measurements.
 
 Model cache keys must include installed digest/configuration. Never cache an
 incomplete response or one whose proposals all have invalid source evidence.

@@ -6,6 +6,7 @@ from pathlib import Path
 import time
 
 from .drafts import DraftOptions, create_bundle
+from .exchange import exchange_evidence
 from .finder import rows_for
 from .finder_jobs import run_pipeline
 from .local_model import LocalModel
@@ -48,7 +49,6 @@ def select_ranges(media, source, candidates, rejected, preferences, options):
     for segment in media.transcript:
         segment.validate(media.duration)
     rows = rows_for(media.transcript)
-    actual = {r['id']: r for r in rows}
     chosen, skipped = [], []
     ordered = sorted(candidates, key=lambda h: (h['status'] != 'approved',
         -(h['rank'] + preferences.get(h['category'], 0)), h['start'], h['id']))
@@ -62,16 +62,16 @@ def select_ranges(media, source, candidates, rejected, preferences, options):
                 reason = 'Unreviewed cue/search results are not autonomous model selections'
             else:
                 try:
-                    evidence = json.loads(item['evidence'])
-                    valid = isinstance(evidence, list) and bool(evidence) and all(
-                        isinstance(e, dict) and type(e.get('id')) is int and actual.get(e['id']) == e
-                        for e in evidence)
-                    if not valid:
-                        reason = 'Evidence no longer matches this transcript'
-                    elif any(e['start'] < item['start'] or e['end'] > item['end'] for e in evidence):
+                    item['exchange'] = exchange_evidence(item, rows)
+                    if item['exchange']['needs_context']:
+                        reason = 'The model requested additional context; do not export this exchange unattended'
+                    elif any(e['start'] < item['start'] or e['end'] > item['end']
+                             for e in json.loads(item['evidence'])):
                         reason = 'Required setup/callback evidence is outside the selected range'
-                except (ValueError, TypeError, KeyError):
-                    reason = 'Invalid transcript evidence'
+                except (ValueError, TypeError, KeyError) as error:
+                    reason = str(error) or 'Invalid transcript evidence'
+        else:
+            item['exchange'] = {'reference_check': 'human_approved', 'semantic_quality': 'NOT_EVALUATED'}
         if not reason:
             try:
                 Clip(media.id, item['start'], item['end']).validate(media)
@@ -95,6 +95,9 @@ def select_ranges(media, source, candidates, rejected, preferences, options):
                     reason = 'Overlaps a range you rejected'
                 elif any(h['start'] <= item['start'] and h['end'] >= item['end'] for h in chosen):
                     reason = 'Already covered by a selected range'
+                elif any(max(0, min(h['end'], item['end']) - max(h['start'], item['start'])) >
+                         .5 * min(h['end']-h['start'], item['end']-item['start']) for h in chosen):
+                    reason = 'Expanded dialogue substantially overlaps an already selected exchange'
                 elif len(chosen) >= options.max_ranges or union_duration(chosen + [item]) > options.max_main_seconds:
                     reason = 'Would exceed the selected budget; dialogue was not truncated'
             except (ValueError, TypeError):
@@ -139,8 +142,10 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         selected, skipped = select_ranges(media, source, list(by_id.values()), store.rejected_for_source(source),
                                            store.preferences(), options)
         if not selected:
+            reasons = '; '.join(dict.fromkeys(s['reason'] for s in skipped))[:1800]
             raise ValueError('No usable complete exchanges were found. No video was created. '
-                             'Inspect the transcript/model results or approve a complete range and rerun.')
+                             'Inspect the transcript/model results or approve a complete range and rerun.' +
+                             (' Selection checks: ' + reasons if reasons else ''))
         if not any(Clip(media.id, h['start'], h['end']).frame_range()[1] <= options.max_short_seconds
                    for h in selected):
             raise ValueError('No complete range fits the Short limit. Increase the limit and rerun; no dialogue was truncated.')
@@ -152,7 +157,8 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         def check(folder, manifest):
             verify_bundle(folder, manifest, ffmpeg, ffprobe, runner, lambda v, m: report(.9+v*.09, m))
         details = {'status': 'EXPERIMENTAL', 'job': job_id, 'engine': engine, 'tested_recipes': recipes,
-                   'selection': [{k: h[k] for k in ('id', 'start', 'end', 'status', 'original_range')} for h in selected],
+                   'selection': [{k: h[k] for k in ('id', 'start', 'end', 'status', 'original_range', 'exchange')}
+                                 for h in selected],
                    'skipped': skipped, 'preferences': store.model_preferences(),
                    'model': params['model'], 'model_identity': identity, 'query': params.get('query', ''),
                    'story_strategy': 'Chronological complete exchanges; no semantic hook or narrative rewriting.',

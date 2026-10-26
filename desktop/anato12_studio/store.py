@@ -45,7 +45,7 @@ class Store(KnowledgeMixin):
         self.path = self.root / "studio.sqlite3"
         with self.connect() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 3:
+            if version > 4:
                 raise ValueError("This app-data database was made by a newer Studio. Keep it and upgrade.")
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS sources (
@@ -76,7 +76,10 @@ class Store(KnowledgeMixin):
             if "use_note" not in columns:
                 db.execute("ALTER TABLE feedback ADD COLUMN use_note INTEGER NOT NULL DEFAULT 0")
             self.initialize_knowledge(db)
-            db.execute("PRAGMA user_version=3")
+            columns = {r["name"] for r in db.execute("PRAGMA table_info(highlights)")}
+            if "structure" not in columns:
+                db.execute("ALTER TABLE highlights ADD COLUMN structure TEXT NOT NULL DEFAULT '{}'")
+            db.execute("PRAGMA user_version=4")
 
     @contextmanager
     def connect(self):
@@ -119,20 +122,26 @@ class Store(KnowledgeMixin):
                        (key, source, kind, json.dumps(payload, ensure_ascii=False), time.time()))
 
     def upsert_highlight(self, source, signature, start, end, title, category, reason,
-                         excerpt, evidence, method, rank):
+                         excerpt, evidence, method, rank, structure=None):
         now = time.time()
         identifier = uuid.uuid4().hex
         with self.connect() as db:
-            old = db.execute("SELECT id FROM highlights WHERE source=? AND signature=?",
+            old = db.execute("SELECT id,status,edited FROM highlights WHERE source=? AND signature=?",
                              (source, signature)).fetchone()
             if old:
                 # Reanalysis never overwrites a reviewed or manually adjusted highlight.
+                if old['status'] == 'unreviewed' and not old['edited']:
+                    db.execute('''UPDATE highlights SET start=?,end=?,title=?,category=?,reason=?,excerpt=?,
+                        evidence=?,method=?,rank=?,structure=?,updated=? WHERE id=?''',
+                        (start, end, title[:180], category, reason, excerpt, json.dumps(evidence, ensure_ascii=False),
+                         method, rank, json.dumps(structure or {}, ensure_ascii=False), now, old['id']))
                 return old["id"]
             db.execute("""INSERT INTO highlights
-                (id,source,signature,start,end,title,category,reason,excerpt,evidence,method,rank,updated)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (id,source,signature,start,end,title,category,reason,excerpt,evidence,method,rank,updated,structure)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                        (identifier, source, signature, start, end, title[:180], category, reason,
-                        excerpt, json.dumps(evidence, ensure_ascii=False), method, rank, now))
+                        excerpt, json.dumps(evidence, ensure_ascii=False), method, rank, now,
+                        json.dumps(structure or {}, ensure_ascii=False)))
         return identifier
 
     def highlights(self, source=None, status="all", order="rank"):
