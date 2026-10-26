@@ -15,6 +15,7 @@ import uuid
 from typing import Callable
 
 from .model import Clip, Media, PROFILES, write_ass, write_srt
+from .export_files import publish_outputs
 
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
@@ -183,6 +184,8 @@ class ExportPlan:
         targets = [self.destination]
         if self.save_srt:
             targets.append(self.destination.with_suffix(".srt"))
+        if any(p.is_dir() for p in targets):
+            raise ValueError("An export destination is a folder. Choose a filename.")
         # Protect every imported source from either output, including aliases.
         for media in self.media.values():
             source = Path(media.path)
@@ -191,7 +194,7 @@ class ExportPlan:
                     raise ValueError("Choose a new filename. An export cannot replace a source recording.")
                 if source.exists() and target.exists() and source.samefile(target):
                     raise ValueError("The output points to a source recording.")
-        if not self.overwrite and any(p.exists() for p in targets):
+        if not self.overwrite and any(p.exists() or p.is_symlink() for p in targets):
             raise FileExistsError("An output file already exists. Choose a new filename.")
 
 
@@ -206,6 +209,7 @@ def export_video(plan: ExportPlan, ffmpeg: str, runner: Runner,
             raise RuntimeError("This FFmpeg build cannot burn captions. Disable burned-in captions "
                                "and export an SRT, or install a full FFmpeg build with libass.")
     temporary_output = plan.destination.with_name(f".anato12-{uuid.uuid4().hex}.mp4")
+    temporary_srt = temporary_output.with_suffix(".srt")
     total = sum(c.frame_range()[1] for c in plan.clips)
     try:
         with tempfile.TemporaryDirectory(prefix="anato12-") as temp:
@@ -250,20 +254,29 @@ def export_video(plan: ExportPlan, ffmpeg: str, runner: Runner,
                 raise RuntimeError("The output was empty.")
             # Recheck immediately before committing; never replace a source.
             plan.validate()
-            srt = folder / "captions.srt"
+            pairs = [(temporary_output, plan.destination)]
             if plan.save_srt:
-                write_srt(srt, plan.clips, plan.media)
-            os.replace(temporary_output, plan.destination)
-            if plan.save_srt:
-                # Copy through a sibling so a cross-drive TEMP folder is supported on Windows.
-                sidecar = plan.destination.with_suffix(".srt")
-                part = sidecar.with_name(f".anato12-{uuid.uuid4().hex}.srt")
-                try:
-                    shutil.copyfile(srt, part)
-                    os.replace(part, sidecar)
-                finally:
-                    part.unlink(missing_ok=True)
-        progress(1, "Export complete")
+                # Stage captions beside the video before touching either old output.
+                write_srt(temporary_srt, plan.clips, plan.media)
+                pairs.append((temporary_srt, plan.destination.with_suffix(".srt")))
+            runner.check()
+            plan.validate()
+            retained = publish_outputs(pairs, runner, plan.overwrite)
+        message = "Export complete"
+        if retained:
+            message += "; old backup files could not be removed: " + ", ".join(map(str, retained))
+        progress(1, message)
         return str(plan.destination)
     finally:
-        temporary_output.unlink(missing_ok=True)
+        # Keep a publication/recovery error (and its backup paths) visible even
+        # if the same filesystem failure also prevents temporary-file cleanup.
+        failing = sys.exc_info()[0] is not None
+        cleanup_errors = []
+        for temporary in (temporary_output, temporary_srt):
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError as error:
+                cleanup_errors.append(error)
+        if cleanup_errors and not failing:
+            raise RuntimeError("Export files were saved, but temporary-file cleanup failed: " +
+                               str(cleanup_errors[0])) from cleanup_errors[0]

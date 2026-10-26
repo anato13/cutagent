@@ -1,5 +1,22 @@
 # Test results and verification history
 
+## Version 0.3.0a7 paired export recovery
+
+Final extracted-package suite: **117 passed, 0 failed, 0 skipped in 30.96 seconds**.
+The final 67-file source ZIP matches the tested extraction except for this updated
+verification note. Recordings, model weights and private profiles are excluded.
+
+Workspace suite: **117 passed, 0 failed, 0 skipped in 30.44 seconds**. Ruff passed.
+Fault injection covers failure/cancellation on the second file, cancellation after
+both files are installed, refusal of an unapproved overwrite, failed recovery
+retaining original backups, and backup-cleanup failures preserving the new pair.
+A real FFmpeg export with an injected caption-publication failure restores the
+previous MP4/SRT bytes and removes temporary outputs. Existing media and desktop
+regressions also pass. Ordinary-error recovery is VERIFIED_WORKING in Linux.
+Power loss/process-kill recovery is NOT_IMPLEMENTED. Windows locking, physical
+disk faults, GPU performance and AI quality were NOT_TESTED in this pass.
+
+
 ## Version 0.3.0a6 reliability fixes
 
 Workspace suite: **107 passed, 0 failed, 0 skipped in 31.04 seconds**.

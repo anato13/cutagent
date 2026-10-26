@@ -1,5 +1,8 @@
 # Bug log
 
+B26 — Export publication could replace an existing MP4 before caption copying/replacement failed, leaving mismatched versions. Both files are now staged first; sibling backups support rollback on ordinary errors and cancellation. Failed recovery preserves originals in named backups and reports their paths. Process termination/power-loss recovery is not implemented.
+
+
 B23 — Relinking now validates every existing clip and caption against the actual new duration before changing the project. Invalid relinks preserve the entire prior state.
 
 B24 — Failed analysis retains its last completed progress instead of resetting to zero.

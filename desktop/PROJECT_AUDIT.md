@@ -1,5 +1,8 @@
 # Project audit — 2026-10-26
 
+Version 0.3.0a7 continues from 59cbc0b with recoverable MP4/SRT publication. Prior outputs are renamed to sibling backups, then restored if publication fails or is cancelled. Successful publication removes backups where permitted. No dependency, project or database schema changes. This is ordinary-error recovery, not atomic multi-file persistence across power loss.
+
+
 Version 0.3.0a6 continues from b925fbc: transactional relinking validation, retained failure progress, and consistent new-project caption defaults. No dependency/schema change. Native Windows/GPU acceptance remains NOT_TESTED; semantic quality remains PARTIALLY_IMPLEMENTED.
 
 

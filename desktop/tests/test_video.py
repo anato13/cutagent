@@ -103,3 +103,27 @@ def test_burned_captions_real_video(tmp_path, recording, binaries):
     export_video(ExportPlan({"m": media}, [Clip("m", 0, .5)], out, burn_captions=True),
                  binaries[0], Runner())
     assert out.exists() and out.with_suffix(".srt").exists()
+
+
+def test_real_export_caption_publish_failure_restores_existing_pair(tmp_path, recording, binaries, monkeypatch):
+    import os
+    from pathlib import Path
+    media = media_for(recording, binaries)
+    media.transcript = [Segment(0, 1, 'Caption')]
+    destination = tmp_path/'existing.mp4'
+    sidecar = destination.with_suffix('.srt')
+    destination.write_bytes(b'previous video')
+    sidecar.write_bytes(b'previous captions')
+    replace = os.replace
+    def fail_captions(src, dst):
+        if (Path(dst) == sidecar and Path(src).name.startswith('.anato12-')
+                and not Path(src).name.startswith('.anato12-backup-')):
+            raise OSError('injected caption publish failure')
+        return replace(src, dst)
+    monkeypatch.setattr(os, 'replace', fail_captions)
+    with pytest.raises(OSError, match='caption publish failure'):
+        export_video(ExportPlan({'m': media}, [Clip('m', 0, .2)], destination, overwrite=True),
+                     binaries[0], Runner())
+    assert destination.read_bytes() == b'previous video'
+    assert sidecar.read_bytes() == b'previous captions'
+    assert not list(tmp_path.glob('.anato12-*'))

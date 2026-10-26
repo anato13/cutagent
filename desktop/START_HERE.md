@@ -78,6 +78,13 @@ The app joins checked clips into one MP4 in list order. If the clip list is empt
 it exports the current range. Export produces H.264 video at 30 fps with AAC audio:
 1920×1080 for YouTube or 1080×1920 for Shorts. You can cancel an export.
 
+When replacing an MP4 and its SRT, Studio prepares both files before replacing
+either. If a normal save error or cancellation interrupts replacement, it attempts
+to restore the previous pair. If a locked file prevents recovery, the error names
+the saved originals. Keep those .anato12-backup-... files until you recover them.
+A computer crash or forced shutdown can leave backups/partial outputs; automatic
+recovery after those interruptions is not implemented.
+
 Use **File → Save project** to save your clip list. Projects end in `.anato12.json`.
 They contain edit decisions and captions, not copies of your recordings. Add your
 chosen range to the clip list before saving. If a recording moves, use

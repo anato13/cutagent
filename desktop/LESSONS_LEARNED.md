@@ -1,5 +1,8 @@
 # Engineering lessons
 
+Atomic replacement of one file does not make an MP4/SRT pair transactional. Stage both before touching old outputs, preserve originals through all file swaps, and test failures between swaps. Recovery itself can fail: retain backups, report their locations, and do not mask that error with a later cleanup failure.
+
+
 A similar recording duration is not enough to validate a relink: even a half-second difference can invalidate a final clip or caption. Validate a detached candidate before replacing live state, then store its actual duration. Preserve completed progress on failures, and keep model defaults consistent with controls.
 
 

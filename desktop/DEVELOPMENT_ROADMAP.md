@@ -1,5 +1,8 @@
 # Development roadmap
 
+Version 0.3.0a7 adds ordinary-error/cancellation recovery for paired video/caption exports. Abrupt process termination and power-loss recovery remain NOT_IMPLEMENTED; native Windows file-lock behavior remains NOT_TESTED. Next priorities remain semantic explanation quality and native Windows acceptance. High is appropriate for this file-recovery work; Medium is sufficient for routine UI fixes.
+
+
 Version 0.3.0a6 addresses relinking, failure progress and new-project defaults. Next priorities remain supported AI explanations, boundary review, and native Windows testing. Medium remains suitable for focused reliability work; no extra AI downloads or inference benchmarks were needed.
 
 
