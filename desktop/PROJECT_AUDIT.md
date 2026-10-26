@@ -1,5 +1,18 @@
 # Project audit — 2026-10-26
 
+Version 0.3.0a3 continues from fcb652f. Model analysis and the standalone evaluator
+now share a bounded-window planner and message construction. Complete rows keep
+source identity/timestamps, callback references are restricted to what was sent,
+and caches include section endpoints, supplied callbacks and prompt version.
+No new dependencies or database/project-schema changes. A saved network draft
+adds the two official Ollama hosts; live access remains blocked pending user action.
+
+Final package verification: 82 tests passed. Checkpoint branch:
+anato12-context-0.3a3. The configuration draft was independently read back at
+revision 5: restricted network mode, package-manager presets and all six prior
+custom hosts were retained; only ollama.com and registry.ollama.ai were added.
+Saving is confirmed; application/publication/runtime access is not.
+
 Version 0.3.0a2 continues from 13b867b with a schema-2 consent column on feedback,
 defaulting to disabled for every existing row. Consent-column/version migration
 is transactional. No project-file format or dependency changes. Local-model

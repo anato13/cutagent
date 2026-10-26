@@ -1,5 +1,33 @@
 # Test results and verification history
 
+## Version 0.3.0a3 bounded dialogue input
+
+Final extracted-package suite: **82 passed, 0 failed, 0 skipped in 20.40 seconds**.
+Ruff and Git whitespace checks passed. The archive contains 61 source/setup files;
+tested code is compared byte-for-byte before final packaging.
+
+Workspace suite: **82 passed, 0 failed, 0 skipped in 20.65 seconds**.
+Coverage includes a dense two-hour synthetic transcript (14,400 lines), Unicode
+and escaped text, oversized line/query errors before any server call, sparse late
+timestamps, callback-budget rejection of unsent evidence, and partial-analysis
+resume with matching bounded windows. All original editor/export tests remain.
+
+A separate planner-only measurement produced **661 sections** from those 14,400
+synthetic lines in **0.0744 seconds**, with maximum content size **4,974 bytes**
+and Python peak RSS **18.5 MiB** (Linux getrusage). This includes no media decoding,
+ASR or model inference and is not a gaming-recording processing benchmark.
+
+Model requests now ask for 8,192 context / at most 1,200 output tokens. Actual
+token counts, server truncation behavior, GPU memory and semantic effectiveness
+are NOT_TESTED. The 6,000-byte content limit is conservative rather than an exact
+tokenizer bound. Callback links may be omitted and are counted in evaluation
+reports; every local transcript row is retained intact in at least one section.
+
+Official Ollama download/registry probes still returned proxy HTTP 403 on
+2026-10-26. A network draft adding only ollama.com and registry.ollama.ai was
+confirmed saved while preserving existing custom hosts. It requires user review,
+save and environment publication; draft persistence is not runtime access.
+
 ## Version 0.3.0a2 feedback controls
 
 Final extracted-package run: **76 passed, 0 failed, 0 skipped in 20.56 seconds**.

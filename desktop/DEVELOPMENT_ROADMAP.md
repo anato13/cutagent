@@ -36,6 +36,14 @@ future influence and clears response caches. This is prompt guidance and categor
 ranking, not training or a general assistant. Its semantic effectiveness still
 needs real-model evaluation; phase 2B remains BLOCKED for that acceptance step.
 
+Version 0.3.0a3 bounds combined model input by UTF-8 size and time, preserves row
+coverage through overlapping sections, reports oversized captions and counts
+omitted callback hints. Planner tests and model request contracts pass; token
+capacity, GPU use and humor quality require a real model. The specific Ollama
+network additions are now saved as a reviewable environment draft. Review/save
+them and publish the environment before retrying downloads; saving the draft
+alone did not change running access. Next step is that actual-model evaluation.
+
 Alpha 3 adds independent draft bundles from approved highlights for one source:
 chronological main edit, merged overlaps, one complete range per Short, optional
 MP4/caption rendering, manifest and cancellation cleanup. Overlong ranges are

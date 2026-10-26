@@ -1,5 +1,14 @@
 # Bug log
 
+| ID | Severity / reproduction | Cause and correction | Evidence / limit |
+| --- | --- | --- | --- |
+| B18 | High: dense/oversized caption text plus feedback in a 90-second window | Time-only grouping imposed no content limit. A shared planner bounds serialized UTF-8 content, preserves complete rows and rejects a line too large to fit | test_model_context.py; actual server truncation/humor impact NOT_TESTED |
+
+New context protection: earlier callback evidence is accepted only if included
+in that section's actual request. Omitted links are counted in evaluator reports.
+The byte limit does not establish exact tokenizer capacity; native model/GPU
+validation remains pending, and dense input can increase the number of requests.
+
 Feedback update verification: schema v1→v2 changes the consent column and version
 in one transaction; injected pre-commit interruption preserves v1 rows/schema.
 Old category opt-in never grants note sharing. Private-note edits retain cached

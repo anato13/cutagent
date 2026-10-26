@@ -243,6 +243,22 @@ currently use CPU; RTX acceleration is not verified. If connection fails, check
 that Ollama is running and a local model has finished downloading, or use cue mode.
 A model request can take up to 60 seconds to time out after cancellation.
 
+Dense dialogue now uses smaller overlapping sections automatically. Each section
+keeps complete transcript lines with their original IDs and timestamps.
+If one line is too large, Studio names its ID and source time so you can shorten
+it or split it at real timestamps in an SRT and reimport. Long search text or
+shared notes also consume the input budget; shortening them may resolve the error.
+Studio does not silently cut a dialogue line or invent replacement times.
+
+The adapter requests 8,192 context tokens with up to 1,200 output tokens, and
+limits the combined system/transcript/search/feedback content to 6,000 UTF-8 bytes.
+This is a conservative size limit, not an exact tokenizer measurement or a
+guarantee that every model/template fits. GPU memory use remains unmeasured.
+Up to four earlier callback links are included when space allows. The model-check
+report lists each section's input size and omitted callback-link count, so omitted
+earlier conversational context is visible during evaluation. Dense transcripts can require
+more requests; section-planning speed does not predict model-inference speed.
+
 ### Check your installed model and save evidence
 
 After transcribing one recording, save its Studio project. Start Ollama, then

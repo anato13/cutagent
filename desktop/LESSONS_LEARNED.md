@@ -1,5 +1,12 @@
 # Engineering lessons
 
+Time limits alone cannot bound a model request: word-level captions, Unicode,
+shared notes and callback references all add content. Use one message builder for
+planning and sending, preserve complete source rows, and fail with an exact source
+location when one row cannot fit. Validate model evidence against the references
+actually supplied. Tests cover 14,400 dense synthetic rows, UTF-8 sizing, omitted
+references and interrupted resume. A content-byte cap is not a measured token count.
+
 Note text needs its own consent, separate from category ranking. Extending a
 previous consent flag would silently change what old feedback sends to a model.
 Schema 2 adds a default-off flag, with an interrupted-migration rollback test.

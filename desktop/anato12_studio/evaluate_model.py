@@ -6,7 +6,8 @@ import json
 from pathlib import Path
 import time
 
-from .finder import callbacks, deduplicate, model_proposals, rows_for, windows
+from .finder import callbacks, deduplicate, model_proposals, rows_for
+from .model_context import bounded_windows, MAX_INPUT_BYTES, CONTEXT_TOKENS, OUTPUT_TOKENS
 from .local_model import LocalModel
 from .model import Project
 from .video import Runner
@@ -19,7 +20,8 @@ def evaluate(project_path, output, client, media_id=None, query="", progress=pri
         raise ValueError("Choose a project with one transcribed recording, or pass --media-id for one recording.")
     media = choices[0]
     rows = rows_for(media.transcript)
-    chunks, repeated = list(windows(rows)), callbacks(rows)
+    runner = Runner()
+    chunks = list(bounded_windows(rows, callbacks(rows), query, {}, runner))
     # Refuse to overwrite any existing file/folder, including user projects.
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
@@ -29,8 +31,10 @@ def evaluate(project_path, output, client, media_id=None, query="", progress=pri
               "transcript_lines": len(rows), "query": query, "windows": [],
               "candidates": [], "humor_quality": "NOT_EVALUATED",
               "note": "Real model proposals require human review. No accuracy or humor score is inferred.",
-              "gpu_measurement": "NOT_MEASURED"}
-    runner, candidates = Runner(), []
+              "gpu_measurement": "NOT_MEASURED",
+              "input_budget_bytes": MAX_INPUT_BYTES, "requested_context_tokens": CONTEXT_TOKENS,
+              "maximum_output_tokens": OUTPUT_TOKENS, "input_token_count": "NOT_MEASURED"}
+    candidates = []
     started = time.monotonic()
     destination = output / "model-evaluation.json"
     def save():
@@ -42,10 +46,10 @@ def evaluate(project_path, output, client, media_id=None, query="", progress=pri
     try:
         identity = client.identity(runner)
         report["model_identity"] = identity
-        for i, window in enumerate(chunks):
+        for i, chunk in enumerate(chunks):
+            window, context = chunk.rows, chunk.callbacks
             if client.identity(runner) != identity:
                 raise ValueError("Model changed during this evaluation; run again with stable installed weights.")
-            context = {r["id"]: repeated[r["id"]][:2] for r in window if r["id"] in repeated}
             progress(f"Evaluating context {i+1}/{len(chunks)}")
             tick = time.monotonic()
             raw = client.analyze(window, context, query, {}, runner)
@@ -56,6 +60,7 @@ def evaluate(project_path, output, client, media_id=None, query="", progress=pri
             candidates.extend(valid)
             report["windows"].append({"first_segment_id": window[0]["id"],
                 "last_segment_id": window[-1]["id"], "wall_seconds": round(elapsed, 3),
+                "content_bytes": chunk.content_bytes, "omitted_callback_links": chunk.omitted_callback_links,
                 "returned_proposals": len(raw), "valid_evidence_proposals": len(valid),
                 "rejected_proposals": len(raw)-len(valid)})
             report["candidates"] = [{**asdict(p), "human_decision": None,

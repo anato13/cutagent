@@ -63,3 +63,9 @@ transaction. Model context includes only reviewed, explicitly shared notes, boun
 to eight recent entries of 240 characters. Preview that actual context in the UI.
 Changing/removing shared preferences invalidates analysis-window caches; private
 edits preserve them. Standalone evaluation deliberately uses no app feedback.
+
+Model context must use model_context.py for both planning and message building.
+Keep source rows intact; do not invent intermediate timestamps to split a caption.
+Cache keys must bind both section endpoints, supplied callbacks and prompt version.
+Validate evidence against sent references only. Document omitted callback counts
+and distinguish UTF-8 byte limits from actual tokenizer/context/GPU measurements.

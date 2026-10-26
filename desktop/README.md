@@ -85,7 +85,10 @@ See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
 
 ## Current limits
 
-Version 0.3.0a2 adds explicit note-sharing controls and editable feedback.
+Version 0.3.0a3 adds content-bounded overlapping model sections and oversized-line
+diagnostics. Reports disclose input bytes and omitted callback links. Exact token
+counts, real-model quality and GPU capacity remain unverified.
+Explicit note-sharing controls and editable feedback remain available.
 Approved draft bundles remain available. CHECK_LOCAL_AI.bat collects a real-model evidence report
 from a saved project transcript. See the beginner guide. The harness is tested;
 the cloud proxy blocks Ollama downloads with HTTP 403, so real model quality,

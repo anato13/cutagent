@@ -4,6 +4,7 @@ import bisect
 import hashlib
 import json
 import re
+from .model_context import bounded_windows, PROMPT_VERSION
 
 
 ANALYSIS_VERSION = "finder-feedback-1"
@@ -172,15 +173,18 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
         candidates = literal_search(rows, query, duration)
     else:
         repeated = callbacks(rows)
-        chunks = list(windows(rows))
         candidates = []
         preferences = store.model_preferences() if model else store.preferences()
-        for i, window in enumerate(chunks):
+        chunks = list(bounded_windows(rows, repeated, query, preferences, runner)) if model else list(windows(rows))
+        for i, chunk in enumerate(chunks):
             runner.check()
-            relevant = {r["id"]: repeated[r["id"]][:2] for r in window if r["id"] in repeated}
+            window = chunk.rows if model else chunk
+            relevant = chunk.callbacks if model else {
+                r["id"]: repeated[r["id"]][:2] for r in window if r["id"] in repeated}
             if model:
                 identity = model.identity(runner)
                 signature = json.dumps([ANALYSIS_VERSION, source, transcript_hash, window[0]["id"],
+                                        window[-1]["id"], relevant, PROMPT_VERSION,
                                         model.base, model.model, identity, query, preferences], sort_keys=True)
                 key = "analysis:" + hashlib.sha256(signature.encode()).hexdigest()
                 raw = store.cache_get(key)

@@ -1,6 +1,6 @@
 # Validation history
 
-Current version **0.3.0a2**: see [TEST_RESULTS.md](TEST_RESULTS.md) for feedback consent/migration, approved
+Current version **0.3.0a3**: see [TEST_RESULTS.md](TEST_RESULTS.md) for bounded model input, feedback consent/migration, approved
 draft/export verification, model-readiness checks, long synthetic media and two-hour chunk/resume
 measurement, feature statuses and explicit NOT_TESTED cases.
 
