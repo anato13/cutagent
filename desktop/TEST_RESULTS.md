@@ -1,4 +1,30 @@
-# Test results — phase 2A
+# Test results and verification history
+
+## Version 0.3.0a2 feedback controls
+
+Final extracted-package run: **76 passed, 0 failed, 0 skipped in 20.56 seconds**.
+Ruff and Git whitespace checks passed. The package contains 59 source/setup files,
+with recordings, models, databases and private verification data excluded.
+
+Initial full suite: **74 passed, 0 failed, 0 skipped in 20.97 seconds**.
+After adding transaction-rollback and private-cache regressions, targeted
+feedback/GUI validation passed: **8 passed in 2.08 seconds**.
+
+Verified: v1 database rows/decisions survive upgrade with note sharing disabled;
+an injected interruption rolls back the consent column and schema version
+together. Category opt-in alone does not share note text. Notes require separate
+consent and a reviewed decision, with at most 8 notes × 240 characters in context.
+Editing/revoking/deleting shared feedback clears model-response caches while
+keeping speech transcripts and approved clips. Private edits preserve model caches.
+
+An actual loopback HTTP fixture receives exactly the explicitly shared note
+context, with quoted instruction-like text kept inside JSON user data. Context
+edits cause fresh requests. The Qt workflow edits a saved note, enables sharing,
+verifies the preview and revokes sharing without losing the note.
+These are consent/transport/cache tests, not real-model humor-quality evidence.
+No GPU utilization or new long-recording throughput measurements were collected.
+Windows/native model quality remain NOT_TESTED; official model downloads were
+previously blocked by the managed proxy.
 
 ## Alpha 3 approved-draft update
 

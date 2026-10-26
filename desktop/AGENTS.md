@@ -56,3 +56,10 @@ table or only visible search results. Preserve current editor state. Main ranges
 merge chronologically; Shorts retain complete ranges and report skips. Stage
 the entire bundle before publishing a unique folder; clean up ordinary failures.
 Do not claim batch restart/resume or automatic narrative/hook selection.
+
+Feedback schema 2 has separate use_note consent; never infer it from personalize.
+Legacy rows default to use_note=0. Migrate the consent column and version in one
+transaction. Model context includes only reviewed, explicitly shared notes, bounded
+to eight recent entries of 240 characters. Preview that actual context in the UI.
+Changing/removing shared preferences invalidates analysis-window caches; private
+edits preserve them. Standalone evaluation deliberately uses no app feedback.

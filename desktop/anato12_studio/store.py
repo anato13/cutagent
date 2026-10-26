@@ -43,7 +43,7 @@ class Store:
         self.path = self.root / "studio.sqlite3"
         with self.connect() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 1:
+            if version > 2:
                 raise ValueError("This app-data database was made by a newer Studio. Keep it and upgrade.")
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS sources (
@@ -68,8 +68,12 @@ class Store:
                     created REAL NOT NULL, updated REAL NOT NULL);
                 CREATE INDEX IF NOT EXISTS cache_source ON cache(source,kind);
                 CREATE INDEX IF NOT EXISTS highlights_source ON highlights(source,status);
-                PRAGMA user_version=1;
             """)
+            db.execute("BEGIN IMMEDIATE")
+            columns = {r["name"] for r in db.execute("PRAGMA table_info(feedback)")}
+            if "use_note" not in columns:
+                db.execute("ALTER TABLE feedback ADD COLUMN use_note INTEGER NOT NULL DEFAULT 0")
+            db.execute("PRAGMA user_version=2")
 
     @contextmanager
     def connect(self):
@@ -177,12 +181,38 @@ class Store:
             db.execute("UPDATE highlights SET status=?,updated=? WHERE id=?",
                        (decision, time.time(), identifier))
 
-    def add_feedback(self, identifier, note, personalize):
+    def add_feedback(self, identifier, note, personalize, use_note=False):
         item = self.highlight(identifier)
+        if use_note and item["status"] not in ("approved", "rejected"):
+            raise ValueError("Approve or reject the highlight before sharing its note with the local model.")
         with self.connect() as db:
-            db.execute("INSERT INTO feedback VALUES (?,?,?,?,?,?,?,?)",
+            db.execute("""INSERT INTO feedback
+                (id,highlight,category,decision,note,personalize,kind,created,use_note)
+                VALUES (?,?,?,?,?,?,?,?,?)""",
                        (uuid.uuid4().hex, identifier, item["category"], item["status"],
-                        note.strip()[:4000], bool(personalize), "user_confirmed", time.time()))
+                        note.strip()[:4000], bool(personalize), "user_confirmed", time.time(), bool(use_note)))
+            if personalize or use_note:
+                db.execute("DELETE FROM cache WHERE kind='analysis_window'")
+
+    def update_feedback(self, identifier, note, personalize, use_note):
+        with self.connect() as db:
+            row = db.execute("SELECT decision,personalize,use_note FROM feedback WHERE id=?", (identifier,)).fetchone()
+            if not row:
+                raise ValueError("Feedback no longer exists.")
+            if use_note and row["decision"] not in ("approved", "rejected"):
+                raise ValueError("Only feedback saved after approval or rejection can be shared with the model.")
+            db.execute("UPDATE feedback SET note=?,personalize=?,use_note=? WHERE id=?",
+                       (note.strip()[:4000], bool(personalize), bool(use_note), identifier))
+            if row["personalize"] or row["use_note"] or personalize or use_note:
+                db.execute("DELETE FROM cache WHERE kind='analysis_window'")
+
+    def model_preferences(self):
+        with self.connect() as db:
+            notes = [dict(r) for r in db.execute("""
+                SELECT category,decision,substr(note,1,240) AS note FROM feedback
+                WHERE use_note=1 AND decision IN ('approved','rejected') AND trim(note)<>''
+                ORDER BY created DESC,id DESC LIMIT 8""")]
+        return {"category_weights": self.preferences(), "notes": notes}
 
     def feedback(self):
         with self.connect() as db:
@@ -190,7 +220,10 @@ class Store:
 
     def delete_feedback(self, identifier):
         with self.connect() as db:
+            old = db.execute("SELECT personalize,use_note FROM feedback WHERE id=?", (identifier,)).fetchone()
             db.execute("DELETE FROM feedback WHERE id=?", (identifier,))
+            if old and (old["personalize"] or old["use_note"]):
+                db.execute("DELETE FROM cache WHERE kind='analysis_window'")
 
     def preferences(self):
         with self.connect() as db:
@@ -230,6 +263,7 @@ class Store:
     def delete_source_data(self, source):
         with self.connect() as db:
             db.execute("DELETE FROM feedback WHERE highlight IN (SELECT id FROM highlights WHERE source=?)", (source,))
+            db.execute("DELETE FROM cache WHERE kind='analysis_window'")
             for table in ("highlights", "cache", "jobs"):
                 db.execute(f"DELETE FROM {table} WHERE source=?", (source,))
             db.execute("DELETE FROM sources WHERE key=?", (source,))

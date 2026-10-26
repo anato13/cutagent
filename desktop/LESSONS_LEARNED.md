@@ -1,5 +1,12 @@
 # Engineering lessons
 
+Note text needs its own consent, separate from category ranking. Extending a
+previous consent flag would silently change what old feedback sends to a model.
+Schema 2 adds a default-off flag, with an interrupted-migration rollback test.
+Bound note context, preview exactly what is shared and invalidate model-response
+caches when shared preferences change. Private edits should not discard expensive
+analysis caches. Editing feedback does not retrain model weights or rewrite clips.
+
 Approved batch workflows need their own complete source query, rather than
 reusing a display-limited table. Keep output filenames controlled (titles are
 metadata), preserve the open timeline and write multi-file work in an owned

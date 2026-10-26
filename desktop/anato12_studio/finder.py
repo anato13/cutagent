@@ -6,7 +6,7 @@ import json
 import re
 
 
-ANALYSIS_VERSION = "finder-2a-1"
+ANALYSIS_VERSION = "finder-feedback-1"
 CATEGORIES = {"misunderstanding", "argument", "surprise", "banter", "callback", "awkward", "gameplay", "other"}
 
 
@@ -174,7 +174,7 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
         repeated = callbacks(rows)
         chunks = list(windows(rows))
         candidates = []
-        preferences = store.preferences()
+        preferences = store.model_preferences() if model else store.preferences()
         for i, window in enumerate(chunks):
             runner.check()
             relevant = {r["id"]: repeated[r["id"]][:2] for r in window if r["id"] in repeated}

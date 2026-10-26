@@ -114,6 +114,8 @@ class FinderPanel(QScrollArea):
         self.feedback = QLineEdit()
         self.feedback.setPlaceholderText("Optional feedback: longer setup, keep the silence, not my kind of humor…")
         self.personalize = QCheckBox("Use this feedback to personalize future ranks")
+        self.model_note = QCheckBox("Share this note with my local model")
+        self.model_note.setToolTip("Optional: up to 8 recent opted-in notes, 240 characters each, guide local analysis.")
         row = QHBoxLayout()
         row.addWidget(self.feedback, 1)
         row.addWidget(self.personalize)
@@ -121,6 +123,7 @@ class FinderPanel(QScrollArea):
         b.clicked.connect(lambda: self.action.emit("feedback"))
         row.addWidget(b)
         column.addLayout(row)
+        column.addWidget(self.model_note)
 
 
 class DraftDialog(QDialog):
@@ -158,6 +161,7 @@ class DraftDialog(QDialog):
 
 class DataPanel(QScrollArea):
     action = Signal(str)
+    feedback_selected = Signal()
 
     def __init__(self):
         super().__init__()
@@ -180,8 +184,28 @@ class DataPanel(QScrollArea):
         column.addLayout(row)
         column.addWidget(QLabel("Clip feedback · user-confirmed only. Preference weights are derived counts, "
                                 "not model retraining or general personal memory."))
-        self.feedback = table(["Category", "Decision", "Use for personalization", "Feedback"])
+        self.feedback = table(["Category", "Decision", "Category ranking", "Share note", "Feedback"])
+        self.feedback.itemSelectionChanged.connect(self.feedback_selected)
         column.addWidget(self.feedback)
+        self.note = QTextEdit()
+        self.note.setAcceptRichText(False)
+        self.note.setPlaceholderText("Select saved feedback to edit its note.")
+        self.note.setMaximumHeight(100)
+        column.addWidget(self.note)
+        self.use_category = QCheckBox("Use category for ranking")
+        self.use_note = QCheckBox("Share note with my local model")
+        row = QHBoxLayout()
+        row.addWidget(self.use_category)
+        row.addWidget(self.use_note)
+        b = QPushButton("Save feedback changes")
+        b.clicked.connect(lambda: self.action.emit("update_feedback"))
+        row.addWidget(b)
+        column.addLayout(row)
         b = QPushButton("Delete selected feedback")
         b.clicked.connect(lambda: self.action.emit("delete_feedback"))
         column.addWidget(b)
+        column.addWidget(QLabel("Personalization preview · up to 8 recent shared notes, 240 characters each"))
+        self.personalization = QTextEdit()
+        self.personalization.setReadOnly(True)
+        self.personalization.setMaximumHeight(120)
+        column.addWidget(self.personalization)

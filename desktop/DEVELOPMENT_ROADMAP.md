@@ -29,6 +29,13 @@ explicitly. Official Ollama downloads returned proxy HTTP 403 here, so phase 2B
 remains BLOCKED for real inference. Use the check on a machine with a downloaded
 model. High is appropriate for this bounded implementation and testing work.
 
+Version 0.3.0a2 adds separate opt-in note guidance, editable feedback and a
+personalization preview. Old notes remain unshared after schema migration.
+Shared notes enter bounded local-model context; deletion/revocation removes
+future influence and clears response caches. This is prompt guidance and category
+ranking, not training or a general assistant. Its semantic effectiveness still
+needs real-model evaluation; phase 2B remains BLOCKED for that acceptance step.
+
 Alpha 3 adds independent draft bundles from approved highlights for one source:
 chronological main edit, merged overlaps, one complete range per Short, optional
 MP4/caption rendering, manifest and cancellation cleanup. Overlong ranges are

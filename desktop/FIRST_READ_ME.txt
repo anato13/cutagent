@@ -1,5 +1,5 @@
 ANATO12 STUDIO
-Version 0.3 alpha - independent approved drafts
+Version 0.3 alpha 2 - approved drafts and editable feedback
 
 1. Extract this entire folder from the ZIP first.
 2. Open START_HERE.html in your web browser for the beginner guide.
@@ -11,6 +11,8 @@ Version 0.3 alpha - independent approved drafts
 You can import, preview, trim and export without AI.
 For optional local transcription, close the app and run INSTALL_SPEECH.bat.
 The AI Clip Finder saves reviews and opt-in category feedback locally.
+Sharing note text with a local model is a separate opt-in; existing notes stay private.
+Jobs & clip feedback lets you edit/revoke notes and preview personalization.
 After approving highlights, use "Create YouTube + Shorts drafts" for separate
 editable projects and optional MP4s. The current edit remains open and unchanged.
 Context cues are limited; semantic analysis needs a downloaded Ollama model.

@@ -1,5 +1,16 @@
 # Project audit — 2026-10-26
 
+Version 0.3.0a2 continues from 13b867b with a schema-2 consent column on feedback,
+defaulting to disabled for every existing row. Consent-column/version migration
+is transactional. No project-file format or dependency changes. Local-model
+context now includes separately opted-in bounded notes, and the UI supports
+editing/revoking them and inspecting the actual context. Ordinary category
+ranking remains independently optional. Semantic effectiveness remains unverified.
+
+Final package verification: 76 tests passed, including legacy migration/rollback,
+note-consent transport and real Qt editing/revocation. Checkpoint branch:
+anato12-feedback-0.3a2. No remote push or new dependency is included.
+
 Alpha 3 continues from b5e8e3d and adds approved-draft assembly and optional batch
 exports. Projects remain JSON version 1; SQLite schema is unchanged. No dependencies
 were added. The builder snapshots the source/transcript, checks its fingerprint,

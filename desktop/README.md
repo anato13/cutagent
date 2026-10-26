@@ -23,6 +23,8 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
   cancellation cleanup and an output/skip manifest.
 - Durable SQLite jobs/caches, restart recovery, literal transcript search and
   explicitly opted-in category feedback with view/delete/export controls.
+- Separately opted-in note preferences for local-model analysis; edit/revoke them
+  and inspect the bounded personalization preview. Existing notes remain unshared.
 - Optional loopback Ollama adapter for downloaded local models. HTTP behavior is
   tested; real semantic-model inference and humor quality are still unverified.
 
@@ -83,7 +85,8 @@ See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
 
 ## Current limits
 
-Version 0.3.0a1 adds approved draft bundles. CHECK_LOCAL_AI.bat collects a real-model evidence report
+Version 0.3.0a2 adds explicit note-sharing controls and editable feedback.
+Approved draft bundles remain available. CHECK_LOCAL_AI.bat collects a real-model evidence report
 from a saved project transcript. See the beginner guide. The harness is tested;
 the cloud proxy blocks Ollama downloads with HTTP 403, so real model quality,
 Windows execution and GPU performance still need verification.

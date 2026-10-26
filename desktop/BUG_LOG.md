@@ -1,5 +1,13 @@
 # Bug log
 
+Feedback update verification: schema v1→v2 changes the consent column and version
+in one transaction; injected pre-commit interruption preserves v1 rows/schema.
+Old category opt-in never grants note sharing. Private-note edits retain cached
+model responses; changing shared/ranking feedback invalidates those responses.
+Regression coverage: test_feedback.py and the real finder Qt workflow. No new
+humor-quality or native Windows fix is claimed. Older releases intentionally
+refuse schema 2; use a pre-upgrade backup for rollback.
+
 Alpha 3 defensive checks (no claim of previously shipped defects): the new batch
 query bypasses the 500-row display cap, with a 501-approval regression. Overlaps
 merge only for the main edit; Shorts use complete approved ranges. Cancellation,

@@ -36,6 +36,7 @@ class FinderController:
         p.status.currentIndexChanged.connect(self.refresh)
         p.order.currentIndexChanged.connect(self.refresh)
         window.data_panel.action.connect(self.data_action)
+        window.data_panel.feedback_selected.connect(self.feedback_selected)
         self.refresh_data()
 
     def select_source(self, media):
@@ -192,11 +193,14 @@ class FinderController:
                 self.refresh_data()
                 return
             if action == "feedback":
-                self.store.add_feedback(item["id"], p.feedback.text(), p.personalize.isChecked())
+                self.store.add_feedback(item["id"], p.feedback.text(), p.personalize.isChecked(),
+                                        p.model_note.isChecked())
                 p.feedback.clear()
                 p.personalize.setChecked(False)
+                p.model_note.setChecked(False)
                 self.refresh_data()
-                p.notice.setText("Feedback saved locally. Only opted-in category decisions affect future ordering.")
+                self.refresh()
+                p.notice.setText("Feedback saved. Category ranking and sharing note text each require their own opt-in.")
                 return
             if action == "save":
                 cached = self.store.cache_get(f'analysis-transcript:{item["source"]}') or []
@@ -307,7 +311,7 @@ class FinderController:
         self.feedback_rows = self.store.feedback()
         for table, rows, fields in (
             (p.jobs, self.job_rows, ("id", "source", "status", "progress", "message")),
-            (p.feedback, self.feedback_rows, ("category", "decision", "personalize", "note"))):
+            (p.feedback, self.feedback_rows, ("category", "decision", "personalize", "use_note", "note"))):
             table.setRowCount(len(rows))
             for i, item in enumerate(rows):
                 for j, field in enumerate(fields):
@@ -316,9 +320,30 @@ class FinderController:
                         value = Path(self.store.get_source(value)["path"]).name
                     if field == "progress":
                         value = f"{value:.0%}"
+                    if field in ("personalize", "use_note"):
+                        value = "Yes" if value else "No"
                     cell = QTableWidgetItem(str(value))
                     cell.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
                     table.setItem(i, j, cell)
+        p.feedback.clearSelection()
+        p.feedback.setCurrentCell(-1, -1)
+        p.note.clear()
+        p.use_category.setChecked(False)
+        p.use_note.setChecked(False)
+        context = self.store.model_preferences()
+        lines = ["Category ranking: " + (", ".join(f"{k}: {v:+d}" for k, v in
+                 sorted(context["category_weights"].items())) or "none"), "", "Shared notes:"]
+        lines += [f'{n["decision"]} · {n["category"]}: {n["note"]}' for n in context["notes"]]
+        p.personalization.setPlainText("\n".join(lines))
+
+    def feedback_selected(self):
+        p = self.w.data_panel
+        row = p.feedback.currentRow()
+        if 0 <= row < len(self.feedback_rows):
+            item = self.feedback_rows[row]
+            p.note.setPlainText(item["note"])
+            p.use_category.setChecked(bool(item["personalize"]))
+            p.use_note.setChecked(bool(item["use_note"]))
 
     def data_action(self, action):
         w, p = self.w, self.w.data_panel
@@ -353,10 +378,18 @@ class FinderController:
                     self.source = None
                     self.refresh()
                     w.refresh_transcript()
+            elif action == "update_feedback":
+                row = p.feedback.currentRow()
+                if not 0 <= row < len(self.feedback_rows):
+                    raise ValueError("Select saved feedback to edit first.")
+                self.store.update_feedback(self.feedback_rows[row]["id"], p.note.toPlainText(),
+                                           p.use_category.isChecked(), p.use_note.isChecked())
+                self.refresh()
             elif action == "delete_feedback":
                 row = p.feedback.currentRow()
                 if row >= 0:
                     self.store.delete_feedback(self.feedback_rows[row]["id"])
+                    self.refresh()
             elif action == "export_data":
                 path, _ = QFileDialog.getSaveFileName(w, "Export local application data", "Anato12-data.json", "JSON (*.json)")
                 if path:

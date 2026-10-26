@@ -53,6 +53,21 @@ def run_finder(recording, destination):
         window.finder.personalize.setChecked(True)
         window.finder.action.emit("feedback")
         assert controller.store.preferences() == {"misunderstanding": 1}
+        assert controller.store.model_preferences()["notes"] == []
+        panel = window.data_panel
+        panel.feedback.selectRow(0)
+        assert panel.note.toPlainText() == "Keep the conversational setup"
+        panel.note.setPlainText("Keep setup and reaction")
+        panel.use_note.setChecked(True)
+        panel.action.emit("update_feedback")
+        assert controller.store.model_preferences()["notes"][0]["note"] == "Keep setup and reaction"
+        assert "Keep setup and reaction" in panel.personalization.toPlainText()
+        panel.feedback.selectRow(0)
+        panel.use_note.setChecked(False)
+        panel.action.emit("update_feedback")
+        assert controller.store.model_preferences()["notes"] == []
+        assert controller.store.feedback()[0]["note"] == "Keep setup and reaction"
+        select_first()
         window.tabs.setCurrentWidget(window.finder)
         app.processEvents()
         assert window.inspector.profile.height() >= 30

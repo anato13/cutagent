@@ -138,6 +138,40 @@ the app reports it clearly if the installed build lacks it.
    only when you want that approved/rejected category to affect future ordering.
    This is a simple, reversible preference adjustment, not AI retraining.
 
+### Use feedback notes to guide your local model
+
+There are two separate, unchecked options when saving feedback:
+
+- **Use this feedback to personalize future ranks** adjusts category ordering.
+- **Share this note with my local model** lets a downloaded local model consider
+  the note during future analysis/search. Approve or reject the highlight first.
+
+For example, you can write “keep the setup and reaction” or “this category is
+usually not my style.” Shared notes are preferences, not proof that something
+happened in the recording. The model still needs valid transcript evidence.
+
+Open **Jobs & clip feedback**, select a saved entry, edit its note/options and
+click **Save feedback changes**. The **Personalization preview** shows the actual
+category preferences and note text included in future local-model requests.
+At most eight recent shared notes are included, with 240 characters from each.
+Older saved notes remain visible but may fall outside that recent-note window.
+The complete saved note remains available in the editor/data export.
+Shared preferences apply across recordings in this app-data profile. The Decision
+column records the review when feedback was saved. To change that recorded vote,
+delete the entry, review the clip again, then save new feedback.
+
+Unchecking note sharing keeps the note private in the app. Deleting feedback
+removes it from future personalization. Changes to shared/ranking feedback clear
+cached model responses; speech transcripts remain cached. Private-note edits do
+not force reanalysis. Existing clips, drafts and exported videos are not rewritten.
+The independent CHECK_LOCAL_AI evaluator uses no app feedback, so its reports
+remain a baseline model check. Actual improvement in humor selection is unverified.
+
+Upgrading to this version adds a separate sharing flag to the local database
+(schema 2). **All existing notes stay unshared.** Keep using this version or newer
+with that data folder; older releases refuse a newer database. For a rollback
+copy, close Studio and back up its app-data folder before upgrading.
+
 **Search** matches transcript words in cue mode. It cannot infer which exchange
 is “weirdest” or verify a story claim. A configured local model is required for
 semantic search. **All saved highlights** clears the current search-result filter.
