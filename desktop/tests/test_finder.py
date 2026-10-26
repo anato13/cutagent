@@ -232,6 +232,9 @@ def test_interrupted_model_analysis_reuses_completed_windows_and_separates_endpo
     class ControlledModel:
         model = "fixture-only"
         base = "http://127.0.0.1:12345"
+        digest = "original"
+        def identity(self, runner=None):
+            return {"digest": self.digest}
         def __init__(self, fail=False):
             self.calls, self.fail = [], fail
         def analyze(self, window, *args):
@@ -251,3 +254,36 @@ def test_interrupted_model_analysis_reuses_completed_windows_and_separates_endpo
     other_endpoint.base = "http://127.0.0.1:23456"
     analyze(store, source, segments, 150, Runner(), lambda *a: None, other_endpoint)
     assert other_endpoint.calls == [0, 6]  # No endpoint-to-endpoint response reuse.
+    replaced = ControlledModel()
+    replaced.digest = "replacement-weights"
+    analyze(store, source, segments, 150, Runner(), lambda *a: None, replaced)
+    assert replaced.calls == [0, 6]
+
+
+def test_invalid_model_evidence_is_not_cached_as_no_match(review):
+    store, media, source, _ = review
+    class InvalidModel:
+        base, model = "http://localhost", "fixture"
+        def identity(self, runner=None):
+            return {"digest": "fixture"}
+        def analyze(self, *a):
+            return [{"first_id": 999, "last_id": 999, "evidence_ids": [999]}]
+    with pytest.raises(ValueError, match="valid source evidence"):
+        analyze(store, source, media.transcript, media.duration, Runner(), lambda *a: None, InvalidModel())
+    with store.connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM cache WHERE kind='analysis_window'").fetchone()[0] == 0
+
+
+def test_model_replacement_during_request_is_not_cached(review):
+    store, media, source, _ = review
+    class ChangedModel:
+        base, model, digest = "http://localhost", "fixture", "old"
+        def identity(self, runner=None):
+            return {"digest": self.digest}
+        def analyze(self, *a):
+            self.digest = "new"
+            return [{"first_id": 0, "last_id": 1, "evidence_ids": [0, 1]}]
+    with pytest.raises(ValueError, match="changed during analysis"):
+        analyze(store, source, media.transcript, media.duration, Runner(), lambda *a: None, ChangedModel())
+    with store.connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM cache WHERE kind='analysis_window'").fetchone()[0] == 0

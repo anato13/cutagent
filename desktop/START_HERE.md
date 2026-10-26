@@ -165,6 +165,34 @@ currently use CPU; RTX acceleration is not verified. If connection fails, check
 that Ollama is running and a local model has finished downloading, or use cue mode.
 A model request can take up to 60 seconds to time out after cancellation.
 
+### Check your installed model and save evidence
+
+After transcribing one recording, save its Studio project. Start Ollama, then
+double-click **CHECK_LOCAL_AI.bat**. Paste the saved .anato12.json path and choose
+an installed model number. Use a project with one transcribed recording.
+
+The check creates a new **Anato12-model-check-...** folder beside the project.
+Its **model-evaluation.json** records model identity, actual processing times,
+candidate timestamps and source quotations. Review the clips against your video;
+human_decision and human_notes fields are blank for your assessment. The tool
+does not calculate a humor score. Reports contain dialogue; keep them private.
+
+If a request fails or you press Ctrl+C, completed evidence remains in that folder.
+The check does not modify the project or the application's review database.
+Use the app's Clip Finder for resumable jobs; this evaluation starts fresh each time.
+
+Advanced command, from the app folder:
+
+```powershell
+.\.venv\Scripts\python.exe -m anato12_studio.evaluate_model --project "My edit.anato12.json" --model "qwen2.5:3b" --output "Model review"
+```
+
+Add --media-id followed by the recording ID from the project JSON for projects
+with several transcribed recordings, or --query followed by quoted search text.
+The output folder must be new. Analysis checks installed model digests before
+reusing cached answers. If a model changes during processing or has no reported
+digest, reconnect and choose a stable downloaded model.
+
 ### Jobs, storage and your data
 
 Open **Jobs & clip feedback** to inspect processing state, resume an interrupted

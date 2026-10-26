@@ -1,5 +1,11 @@
 # Project audit — 2026-10-26
 
+Alpha 2 continues from checkpoint 04d6e61. Added a separate local-model evaluation
+command and Windows launcher, installed-weight/configuration cache identity,
+and explicit rejection of incomplete or unsupported model results. HTTP fixtures
+verify mechanics; real inference is blocked by proxy HTTP 403 for the official
+Ollama download and registry. The existing editor and review database are preserved.
+
 ## Recovery and scope
 
 The existing app was inspected and its 17 tests passed before this milestone.

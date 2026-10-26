@@ -22,6 +22,13 @@ setup/punchline/reaction/callback candidates on genuine dialogue. Start with a
 short labeled sample; measure missed/unsupported suggestions and boundary quality.
 Do not call cue matching or a successful HTTP fixture contextual humor intelligence.
 
+Alpha 2 adds CHECK_LOCAL_AI.bat and evaluate_model to collect actual model identity,
+timing, supported candidates and blank human-review fields from a saved project.
+Installed model changes invalidate caches; incomplete/unsupported replies fail
+explicitly. Official Ollama downloads returned proxy HTTP 403 here, so phase 2B
+remains BLOCKED for real inference. Use the check on a machine with a downloaded
+model. High is appropriate for this bounded implementation and testing work.
+
 Then verify native Windows import, seeking, audio, project save/reopen and both
 exports on the user's hardware. Preserve approved clips before improving automatic
 draft editing. Separate main/Shorts projects are needed today: Add to Shorts changes

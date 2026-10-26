@@ -45,3 +45,8 @@ has Low, Medium, High, Extra High and Ultra available. Recommend the lowest
 suitable setting; do not claim to see/change the selected setting or live allowance.
 Image generation is last, after higher-priority milestones have been tested and
 accepted. Do not add unrelated optional features ahead of clip-finder reliability.
+
+Model cache keys must include installed digest/configuration. Never cache an
+incomplete response or one whose proposals all have invalid source evidence.
+Keep evaluation-harness tests separate from real-model acceptance. evaluate_model
+must write a new report folder without changing the project/main review database.

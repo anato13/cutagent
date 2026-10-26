@@ -1,5 +1,13 @@
 # Bug log
 
+Alpha 2 corrections:
+
+| ID | Severity / reproduction | Expected vs actual, cause and fix | Regression |
+| --- | --- | --- | --- |
+| B15 | High: replace weights under the same model name | Old answers were reused because the cache keyed the name. Digest/configuration now participate; mid-request changes fail before caching | Model identity and interrupted-window cache tests |
+| B16 | Medium: all proposed evidence IDs are invented | Previously became zero candidates and was cached. Now fails explicitly and is not cached | test_invalid_model_evidence_is_not_cached_as_no_match |
+| B17 | Medium: incomplete or nontext chat content | Could accept partial results or throw an attribute error. Now reports incomplete/nontext responses | test_incomplete_or_nontext_model_responses_fail |
+
 | ID | Problem / root cause | Verified correction / remaining limit |
 | --- | --- | --- |
 | B01 | Qt 6.12 headless multimedia startup crash | Pin 6.8.3; real offscreen GUI checks. Native Windows NOT_TESTED |

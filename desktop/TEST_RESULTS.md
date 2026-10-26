@@ -1,5 +1,24 @@
 # Test results — phase 2A
 
+## Alpha 2 model-readiness update
+
+Workspace validation: **62 passed, 0 failed, 0 skipped in 16.85 seconds**.
+Final extracted alpha-2 package: **62 passed, 0 failed, 0 skipped in 17.00 seconds**.
+Ruff and Git whitespace checks passed. The source archive contains 56 files and
+excludes recordings, models, databases and private verification artifacts.
+New checks cover installed-model replacement, configuration identity, invalid
+evidence excluded from cache, mid-request model replacement, incomplete/nontextual
+responses, and evaluation reports preserving completed evidence after failure.
+Evaluation tests use controlled HTTP responses, not real semantic inference.
+
+Actual download attempts to ollama.com and registry.ollama.ai were rejected by
+the managed proxy with **HTTP 403** on 2026-10-26. No network policy was bypassed.
+Real Ollama inference remains BLOCKED here. Windows launcher/GPU acceptance
+remain NOT_TESTED. The evaluator makes those local checks reproducible once
+a downloaded model is available; it measures wall time, not GPU usage.
+
+The historical alpha-1 measurements below apply to their stated fixtures.
+
 Baseline before changes: **17 passed in 5.69 s** on Linux, Python 3.12.14,
 PySide6 6.8.3 and FFmpeg 7.1.5. After first finder integration, the same 17 tests
 passed in 5.78 s. These are genuine process outputs, not estimates.

@@ -16,6 +16,7 @@ def endpoint():
         redirect = False
         bad_json = False
         unavailable = False
+        digest = "fixture-sha256"
         requests = []
         def log_message(self, *args):
             pass
@@ -34,7 +35,7 @@ def endpoint():
                 self.send_header("Location", "https://example.com")
                 self.end_headers()
                 return
-            self.respond({"models": [{"name": "fixture-local"}, {"name": "cloudy:cloud"},
+            self.respond({"models": [{"name": "fixture-local", "digest": self.digest}, {"name": "cloudy:cloud"},
                                      {"name": "hidden", "remote_host": "https://remote"}]})
         def do_POST(self):
             payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
@@ -102,3 +103,24 @@ def test_server_outage_and_malformed_json_are_not_reported_as_results(endpoint):
     handler.bad_json = True
     with pytest.raises(ValueError):
         LocalModel(url).models()
+
+
+def test_identity_detects_model_replacement_and_missing_digest(endpoint):
+    url, handler = endpoint
+    client = LocalModel(url, "fixture-local")
+    original = client.identity()
+    handler.digest = "replacement"
+    assert client.identity() != original
+    handler.digest = ""
+    with pytest.raises(ValueError, match="digest"):
+        client.identity()
+
+
+@pytest.mark.parametrize("response", [{"done": False}, {"done_reason": "length"},
+                                    {"message": None}, {"message": {"content": 123}}])
+def test_incomplete_or_nontext_model_responses_fail(response, monkeypatch):
+    client = LocalModel(model="fixture")
+    monkeypatch.setattr(client, "request", lambda path, payload=None:
+                        {} if path == "/api/show" else response)
+    with pytest.raises(ValueError):
+        client.analyze([], {}, "", {}, Runner())

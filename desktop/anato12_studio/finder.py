@@ -179,14 +179,23 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
             runner.check()
             relevant = {r["id"]: repeated[r["id"]][:2] for r in window if r["id"] in repeated}
             if model:
+                identity = model.identity(runner)
                 signature = json.dumps([ANALYSIS_VERSION, source, transcript_hash, window[0]["id"],
-                                        model.base, model.model, query, preferences], sort_keys=True)
+                                        model.base, model.model, identity, query, preferences], sort_keys=True)
                 key = "analysis:" + hashlib.sha256(signature.encode()).hexdigest()
                 raw = store.cache_get(key)
+                fresh = raw is None
                 if raw is None:
                     raw = model.analyze(window, relevant, query, preferences, runner)
+                    if model.identity(runner) != identity:
+                        raise ValueError("The local model changed during analysis. Retry with a stable model.")
+                valid = model_proposals(raw, window, relevant, duration)
+                if raw and not valid:
+                    raise ValueError("The model proposed clips without valid source evidence. "
+                                     "Try another model or review the transcript; this is not a no-match result.")
+                if fresh:
                     store.cache_put(key, source, "analysis_window", raw)
-                candidates.extend(model_proposals(raw, window, relevant, duration))
+                candidates.extend(valid)
             else:
                 candidates.extend(context_cues(window, relevant, duration))
             progress((i+1)/len(chunks), f"Analyzing context window {i+1}/{len(chunks)}")

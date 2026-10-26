@@ -80,6 +80,11 @@ See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
 
 ## Current limits
 
+Version 0.2.0a2 adds CHECK_LOCAL_AI.bat to collect a real-model evidence report
+from a saved project transcript. See the beginner guide. The harness is tested;
+the cloud proxy blocks Ollama downloads with HTTP 403, so real model quality,
+Windows execution and GPU performance still need verification.
+
 - English transcription, approximate phrase timestamps, no speaker diarization.
 - Default moment ranking is a text heuristic, not a validated humor detector.
   Semantic analysis requires an installed local Ollama model; actual model quality

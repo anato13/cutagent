@@ -140,6 +140,26 @@ The model may make mistakes even though timestamps/evidence use actual lines.</l
 currently use CPU; RTX acceleration is not verified. If connection fails, check
 that Ollama is running and a local model has finished downloading, or use cue mode.
 A model request can take up to 60 seconds to time out after cancellation.</p>
+<h3>Check your installed model and save evidence</h3>
+<p>After transcribing one recording, save its Studio project. Start Ollama, then
+double-click <strong>CHECK_LOCAL_AI.bat</strong>. Paste the saved .anato12.json path and choose
+an installed model number. Use a project with one transcribed recording.</p>
+<p>The check creates a new <strong>Anato12-model-check-...</strong> folder beside the project.
+Its <strong>model-evaluation.json</strong> records model identity, actual processing times,
+candidate timestamps and source quotations. Review the clips against your video;
+human_decision and human_notes fields are blank for your assessment. The tool
+does not calculate a humor score. Reports contain dialogue; keep them private.</p>
+<p>If a request fails or you press Ctrl+C, completed evidence remains in that folder.
+The check does not modify the project or the application's review database.
+Use the app's Clip Finder for resumable jobs; this evaluation starts fresh each time.</p>
+<p>Advanced command, from the app folder:</p>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m anato12_studio.evaluate_model --project &quot;My edit.anato12.json&quot; --model &quot;qwen2.5:3b&quot; --output &quot;Model review&quot;
+</code></pre>
+<p>Add --media-id followed by the recording ID from the project JSON for projects
+with several transcribed recordings, or --query followed by quoted search text.
+The output folder must be new. Analysis checks installed model digests before
+reusing cached answers. If a model changes during processing or has no reported
+digest, reconnect and choose a stable downloaded model.</p>
 <h3>Jobs, storage and your data</h3>
 <p>Open <strong>Jobs &amp; clip feedback</strong> to inspect processing state, resume an interrupted
 job, view/delete feedback, clear processing caches or export local application

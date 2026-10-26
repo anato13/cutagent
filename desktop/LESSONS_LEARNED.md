@@ -1,5 +1,11 @@
 # Engineering lessons
 
+Alpha 2: a model name does not identify its installed weights. Resolve the digest
+and configuration before using cached results, and verify again after inference.
+Invalid evidence is a failed model answer, not proof that no clip matches. Do not
+cache those failures. Controlled replacement/response tests verify these fixes;
+real semantic quality still needs separate human evaluation.
+
 1. Qt multimedia behavior must be exercised, not inferred from compilation.
    PySide6 6.12 crashed during headless audio startup; 6.8.3 is pinned after real
    decode/export checks. This does not prove all native Windows drivers work.
