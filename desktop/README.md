@@ -85,19 +85,26 @@ See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
 
 ## Current limits
 
-Version 0.3.0a3 adds content-bounded overlapping model sections and oversized-line
-diagnostics. Reports disclose input bytes and omitted callback links. Exact token
-counts, real-model quality and GPU capacity remain unverified.
-Explicit note-sharing controls and editable feedback remain available.
-Approved draft bundles remain available. CHECK_LOCAL_AI.bat collects a real-model evidence report
-from a saved project transcript. See the beginner guide. The harness is tested;
-the cloud proxy blocks Ollama downloads with HTTP 403, so real model quality,
-Windows execution and GPU performance still need verification.
+Version 0.3.0a4 adds cancellable local-model connections, total request deadlines,
+and reports containing raw proposals plus server token/timing measurements.
+Official model downloads now work in the development environment. Real CPU
+inference was tested with Qwen2.5 3B/7B and Qwen3 8B, but valid transcript IDs
+did not prevent unsupported explanations. Automatic humor selection remains
+PARTIALLY_IMPLEMENTED and requires source review; no model has passed human
+acceptance. See TEST_RESULTS.md for the actual comparisons and limitations.
+
+The revised prompt asks for complete exchanges and treats targeted search
+separately from humor selection. Advertised thinking mode is disabled for the
+local model's bounded JSON response; this does not alter Codex reasoning settings.
+Approved drafts, separate feedback-note consent, and content-bounded context
+remain available. CHECK_LOCAL_AI.bat saves private evaluation evidence beside
+your project. Windows execution, RTX performance and full-length semantic
+acceptance still need verification.
 
 - English transcription, approximate phrase timestamps, no speaker diarization.
 - Default moment ranking is a text heuristic, not a validated humor detector.
-  Semantic analysis requires an installed local Ollama model; actual model quality
-  has not been established in this environment.
+  Semantic analysis requires an installed local Ollama model; small genuine-dialogue
+  checks found both unsupported suggestions and missed exchanges. Review every result.
 - Add to main/Shorts appends to one editor timeline and switches its output ratio.
   The new approved-draft button creates those separate projects automatically.
   This is chronological assembly from user decisions; story/hook selection,

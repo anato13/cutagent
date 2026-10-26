@@ -69,3 +69,13 @@ Keep source rows intact; do not invent intermediate timestamps to split a captio
 Cache keys must bind both section endpoints, supplied callbacks and prompt version.
 Validate evidence against sent references only. Document omitted callback counts
 and distinguish UTF-8 byte limits from actual tokenizer/context/GPU measurements.
+
+Local-model requests must remain loopback-only, reject redirects and preserve TLS
+verification. Active cancellation must close the transport, including stalled
+headers and partial bodies; do not abandon inference threads as a workaround.
+Use bounded response sizes and total deadlines. Evaluation reports retain raw
+proposals and distinguish invalid evidence from an actual empty response. Server
+token/duration counts are measurements of processing, never humor confidence.
+Real models can produce unsupported reasons with valid IDs; semantic acceptance
+requires separate review. Disabling a local model's advertised thinking mode is
+independent of the user's Codex reasoning setting.

@@ -1,5 +1,16 @@
 # Engineering lessons
 
+A real model can cite valid transcript IDs while inventing the explanation.
+Inspect the reason against its evidence and preserve raw rejected proposals.
+Successful HTTP/schema tests establish mechanics, not story comprehension or
+humor. Stronger instructions alone did not make the tested small models reliable.
+
+Checking cancellation only after a synchronous response makes Cancel wait for
+generation. A watcher now shuts down the connected loopback socket, including
+when headers or a partial body stall; no abandoned inference thread is left
+waiting in the application. Keep a total deadline, response-size cap, TLS
+verification and redirect rejection alongside cancellation.
+
 Time limits alone cannot bound a model request: word-level captions, Unicode,
 shared notes and callback references all add content. Use one message builder for
 planning and sending, preserve complete source rows, and fail with an exact source

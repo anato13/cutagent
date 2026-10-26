@@ -105,6 +105,17 @@ def test_server_outage_and_malformed_json_are_not_reported_as_results(endpoint):
         LocalModel(url).models()
 
 
+def test_oversized_response_is_rejected(endpoint, monkeypatch):
+    url, handler = endpoint
+    def oversized(self, value):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b" " * 2_000_001)
+    monkeypatch.setattr(handler, "respond", oversized)
+    with pytest.raises(ValueError, match="size limit"):
+        LocalModel(url).models()
+
+
 def test_identity_detects_model_replacement_and_missing_digest(endpoint):
     url, handler = endpoint
     client = LocalModel(url, "fixture-local")
@@ -120,7 +131,42 @@ def test_identity_detects_model_replacement_and_missing_digest(endpoint):
                                     {"message": None}, {"message": {"content": 123}}])
 def test_incomplete_or_nontext_model_responses_fail(response, monkeypatch):
     client = LocalModel(model="fixture")
-    monkeypatch.setattr(client, "request", lambda path, payload=None:
+    monkeypatch.setattr(client, "request", lambda path, payload=None, runner=None:
                         {} if path == "/api/show" else response)
     with pytest.raises(ValueError):
         client.analyze([], {}, "", {}, Runner())
+
+
+def test_server_metrics_are_bounded_fields_and_cleared_on_failure(monkeypatch):
+    client = LocalModel(model="fixture")
+    response = {"message": {"content": '{"highlights": []}'}, "done": True,
+                "prompt_eval_count": 321, "eval_count": 42, "total_duration": 987654321,
+                "load_duration": -1, "eval_duration": True, "prompt_eval_duration": "estimated",
+                "unrelated": "private server metadata"}
+    monkeypatch.setattr(client, "request", lambda path, payload=None, runner=None:
+                        {} if path == "/api/show" else response)
+    assert client.analyze([], {}, "", {}, Runner()) == []
+    assert client.last_metrics == {"prompt_eval_count": 321, "eval_count": 42,
+                                   "total_duration": 987654321}
+    response["done"] = False
+    with pytest.raises(ValueError, match="incomplete"):
+        client.analyze([], {}, "", {}, Runner())
+    assert client.last_metrics == {}
+
+
+@pytest.mark.parametrize("capabilities", [["completion"], ["completion", "thinking"]])
+def test_advertised_thinking_is_disabled_for_bounded_json_output(monkeypatch, capabilities):
+    client = LocalModel(model="fixture")
+    calls = []
+    def request(path, payload=None, runner=None):
+        calls.append((path, payload))
+        if path == "/api/show":
+            return {"capabilities": capabilities}
+        return {"message": {"content": '{"highlights": []}'}, "done": True}
+    monkeypatch.setattr(client, "request", request)
+    client.analyze([], {}, "", {}, Runner())
+    payload = calls[-1][1]
+    if "thinking" in capabilities:
+        assert payload["think"] is False
+    else:
+        assert "think" not in payload

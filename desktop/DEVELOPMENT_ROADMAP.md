@@ -8,13 +8,29 @@ for exact checks and NOT_TESTED cases.
 | --- | --- | --- |
 | 1 — inspect and preserve editor | VERIFIED_WORKING | Baseline inspected, 17 baseline tests passed, local recovery commit |
 | 2A — persistent clip-review foundation | VERIFIED_WORKING | Linux: 53 tests from the extracted ZIP, real thumbnails/preview/export, durable reviews and interrupted job recovery |
-| 2B — contextual humor and semantic search | BLOCKED | Adapter implemented; needs a real downloaded local model, quality evaluation on genuine gaming dialogue and human feedback |
+| 2B — contextual humor and semantic search | PARTIALLY_IMPLEMENTED | Real local inference now runs; genuine-dialogue tests exposed unsupported explanations. Model selection, boundary quality and human acceptance remain |
 | 3 — automatic long-form drafts / Shorts batches | PARTIALLY_IMPLEMENTED | Independent drafts and optional batch renders from approved ranges; chronological overlap merging. Semantic story assembly/hook selection remains NOT_IMPLEMENTED |
 | 4 — personal assistant and general memory | NOT_IMPLEMENTED | Clip feedback is not an assistant or general memory |
 | 5 — official read-only YouTube analytics | NOT_IMPLEMENTED | Requires OAuth app configuration and user authorization |
 | 6 — thumbnail studio, planning, strategy/business tools | NOT_IMPLEMENTED | Earlier manually created assets do not constitute application features |
 | 7 — full product reliability / Windows acceptance | PARTIALLY_IMPLEMENTED | Linux tests and synthetic 30s–120min checks pass; Windows, GPU and genuine 60/120-minute gaming acceptance remain |
 | Last — image generation studio | NOT_IMPLEMENTED | Intentionally deferred until higher priorities are completed and accepted |
+
+Version 0.3.0a4 resolves the official-download network blocker and exercises real
+CPU inference with three downloaded models. Active requests can be cancelled;
+raw proposals, token/timing measurements and invalid-evidence outcomes are now
+reviewable. Prompt instructions alone did not solve unsupported explanations.
+The sampled targeted-search result is progress, not broad semantic acceptance.
+
+Next: improve evidence-supported explanations and clip boundaries on a labeled
+set of genuine conversations, then evaluate an entire recording with human
+feedback. The isolated ending has insufficient earlier story context. Cross-window
+context and ordinary transcript errors remain limits. Do not recommend unattended
+selection from the small sample checks. Native Windows/RTX and genuine long-file
+semantic performance remain separate unverified requirements.
+
+Earlier milestone notes follow; their network-blocked status describes those
+historical runs, not the current environment.
 
 Next: run a real local 3B–8B quantized conversational model suitable for the
 RTX 3060 Ti, record exact model/version and VRAM use, and evaluate supported
@@ -58,6 +74,6 @@ the current project's output ratio and appends a clip; there are not two indepen
 timelines in one editor window. The new draft button creates separate project files
 without changing the open timeline. Feedback supplies category preferences, not fine-tuning.
 
-Recommended reasoning: Extra High for model/evidence integration and interrupted
-job correctness; High for ordinary UI/docs once those interactions settle. Ultra
-has no demonstrated need at this milestone. The app cannot inspect Codex usage.
+Recommended reasoning: High for the next bounded model/evidence improvement and
+regression pass. Escalate only if a specific unresolved issue warrants it. The app
+cannot inspect Codex usage or change the selected reasoning setting.

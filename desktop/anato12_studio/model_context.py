@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import bisect
 import json
 
-PROMPT_VERSION = "bounded-context-1"
+PROMPT_VERSION = "complete-exchanges-search-3"
 CONTEXT_TOKENS = 8192
 OUTPUT_TOKENS = 1200
 MAX_INPUT_BYTES = 6000
@@ -18,8 +18,20 @@ SYSTEM_PROMPT = (
     "and callbacks. Loudness, profanity or laughter alone do not establish humor. "
     "Return JSON {highlights:[{first_id:int,last_id:int,evidence_ids:[int],title:str,"
     "category:str,reason:str}]}. Categories: misunderstanding, argument, surprise, banter, callback, "
-    "awkward, gameplay, other. Select at most 4 candidates, best first, or [] if no evidence. "
-    "For search, return only supported relevant matches. Use supplied segment IDs; never create "
+    "awkward, gameplay, other. Select at most 4 candidates, best first; never fill a quota. "
+    "Return {\"highlights\":[]} when no supported entertaining exchange is present. "
+    "A highlight needs a specific twist, contradiction, joke or revealing reaction. An ordinary "
+    "statement, repeated claim, clarification or friendly comment alone is not a highlight. "
+    "Select a complete exchange: first_id includes the setup/question, last_id includes the "
+    "payoff/answer and relevant reaction. Keep it under 75 seconds. Do not divide one continuous "
+    "exchange into adjacent pairs of lines. Prefer one complete exchange over several fragments. "
+    "evidence_ids must include the actual setup and payoff lines supporting your reason. "
+    "Every event described in title/reason must be supported by those evidence lines. "
+    "Do not infer agreement, speaker identity or who said which line. Treat claims as claims. "
+    "Skip garbled transcription or unrelated background speech instead of inventing an explanation. "
+    "When search is nonempty, find the requested exchange even if it is not humorous: relevance "
+    "to that search replaces the entertainment requirement. Return only supported relevant matches; "
+    "do not treat a search's assumptions as facts. Use supplied segment IDs; never create "
     "timestamps, quote missing dialogue, infer identities, or invent events. Titles must not assert "
     "that a person's contested claim is true. Do not output confidence percentages."
 )

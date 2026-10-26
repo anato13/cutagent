@@ -1,5 +1,27 @@
 # Project audit — 2026-10-26
 
+Version 0.3.0a4 continues from 1c1246c. The published network change now permits
+official Ollama/runtime downloads; the previous network blocker is resolved.
+Ollama 0.40.11 runs explicitly on loopback with cloud features disabled. Runtime
+and model layers were checksum verified and stay outside the source distribution.
+
+Real-model testing now distinguishes transport success, valid source references,
+and semantic quality. Valid IDs alone did not prevent unsupported explanations.
+The adapter closes active sockets on cancellation, enforces a total request
+deadline, and retains bounded server timing/token measurements. The evaluator
+records original proposals and distinguishes invalid evidence from empty output.
+The shared prompt requests complete exchanges and has a new cache version.
+Thinking-capable local models use non-thinking mode to reserve the output budget
+for review JSON; this does not change Codex's reasoning setting. No dependencies,
+project format or database schema changed. See the latest TEST_RESULTS.md entry
+for measurements and unverified acceptance requirements.
+
+Final extracted-package verification: 96 tests passed, 0 failed, 0 skipped.
+This milestone is preserved on local branch anato12-real-model-0.3a4, with a
+complete Git recovery bundle outside the checkout. No remote push was performed.
+
+The sections below preserve earlier milestone evidence and blockers at that time.
+
 Version 0.3.0a3 continues from fcb652f. Model analysis and the standalone evaluator
 now share a bounded-window planner and message construction. Complete rows keep
 source identity/timestamps, callback references are restricted to what was sent,

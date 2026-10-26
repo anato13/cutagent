@@ -1,5 +1,104 @@
 # Test results and verification history
 
+## Version 0.3.0a4 real inference and cancellation
+
+Final extracted-package suite: **96 passed, 0 failed, 0 skipped in 30.76 seconds**.
+The source ZIP contains 63 source/setup files. Its final application, tests,
+launchers, lockfile and other unchanged files match the tested extraction;
+only these verification notes and the audit summary were updated afterward.
+
+Workspace suite: **96 passed, 0 failed, 0 skipped in 30.51 seconds**.
+Ruff, offline lockfile consistency and Git whitespace checks passed.
+
+Status: transport/search/cache/export mechanics VERIFIED_WORKING on this Linux
+CPU environment; automatic humor selection PARTIALLY_IMPLEMENTED. The official
+Ollama download and registry requests now succeed after the user's environment
+change. This supersedes earlier network-blocked entries below.
+
+Ollama **0.40.11**, Linux amd64, was installed from its official release. Archive
+SHA256 matched the release's sha256sum.txt:
+`7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d`.
+Model blobs were SHA256 checked against official registry manifests. The runtime
+binds only to 127.0.0.1 with OLLAMA_NO_CLOUD=1. Models and private evidence remain
+outside the source distribution; no transcript was sent to a cloud inference API.
+
+Models tested (all Q4_K_M):
+
+- qwen2.5:3b, 3.1B parameters, installed digest
+  `357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b`.
+- qwen2.5:7b, 7.6B parameters, installed digest
+  `845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e`.
+- qwen3:8b, 8.2B parameters, installed digest
+  `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`.
+  Its advertised thinking mode is disabled for bounded JSON output.
+
+### Genuine-dialogue checks
+
+Three selected excerpts from one real recording used 19, 20 and 4 existing ASR
+lines (A/B/C), retaining absolute source timestamps. They are not an independent
+labeled dataset, and ASR errors remain. No user humor ratings or accuracy score
+were invented. Engineering inspection checked whether explanations matched the
+provided transcript; source-audio boundary acceptance remains separate.
+
+| Model / prompt | Wall seconds A / B / C | Candidates after validation and deduplication | Finding |
+| --- | --- | --- | --- |
+| Qwen2.5 3B / bounded-context-1 | 32.712 / 15.328 / 6.668 | 2 / 2 / 0 | Fragmented exchanges and unsupported explanations; C's single raw proposal had no valid evidence, not a true no-match |
+| Qwen2.5 3B / complete-exchanges-2 | 20.470 / 12.713 / 9.201 | 1 / 1 / 2 | Stronger wording alone did not resolve invented interpretations |
+| Qwen2.5 7B / complete-exchanges-2 | 43.125 / 25.835 / 5.032 | 1 / 1 / 0 | More complete ranges, but an explanation still invented a relationship reaction |
+| Qwen3 8B / complete-exchanges-2 | 35.024 / 20.284 / 5.449 | 0 / 0 / 0 | Conservative empty responses; missed a potentially useful exchange |
+| Qwen3 8B / final complete-exchanges-search-3 | 1.953 / 19.554 / 5.407 | 0 / 0 / 0 | Same limitation in the final automatic mode |
+
+Times include differing model-load/prompt-cache states; this is not a controlled
+speed ranking. Server token/duration fields are retained per request. The sampled
+runs reported at most 1,116 prompt tokens; maximum-budget Unicode/template
+capacity was not established. Ollama reported CPU operation and size_vram=0.
+This does not establish an 8 GB GPU fit, actual VRAM use or Windows speed.
+
+A specific semantic query under the final prompt found one relevant source range
+in **35.336s** with Qwen3 8B. Its generated explanation still needs review,
+including speaker attribution; there is no diarization. Prompt instructions now
+explicitly distinguish requested relevance from automatic entertainment selection.
+
+### Real app pipeline and media
+
+The actual finder/store pipeline, in a separate disposable profile, found one
+unreviewed result in **15.054s** using one Qwen3 request. Reopening the store and
+running the same search took **0.022s** with **zero additional chat requests**.
+The original source fingerprint and unreviewed status were preserved.
+
+The returned range exported through the application's normal backend to two
+**38.0-second** H.264/AAC MP4s, with burned captions and nonempty SRT sidecars:
+
+- 1920x1080 landscape: **14.664s** export time.
+- 1080x1920 portrait, keep-whole-frame: **11.942s** export time.
+
+Both files passed complete FFmpeg decode checks. Inspected frames show the
+source frame retained and readable captions; portrait keep-whole-frame adds bars
+as designed. This is export verification, not approval of pacing, framing or humor.
+Private clips, reports, screenshots, databases and model weights are excluded
+from the ZIP.
+
+### Cancellation and remaining acceptance
+
+An actual Ollama call cancelled at 1s returned at **5.109s** before the fix and
+**1.035s** after it (about 35ms after the request). Ollama logged cancellation and
+released the inference slot. HTTP regression fixtures separately stall before
+headers and during a partial body; cancellation and total deadlines terminate
+both. Initial connection establishment has a five-second socket timeout; active
+requests have a 300s chat / 60s metadata deadline and a 2MB response cap.
+
+Reports retain raw rejected proposals, server counters when present, prompt
+version and explicit no_proposals/invalid_evidence outcomes. Valid source IDs
+prove reference membership only, not that the generated explanation is true.
+
+NOT_TESTED: native Windows setup/playback/EXE, RTX/NVENC/CUDA, full-recording
+semantic quality or 60/120-minute gaming inference, calibrated humor accuracy,
+user acceptance and a controlled comparison of model performance. The entire
+490-line recording was prepared as a private project but was not semantically
+analyzed in this milestone. Next work should improve supported explanations,
+boundaries and earlier story context before broad unattended-selection claims.
+
+
 ## Version 0.3.0a3 bounded dialogue input
 
 Final extracted-package suite: **82 passed, 0 failed, 0 skipped in 20.40 seconds**.

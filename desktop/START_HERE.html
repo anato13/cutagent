@@ -200,13 +200,17 @@ an example to try, not a model-quality or GPU-performance guarantee.</li>
 <li>Choose <strong>Local Ollama · contextual</strong> and analyze or search. Transcript windows
 go to that local server. Use downloaded models; known cloud-backed Ollama
 models and non-loopback endpoints are rejected. There is no cloud fallback.</li>
-<li>Review every result. Semantic humor quality has <strong>not</strong> been validated here.
-The model may make mistakes even though timestamps/evidence use actual lines.</li>
+<li>Review every result. Genuine-dialogue tests with Qwen2.5 3B/7B found invented
+explanations despite valid source references. Qwen3 8B was more conservative
+and missed exchanges. None is a validated automatic humor detector.
+A specific search can help locate an exchange, but its explanation still needs review.</li>
 </ol>
 <p>Ollama controls its own hardware use. The editor's FFmpeg and speech paths
 currently use CPU; RTX acceleration is not verified. If connection fails, check
 that Ollama is running and a local model has finished downloading, or use cue mode.
-A model request can take up to 60 seconds to time out after cancellation.</p>
+Cancel now closes an active local request and stops waiting for generation. A slow
+CPU inference request may run for up to five minutes before timing out; metadata
+requests have a one-minute limit. Completed analysis sections remain cached.</p>
 <p>Dense dialogue now uses smaller overlapping sections automatically. Each section
 keeps complete transcript lines with their original IDs and timestamps.
 If one line is too large, Studio names its ID and source time so you can shorten
@@ -215,6 +219,8 @@ shared notes also consume the input budget; shortening them may resolve the erro
 Studio does not silently cut a dialogue line or invent replacement times.</p>
 <p>The adapter requests 8,192 context tokens with up to 1,200 output tokens, and
 limits the combined system/transcript/search/feedback content to 6,000 UTF-8 bytes.
+For models advertising thinking support, Studio disables that mode to leave the
+output budget for clip suggestions. This is separate from Codex reasoning settings.
 This is a conservative size limit, not an exact tokenizer measurement or a
 guarantee that every model/template fits. GPU memory use remains unmeasured.
 Up to four earlier callback links are included when space allows. The model-check
@@ -227,7 +233,14 @@ double-click <strong>CHECK_LOCAL_AI.bat</strong>. Paste the saved .anato12.json 
 an installed model number. Use a project with one transcribed recording.</p>
 <p>The check creates a new <strong>Anato12-model-check-...</strong> folder beside the project.
 Its <strong>model-evaluation.json</strong> records model identity, actual processing times,
-candidate timestamps and source quotations. Review the clips against your video;
+candidate timestamps and source quotations. Each section also retains the original
+proposals, including rejected ones, and any token counts/timings reported by Ollama.
+Those measurements describe model processing, not how funny a clip is. Duration
+fields inside server_metrics use nanoseconds; wall_seconds uses seconds.
+Missing server measurements stay absent rather than being estimated.
+An outcome of invalid_evidence means the model proposed clips that failed the
+source checks; no_proposals means it returned an empty list. Neither is a humor rating.
+Review the clips against your video;
 human_decision and human_notes fields are blank for your assessment. The tool
 does not calculate a humor score. Reports contain dialogue; keep them private.</p>
 <p>If a request fails or you press Ctrl+C, completed evidence remains in that folder.

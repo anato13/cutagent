@@ -118,7 +118,7 @@ class FinderController:
                              "Known cloud-backed models are excluded. Nothing has been analyzed yet.")
         try:
             client = LocalModel(p.url.text())
-            w.start_job(lambda runner, progress: client.models(), done, "Connecting to local Ollama")
+            w.start_job(lambda runner, progress: client.models(runner), done, "Connecting to local Ollama")
         except Exception as error:
             w.fail(str(error))
 

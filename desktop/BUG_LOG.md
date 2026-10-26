@@ -2,6 +2,12 @@
 
 | ID | Severity / reproduction | Cause and correction | Evidence / limit |
 | --- | --- | --- | --- |
+| B19 | Medium: cancel during local-model inference | Cancellation was checked only after a blocking response. The transport now shuts down the active socket and enforces a total deadline | Stalled headers/body HTTP regressions; actual Ollama returned at 1.035s for a cancellation at 1s, compared with 5.109s before the fix |
+| B20 | High, OPEN: a model cites real IDs but invents an explanation | Reference validation cannot establish semantic support. Real 3B/7B checks exposed this; stricter prompts alone did not resolve it | Preserve raw proposals, review reasons against source dialogue, and keep semantic quality PARTIALLY_IMPLEMENTED |
+
+
+| ID | Severity / reproduction | Cause and correction | Evidence / limit |
+| --- | --- | --- | --- |
 | B18 | High: dense/oversized caption text plus feedback in a 90-second window | Time-only grouping imposed no content limit. A shared planner bounds serialized UTF-8 content, preserves complete rows and rejects a line too large to fit | test_model_context.py; actual server truncation/humor impact NOT_TESTED |
 
 New context protection: earlier callback evidence is accepted only if included
@@ -51,8 +57,8 @@ Alpha 2 corrections:
 | B14 | Integer transcript times changed to floats after the first cache hash, causing redundant model calls on resume | Validate/canonicalize times before forming rows and hashing; interrupted-window cache regression |
 
 Known limitations: semantic humor quality is unverified; no native Windows or GPU
-validation; one editor timeline with a project-wide output ratio; synchronous local
-model request cancellation can wait up to its 60-second network timeout; resuming
+validation; one editor timeline with a project-wide output ratio; local
+model quality remains under evaluation; resuming
 ASR re-extracts a temporary WAV. No automatic long-form story editor or personal
 assistant exists yet. Never silently classify these as verified features.
 
