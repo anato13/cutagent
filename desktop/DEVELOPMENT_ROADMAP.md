@@ -1,5 +1,8 @@
 # Development roadmap
 
+Version 0.3.0a6 addresses relinking, failure progress and new-project defaults. Next priorities remain supported AI explanations, boundary review, and native Windows testing. Medium remains suitable for focused reliability work; no extra AI downloads or inference benchmarks were needed.
+
+
 Version 0.3.0a5 fixes two reproducible persistence/metadata defects. Continue semantic evidence and boundary evaluation before claiming automatic humor selection is reliable. Medium remains appropriate for focused bug fixes; no extra model downloads or inference benchmarks were required for this pass.
 
 

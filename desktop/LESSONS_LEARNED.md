@@ -1,5 +1,8 @@
 # Engineering lessons
 
+A similar recording duration is not enough to validate a relink: even a half-second difference can invalidate a final clip or caption. Validate a detached candidate before replacing live state, then store its actual duration. Preserve completed progress on failures, and keep model defaults consistent with controls.
+
+
 Source protection belongs in project persistence as well as video export. File-dialog filters cannot protect API callers, unusual extensions or hardlink aliases. Validate optional model metadata before using membership operations.
 
 

@@ -66,6 +66,11 @@ def run_desktop(recording, destination):
         assert not failures, failures
         assert exported == [str(destination)]
         window.grab().save(str(destination.with_suffix('.png')))
+        window.dirty = False
+        window.new_project()
+        assert window.project.save_srt is False
+        assert window.inspector.srt.isChecked() == window.project.save_srt
+        assert not window.project.media and not window.project.clips
     finally:
         if window.job:
             window.cancel_job()

@@ -1,7 +1,7 @@
 """Portable project data and validation, independent of the desktop UI."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 import json
 import math
 from pathlib import Path
@@ -105,6 +105,21 @@ class Project:
     profile: str = "YouTube · 16:9"
     burn_captions: bool = False
     save_srt: bool = True
+
+    def relink_media(self, media_id, path, metadata):
+        old = self.media[media_id]
+        candidate = replace(old, path=str(Path(path).resolve()), **metadata,
+                            transcript=[replace(s) for s in old.transcript])
+        candidate.duration = number(candidate.duration, 1/30, 1_000_000, "Video duration")
+        if abs(candidate.duration - old.duration) > 1:
+            raise ValueError("This recording has a different duration. Import it as a new source.")
+        for segment in candidate.transcript:
+            segment.validate(candidate.duration)
+        for clip in self.clips:
+            if clip.media_id == media_id:
+                replace(clip).validate(candidate)
+        self.media[media_id] = candidate
+        return candidate
 
     def add_media(self, path: str, **metadata: object) -> Media:
         canonical = str(Path(path).resolve())

@@ -70,7 +70,7 @@ class Actions:
             return
         self.player.player.stop()
         self.player.player.setSource(QUrl())
-        self.project = Project()
+        self.project = Project(save_srt=False)
         self.project_path = None
         self.current_id = None
         self.dirty = False
@@ -79,7 +79,7 @@ class Actions:
         self.loading = True
         self.inspector.profile.setCurrentIndex(0)
         self.inspector.burn.setChecked(False)
-        self.inspector.srt.setChecked(False)
+        self.inspector.srt.setChecked(self.project.save_srt)
         self.inspector.fit.setCurrentIndex(0)
         self.inspector.zoom.setValue(1)
         self.inspector.x.setValue(50)
@@ -146,13 +146,7 @@ class Actions:
             self.fail(str(error))
             return
         def done(metadata):
-            if abs(metadata["duration"] - media.duration) > 1:
-                self.fail("This recording has a different duration. Reimport it as a new source "
-                          "instead of relinking existing clip times.")
-                return
-            media.path = str(Path(path).resolve())
-            media.width, media.height = metadata["width"], metadata["height"]
-            media.has_audio = metadata["has_audio"]
+            self.project.relink_media(media.id, path, metadata)
             self.dirty = True
             self.player.media = None
             self.refresh_library(media.id)

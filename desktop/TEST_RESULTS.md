@@ -1,5 +1,19 @@
 # Test results and verification history
 
+## Version 0.3.0a6 reliability fixes
+
+Workspace suite: **107 passed, 0 failed, 0 skipped in 31.04 seconds**.
+After the final new-project default adjustment, the real desktop workflow passed
+again (1 test in 1.79 seconds), including import, decoded preview, seeking, export
+and empty-project caption-control consistency. Ruff and whitespace checks passed.
+Relink regressions verify shortened clips/captions are rejected without changing
+the project, duration mismatches are rejected, and valid replacements store actual
+metadata. A failed-analysis regression verifies retained progress.
+These mechanics are VERIFIED_WORKING in Linux. Native Windows/GPU and AI semantic
+quality were NOT_TESTED in this pass. No new performance claim is made. The source
+ZIP was rebuilt and integrity checked, without a separate extracted-package suite.
+
+
 ## Version 0.3.0a5 focused bug fixes
 
 Workspace suite: **102 passed, 0 failed, 0 skipped in 30.76 seconds**. Ruff passed.

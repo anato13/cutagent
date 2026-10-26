@@ -1,5 +1,8 @@
 # Project audit — 2026-10-26
 
+Version 0.3.0a6 continues from b925fbc: transactional relinking validation, retained failure progress, and consistent new-project caption defaults. No dependency/schema change. Native Windows/GPU acceptance remains NOT_TESTED; semantic quality remains PARTIALLY_IMPLEMENTED.
+
+
 Version 0.3.0a5 continues from 2cc680f. Adds source-file protection to project saving and explicit malformed model-capability errors. No dependency or schema changes. AI quality remains PARTIALLY_IMPLEMENTED; Windows/GPU acceptance remains NOT_TESTED.
 
 

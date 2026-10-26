@@ -1,5 +1,12 @@
 # Bug log
 
+B23 — Relinking now validates every existing clip and caption against the actual new duration before changing the project. Invalid relinks preserve the entire prior state.
+
+B24 — Failed analysis retains its last completed progress instead of resetting to zero.
+
+B25 — New projects now consistently start with optional SRT export disabled in both saved data and visible controls.
+
+
 B21 — VERIFIED_WORKING: project saving now rejects a source recording path or hardlink alias before writing. Direct/alias preservation and normal save/reopen regressions added.
 
 B22 — VERIFIED_WORKING: malformed nonempty model capabilities now produce an actionable validation error before inference. Scalar, string and mixed-list regressions added.

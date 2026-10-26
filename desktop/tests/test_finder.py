@@ -287,3 +287,17 @@ def test_model_replacement_during_request_is_not_cached(review):
         analyze(store, source, media.transcript, media.duration, Runner(), lambda *a: None, ChangedModel())
     with store.connect() as db:
         assert db.execute("SELECT COUNT(*) FROM cache WHERE kind='analysis_window'").fetchone()[0] == 0
+
+
+def test_failed_pipeline_keeps_completed_progress(review, monkeypatch):
+    store, media, source, _ = review
+    job = store.create_job(source, {})
+    def fail_analysis(*args):
+        args[5](.5, 'Halfway through analysis')
+        raise RuntimeError('injected failure')
+    monkeypatch.setattr('anato12_studio.finder_jobs.analyze', fail_analysis)
+    with pytest.raises(RuntimeError, match='injected failure'):
+        run_pipeline(store, source, media, {}, job, 'unused', Runner(), lambda *a: None)
+    saved = next(j for j in store.jobs() if j['id'] == job)
+    assert saved['status'] == 'failed'
+    assert saved['progress'] == pytest.approx(.8)

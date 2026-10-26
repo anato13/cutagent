@@ -80,7 +80,7 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
         raise
     except Exception as error:
         try:
-            store.update_job(job_id, "failed", 0, str(error))
+            store.update_job(job_id, "failed", last_progress[0], str(error))
         except Exception:
             pass
         raise
