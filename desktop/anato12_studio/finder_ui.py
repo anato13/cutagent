@@ -2,6 +2,7 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDoubleSpinBox, QHBoxLayout, QLabel, QLineEdit,
+    QDialog, QDialogButtonBox, QFormLayout, QSpinBox,
     QHeaderView, QPushButton, QScrollArea, QSplitter, QTextEdit, QVBoxLayout, QWidget,
 )
 from .panels import table
@@ -14,6 +15,7 @@ class FinderPanel(QScrollArea):
     refresh = Signal()
     selected = Signal()
     action = Signal(str)
+    drafts = Signal()
 
     def __init__(self):
         super().__init__()
@@ -59,6 +61,9 @@ class FinderPanel(QScrollArea):
         b.clicked.connect(self.refresh)
         row.addWidget(b)
         column.addLayout(row)
+        b = QPushButton("Create YouTube + Shorts drafts from approved highlights…")
+        b.clicked.connect(self.drafts)
+        column.addWidget(b)
         self.notice = QLabel("LOCAL processing · cue ranks are not confidence scores. "
                              "A configured local model is needed for semantic analysis/search.")
         self.notice.setWordWrap(True)
@@ -116,6 +121,39 @@ class FinderPanel(QScrollArea):
         b.clicked.connect(lambda: self.action.emit("feedback"))
         row.addWidget(b)
         column.addLayout(row)
+
+
+class DraftDialog(QDialog):
+    def __init__(self, count, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Create approved drafts")
+        column = QVBoxLayout(self)
+        note = QLabel(f"Use all {count} approved highlights for this recording.\n"
+                      "Create a new YouTube project and separate Shorts projects.\n"
+                      "The current edit stays open. Main clips follow recording order;\n"
+                      "overlapping ranges are merged. Long Shorts are skipped, not cut short.")
+        note.setWordWrap(True)
+        column.addWidget(note)
+        form = QFormLayout()
+        self.limit = QSpinBox()
+        self.limit.setRange(1, 180)
+        self.limit.setValue(60)
+        self.limit.setSuffix(" seconds")
+        self.fit = QComboBox()
+        self.fit.addItem("Keep whole frame · add bars", "fit")
+        self.fit.addItem("Fill portrait · crop center", "fill")
+        form.addRow("Maximum Short length", self.limit)
+        form.addRow("Shorts framing", self.fit)
+        column.addLayout(form)
+        self.burn = QCheckBox("Burn dialogue captions")
+        self.srt = QCheckBox("Save SRT captions with rendered videos")
+        self.render = QCheckBox("Also render MP4s now (takes longer)")
+        for widget in (self.burn, self.srt, self.render):
+            column.addWidget(widget)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        column.addWidget(buttons)
 
 
 class DataPanel(QScrollArea):

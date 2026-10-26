@@ -1,5 +1,13 @@
 # Bug log
 
+Alpha 3 defensive checks (no claim of previously shipped defects): the new batch
+query bypasses the 500-row display cap, with a 501-approval regression. Overlaps
+merge only for the main edit; Shorts use complete approved ranges. Cancellation,
+including after one real MP4 has completed, removes the entire unpublished bundle.
+Simulated disk-write failure and changed-source checks preserve existing files.
+Known new limit: forced process termination may leave a hidden temporary folder;
+draft batches restart from scratch and are not represented as resumable analysis jobs.
+
 Alpha 2 corrections:
 
 | ID | Severity / reproduction | Expected vs actual, cause and fix | Regression |

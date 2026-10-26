@@ -3,11 +3,13 @@ import copy
 import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QSignalBlocker
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt, QSignalBlocker, QUrl
+from PySide6.QtGui import QPixmap, QDesktopServices
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
 
 from .finder_jobs import make_thumbnail, run_pipeline, thumbnail_path
+from .drafts import DraftOptions, create_bundle
+from .finder_ui import DraftDialog
 from .local_model import LocalModel
 from .model import Clip, Segment, timestamp
 from .store import Store, fingerprint
@@ -30,6 +32,7 @@ class FinderController:
         p.refresh.connect(self.refresh_all)
         p.selected.connect(self.selected)
         p.action.connect(self.action)
+        p.drafts.connect(self.create_drafts)
         p.status.currentIndexChanged.connect(self.refresh)
         p.order.currentIndexChanged.connect(self.refresh)
         window.data_panel.action.connect(self.data_action)
@@ -253,6 +256,50 @@ class FinderController:
         ffmpeg, _ = w.tools()
         w.start_job(lambda runner, progress: export_video(plan, ffmpeg, runner, progress),
                     w._exported, "Exporting selected highlight only")
+
+    def create_drafts(self):
+        w = self.w
+        if w.job:
+            return
+        try:
+            media = w.current_media()
+            if not media or not self.source:
+                raise ValueError("Select a recording with approved highlights first.")
+            approved = self.store.approved_for_source(self.source)
+            if not approved:
+                raise ValueError("Approve at least one highlight for this recording first.")
+            dialog = DraftDialog(len(approved), w)
+            if dialog.exec() != DraftDialog.DialogCode.Accepted:
+                return
+            parent = QFileDialog.getExistingDirectory(w, "Choose folder for a new draft bundle")
+            if not parent:
+                return
+            snapshot = copy.deepcopy(media)
+            if not snapshot.transcript:
+                saved = self.store.cache_get(f"analysis-transcript:{self.source}") or []
+                snapshot.transcript = [Segment(**s) for s in saved]
+            options = DraftOptions(dialog.limit.value(), dialog.fit.currentData(),
+                                   dialog.burn.isChecked(), dialog.srt.isChecked(), dialog.render.isChecked())
+            ffmpeg = w.tools()[0] if options.render else ""
+            source = self.source
+            w.start_job(lambda runner, progress: create_bundle(snapshot, source, approved,
+                parent, options, ffmpeg, runner, progress), self._drafts_ready, "Creating approved drafts")
+        except Exception as error:
+            w.fail(str(error))
+
+    def _drafts_ready(self, result):
+        self.w.statusBar().showMessage(f"Drafts ready: {result['directory']}")
+        box = QMessageBox(self.w)
+        box.setWindowTitle("Drafts ready")
+        box.setText(
+            f"Created {result['main_clips']} main-video ranges and {result['shorts']} Shorts projects.\n"
+            f"Skipped Shorts: {result['skipped']} (see draft-manifest.json).\n\n{result['directory']}\n\n"
+            "Open a draft using File → Open project. Review its framing before publishing.")
+        open_folder = box.addButton("Open folder", QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QMessageBox.StandardButton.Close)
+        box.exec()
+        if box.clickedButton() == open_folder:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(result["directory"]))
 
     def refresh_data(self):
         p = self.w.data_panel

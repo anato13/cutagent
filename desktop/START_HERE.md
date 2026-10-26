@@ -4,7 +4,7 @@ Anato12 Studio edits recordings **on your own computer**. There is no 32 MB uplo
 limit, paid API, subscription, or account requirement. Keep your original recording:
 the app exports a new MP4.
 
-This is version 0.2 alpha, supplied as a Python desktop project with Windows
+This is version 0.3 alpha, supplied as a Python desktop project with Windows
 launchers. It is not a prebuilt or signed Windows installer.
 
 ## 1. Put the app in a folder
@@ -142,6 +142,50 @@ the app reports it clearly if the installed build lacks it.
 is “weirdest” or verify a story claim. A configured local model is required for
 semantic search. **All saved highlights** clears the current search-result filter.
 The older **Potential moments** tab remains available with its original text cues.
+
+### Create separate YouTube and Shorts drafts
+
+After approving your favorite highlights for one recording, click
+**Create YouTube + Shorts drafts from approved highlights…** in AI Clip Finder.
+The button uses every approved highlight for that recording, including ones
+outside the current search or decision filter.
+
+Choose a maximum Short length (default 60 seconds, adjustable from 1–180) and
+portrait framing. **Keep whole frame** adds bars; **Fill portrait** crops the
+center and needs careful preview if your facecam sits near an edge.
+Choose optional captions and check **Also render MP4s now** if you want finished
+videos as well as editable projects. Otherwise creation is much quicker.
+
+Choose a destination folder. Studio creates a uniquely named **Anato12-drafts-...**
+folder containing:
+
+- **YouTube.anato12.json** — approved ranges in recording order. Overlapping
+  ranges merge so the main edit does not repeat the same footage.
+- **Short-001.anato12.json**, etc. — one complete approved range per independent
+  portrait project. Exact duplicate frame ranges are included once.
+- **draft-manifest.json** — source, included highlights, outputs and reasons for
+  skipped Shorts. A range over your chosen limit stays in the main draft and is
+  skipped for Shorts; it is not automatically cut in half.
+- MP4s and optional SRTs if you chose to render immediately.
+
+Click **Open folder** when creation finishes. Open each project using
+**File → Open project**, save your current edit when prompted, and review framing,
+captions and clip boundaries. The open edit is unchanged while drafts are created.
+Projects reference the original recording, so keep it at its current location.
+Each project stores editable captions; burned captions are permanent only in
+finished MP4s. Caption options in a project-only bundle apply when you export later.
+
+Cancellation or a processing error removes that attempt's temporary bundle.
+A forced app/computer shutdown can leave a hidden .anato12-drafts-... temporary
+folder; it is not a completed bundle. Draft batches currently restart from scratch.
+Rendering needs disk space for every output and FFmpeg's temporary intermediates.
+The completion message reports any skipped Shorts; inspect the manifest before
+assuming every approved range became a Short.
+
+This builds drafts from your decisions. It does not choose an opening hook,
+understand a story arc or automatically track faces. The older **Add to main video**
+and **Add to Shorts** buttons still append to the currently open project and
+switch its ratio; use the new draft button for independent edits.
 
 ### Optional: connect a downloaded local model
 

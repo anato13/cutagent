@@ -1,5 +1,5 @@
 ANATO12 STUDIO
-Version 0.2 alpha - persistent clip review milestone
+Version 0.3 alpha - independent approved drafts
 
 1. Extract this entire folder from the ZIP first.
 2. Open START_HERE.html in your web browser for the beginner guide.
@@ -11,6 +11,8 @@ Version 0.2 alpha - persistent clip review milestone
 You can import, preview, trim and export without AI.
 For optional local transcription, close the app and run INSTALL_SPEECH.bat.
 The AI Clip Finder saves reviews and opt-in category feedback locally.
+After approving highlights, use "Create YouTube + Shorts drafts" for separate
+editable projects and optional MP4s. The current edit remains open and unchanged.
 Context cues are limited; semantic analysis needs a downloaded Ollama model.
 Read START_HERE.html for the optional model setup and data controls.
 TEST_RESULTS.md and DEVELOPMENT_ROADMAP.md list verified features and blockers.

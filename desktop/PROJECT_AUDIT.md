@@ -1,5 +1,18 @@
 # Project audit — 2026-10-26
 
+Alpha 3 continues from b5e8e3d and adds approved-draft assembly and optional batch
+exports. Projects remain JSON version 1; SQLite schema is unchanged. No dependencies
+were added. The builder snapshots the source/transcript, checks its fingerprint,
+writes in an owned temporary directory and publishes a unique folder only after
+success. Ordinary cancellation/errors remove partial outputs. Abrupt termination
+may leave a temporary folder and is not a resumable batch.
+
+Final alpha-3 validation: 69 tests passed from the extracted distribution, including
+real captioned exports, cancellation after one rendered output, and the GUI's
+unchanged-project check. Native Windows/GPU and semantic-model quality remain
+unverified. The approved-draft milestone is preserved on local branch
+anato12-approved-drafts-0.3a1; no remote push is part of this checkpoint.
+
 Alpha 2 continues from checkpoint 04d6e61. Added a separate local-model evaluation
 command and Windows launcher, installed-weight/configuration cache identity,
 and explicit rejection of incomplete or unsupported model results. HTTP fixtures

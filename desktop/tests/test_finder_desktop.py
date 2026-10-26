@@ -71,6 +71,23 @@ def run_finder(recording, destination):
         window.finder.action.emit("export")
         wait_until(app, lambda: window.job is None)
         assert exports == [str(destination)] and not failures, failures
+        # Create independent drafts without altering this open, unsaved timeline.
+        from dataclasses import asdict
+        from anato12_studio.finder_ui import DraftDialog
+        from anato12_studio.model import Project
+        before = asdict(window.project)
+        was_dirty = window.dirty
+        bundles = []
+        controller._drafts_ready = bundles.append
+        DraftDialog.exec = lambda self: DraftDialog.DialogCode.Accepted
+        QFileDialog.getExistingDirectory = lambda *a, **k: str(destination.parent)
+        window.finder.drafts.emit()
+        wait_until(app, lambda: window.job is None)
+        assert not failures and len(bundles) == 1, failures
+        assert asdict(window.project) == before and window.dirty == was_dirty
+        bundle = Path(bundles[0]["directory"])
+        assert Project.load(bundle / "YouTube.anato12.json").profile == "YouTube · 16:9"
+        assert Project.load(bundle / "Short-001.anato12.json").profile == "Shorts · 9:16"
         # A new project clears old-source candidates; persisted review remains.
         window.dirty = False
         window.new_project()

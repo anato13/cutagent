@@ -1,5 +1,12 @@
 # Engineering lessons
 
+Approved batch workflows need their own complete source query, rather than
+reusing a display-limited table. Keep output filenames controlled (titles are
+metadata), preserve the open timeline and write multi-file work in an owned
+temporary directory. Publish only after all requested outputs succeed. The
+501-approval, actual batch export, mid-batch cancellation and GUI snapshot checks
+cover these boundaries. Do not equate chronological assembly with story understanding.
+
 Alpha 2: a model name does not identify its installed weights. Resolve the digest
 and configuration before using cached results, and verify again after inference.
 Invalid evidence is a failed model answer, not proof that no clip matches. Do not

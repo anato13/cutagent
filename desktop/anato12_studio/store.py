@@ -147,6 +147,11 @@ class Store:
             result.sort(key=lambda r: (-(r["rank"] + r["preference_adjustment"]), r["start"]))
         return result
 
+    def approved_for_source(self, source):
+        with self.connect() as db:
+            return [dict(row) for row in db.execute(
+                "SELECT * FROM highlights WHERE source=? AND status='approved' ORDER BY start,end,id", (source,))]
+
     def highlight(self, identifier):
         with self.connect() as db:
             row = db.execute("SELECT * FROM highlights WHERE id=?", (identifier,)).fetchone()

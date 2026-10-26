@@ -1,5 +1,30 @@
 # Test results — phase 2A
 
+## Alpha 3 approved-draft update
+
+Final extracted-package validation: **69 passed, 0 failed, 0 skipped in 19.98
+seconds**. Ruff and Git whitespace checks passed. The styled draft dialog was
+inspected visually. The archive contains 58 source/setup files and excludes
+recordings, model weights, databases and private verification outputs.
+
+First complete run: **68 passed, 0 failed, 0 skipped in 19.70 seconds**.
+After adding actual mid-batch render cancellation and the completion-folder action,
+the affected draft/GUI tests passed: **8 passed in 4.93 seconds**.
+
+New evidence: real main/Short MP4s have correct ratios, durations, audio and SRT
+offsets; burned captions render. Three tiny synthetic outputs took 2.36 seconds
+in the targeted integration test (including project/probe checks), not a benchmark
+for long gaming recordings. CPU processing only; GPU utilization NOT_MEASURED.
+
+Tests verify main-range overlap merging, exact duplicate Shorts suppression,
+whole-range duration-limit skipping, separate editable caption objects, source
+change rejection, all 501 approved records beyond the display limit, and unchanged
+open-project/dirty state through the real Qt action. Cancellation after the first
+MP4 finishes publishes no partial bundle. Simulated ENOSPC also cleans up without
+changing existing files. Physical disk exhaustion/power loss/native Windows remain
+NOT_TESTED. Full semantic story selection and real-model humor quality remain
+unverified; these drafts use explicit user approvals.
+
 ## Alpha 2 model-readiness update
 
 Workspace validation: **62 passed, 0 failed, 0 skipped in 16.85 seconds**.

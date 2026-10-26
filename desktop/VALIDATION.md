@@ -1,7 +1,7 @@
 # Validation history
 
-Current version **0.2.0a2**: see [TEST_RESULTS.md](TEST_RESULTS.md) for the
-62-test model-readiness milestone, earlier long synthetic media and two-hour chunk/resume
+Current version **0.3.0a1**: see [TEST_RESULTS.md](TEST_RESULTS.md) for approved
+draft/export verification, model-readiness checks, long synthetic media and two-hour chunk/resume
 measurement, feature statuses and explicit NOT_TESTED cases.
 
 ## Version 0.1.0 baseline

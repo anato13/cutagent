@@ -18,6 +18,9 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
 - Reviewable moment suggestions based on explicit transcript cues.
 - Persistent AI Clip Finder: contextual cue candidates, actual frame thumbnails,
   preview, manual ranges, approvals/rejections, selected-clip export and editor insertion.
+- Create independent YouTube and Shorts project bundles from approved highlights,
+  with overlap merging, complete-range Shorts, optional batch MP4/caption rendering,
+  cancellation cleanup and an output/skip manifest.
 - Durable SQLite jobs/caches, restart recovery, literal transcript search and
   explicitly opted-in category feedback with view/delete/export controls.
 - Optional loopback Ollama adapter for downloaded local models. HTTP behavior is
@@ -80,7 +83,7 @@ See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
 
 ## Current limits
 
-Version 0.2.0a2 adds CHECK_LOCAL_AI.bat to collect a real-model evidence report
+Version 0.3.0a1 adds approved draft bundles. CHECK_LOCAL_AI.bat collects a real-model evidence report
 from a saved project transcript. See the beginner guide. The harness is tested;
 the cloud proxy blocks Ollama downloads with HTTP 403, so real model quality,
 Windows execution and GPU performance still need verification.
@@ -90,8 +93,9 @@ Windows execution and GPU performance still need verification.
   Semantic analysis requires an installed local Ollama model; actual model quality
   has not been established in this environment.
 - Add to main/Shorts appends to one editor timeline and switches its output ratio.
-  Save separate projects for separate timelines. There is no automatic story
-  assembly, batch Shorts editor or general personal assistant yet.
+  The new approved-draft button creates those separate projects automatically.
+  This is chronological assembly from user decisions; story/hook selection,
+  face tracking and a general personal assistant are not implemented.
 - Feedback is bounded category reordering, not model training.
 - Hard cuts and fixed per-clip zoom; no animated keyframes, transitions, waveform
   editor, multitrack compositing or automatic face tracking yet.

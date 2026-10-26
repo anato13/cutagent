@@ -50,3 +50,9 @@ Model cache keys must include installed digest/configuration. Never cache an
 incomplete response or one whose proposals all have invalid source evidence.
 Keep evaluation-harness tests separate from real-model acceptance. evaluate_model
 must write a new report folder without changing the project/main review database.
+
+Draft bundles use all approved highlights for one source, never the capped UI
+table or only visible search results. Preserve current editor state. Main ranges
+merge chronologically; Shorts retain complete ranges and report skips. Stage
+the entire bundle before publishing a unique folder; clean up ordinary failures.
+Do not claim batch restart/resume or automatic narrative/hook selection.
