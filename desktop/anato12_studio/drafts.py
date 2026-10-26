@@ -28,10 +28,13 @@ class DraftOptions:
             raise ValueError("Invalid draft caption/render option.")
 
 
-def assemble(media, source, highlights, options):
+def assemble(media, source, highlights, options, selection="approved"):
     """Chronological main cut merges overlaps; Shorts keep complete approved ranges."""
     options.validate()
-    approved = [h for h in highlights if h["source"] == source and h["status"] == "approved"]
+    if selection not in {"approved", "automatic"}:
+        raise ValueError("Unknown selection mode.")
+    statuses = {"approved"} if selection == "approved" else {"approved", "unreviewed"}
+    approved = [h for h in highlights if h["source"] == source and h["status"] in statuses]
     if not approved:
         raise ValueError("Approve at least one highlight for this recording first.")
     if (options.burn_captions or options.save_srt) and not media.transcript:
@@ -69,18 +72,21 @@ def assemble(media, source, highlights, options):
         shorts.append((identifier, Project(media={media.id: copy.deepcopy(media)}, clips=[short_clip],
                          profile="Shorts · 9:16", burn_captions=options.burn_captions,
                          save_srt=options.save_srt)))
-    return main, shorts, {"approved_highlights": included, "shorts_skipped": skipped}
+    key = "approved_highlights" if selection == "approved" else "automatically_selected_highlights"
+    return main, shorts, {key: included, "shorts_skipped": skipped}
 
 
-def create_bundle(media, source, highlights, parent, options, ffmpeg, runner, progress):
+def create_bundle(media, source, highlights, parent, options, ffmpeg, runner, progress,
+                  selection="approved", before_publish=None, extra_manifest=None):
     runner.check()
     if fingerprint(media.path) != source:
         raise ValueError("The recording changed. Reimport and review it before making drafts.")
-    main, shorts, details = assemble(media, source, highlights, options)
+    main, shorts, details = assemble(media, source, highlights, options, selection)
     parent = Path(parent).resolve()
     if not parent.is_dir():
         raise ValueError("Choose an existing folder for the draft bundle.")
-    name = "Anato12-drafts-" + datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:12]
+    prefix = "Anato12-auto-" if selection == "automatic" else "Anato12-drafts-"
+    name = prefix + datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:12]
     destination = parent / name
     plans = [("YouTube.anato12.json", main, None)]
     plans += [(f"Short-{i:03}.anato12.json", project, identifier)
@@ -89,9 +95,9 @@ def create_bundle(media, source, highlights, parent, options, ffmpeg, runner, pr
     with tempfile.TemporaryDirectory(prefix=".anato12-drafts-", dir=parent) as temporary:
         working = Path(temporary)
         manifest = {"version": 1, "source_fingerprint": source, "source_path": media.path,
-                    "assembly": "Approved ranges in recording order; overlapping main ranges merged.",
+                    "assembly": f"{selection.title()} ranges in recording order; overlapping main ranges merged.",
                     "short_framing": options.short_fit, "max_short_seconds": options.max_short_seconds,
-                    **details, "outputs": []}
+                    **details, "outputs": [], "automation": extra_manifest or {}}
         for i, (filename, project, identifier) in enumerate(plans):
             runner.check()
             project.save(working / filename)
@@ -108,6 +114,9 @@ def create_bundle(media, source, highlights, parent, options, ffmpeg, runner, pr
                     entry["captions"] = Path(video).with_suffix(".srt").name
             manifest["outputs"].append(entry)
             progress((i+1)/len(plans), f"Prepared {filename}")
+        runner.check()
+        if before_publish:
+            before_publish(working, manifest)
         runner.check()
         if fingerprint(media.path) != source:
             raise ValueError("The recording changed during draft creation. Drafts were not published.")

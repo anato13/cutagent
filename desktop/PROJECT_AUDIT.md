@@ -1,5 +1,28 @@
 # Project audit — 2026-10-26
 
+## 0.4.0a1 — autonomous editing and persistent learning foundation
+
+Continues from b7c03d7; the prior state is preserved in branch
+`anato12-before-autonomous-learning` and a complete local recovery bundle.
+No architecture restart, remote push, paid API or new dependency. Project JSON
+stays version 1. SQLite schema 3 adds learning tables with transactional migration.
+
+| Area | Status | Scope |
+| --- | --- | --- |
+| Existing editor / approved drafts | VERIFIED_WORKING | Regression-tested in Linux; original workflows retained |
+| Auto Edit orchestration and technical checks | VERIFIED_WORKING | Fixture-model Qt/FFmpeg end-to-end tests; unattended selection, rendering, full decode and staged publication |
+| Automatic funny-moment and story quality | PARTIALLY_IMPLEMENTED | Existing local model proposes ranges; conservative extraction, chronological assembly, no semantic hook/story planner |
+| Persistent learning library | VERIFIED_WORKING | Local source indexing, search, timestamps, sampled frames, corrections, deletion/export and shared own-video notes |
+| Tutorial / creator understanding | PARTIALLY_IMPLEMENTED | Technique-word hypotheses and measured possible scene changes; no semantic visual demonstration or engagement understanding |
+| Original/finished comparison | PARTIALLY_IMPLEMENTED | Unique exact transcript matches with both source references/times; no audiovisual alignment or learned keep/discard classifier |
+| YouTube URL ingestion | PARTIALLY_IMPLEMENTED | Saves clearly labeled unviewed references; downloading/viewing URLs is NOT_IMPLEMENTED |
+| Executable technique tests | VERIFIED_WORKING | Fixed recipes, real synthetic render/decode tests tied to installed engine/code; observations cannot enable code |
+| Recovery | PARTIALLY_IMPLEMENTED | Durable jobs, cached analysis retry, failed/cancelled stage cleanup; no encoded-batch continuation or power-loss guarantee |
+
+See LEARNING_SYSTEM.md for architecture and TEST_RESULTS.md for the actual
+acceptance evidence. Model quality, Windows/RTX execution and genuine full-length
+unattended editing remain separate unresolved acceptance requirements.
+
 Version 0.3.0a7 continues from 59cbc0b with recoverable MP4/SRT publication. Prior outputs are renamed to sibling backups, then restored if publication fails or is cancelled. Successful publication removes backups where permitted. No dependency, project or database schema changes. This is ordinary-error recovery, not atomic multi-file persistence across power loss.
 
 

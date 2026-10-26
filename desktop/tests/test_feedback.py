@@ -40,7 +40,7 @@ def test_v1_upgrade_preserves_old_feedback_without_sharing_notes(tmp_path):
     reopened = Store(root)
     assert len(reopened.feedback()) == 1
     with reopened.connect() as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 3
 
 
 def test_note_sharing_is_separate_and_requires_review(feedback_source):

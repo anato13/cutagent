@@ -15,6 +15,7 @@ from .player import Player
 from .speech_ui import SpeechActions
 from .finder_ui import FinderPanel, DataPanel
 from .finder_controller import FinderController
+from .learning_ui import LearningController
 
 
 class MainWindow(Actions, SpeechActions, QMainWindow):
@@ -133,6 +134,7 @@ class MainWindow(Actions, SpeechActions, QMainWindow):
         column.addLayout(progress_row)
         self._menus()
         self.finder_controller = FinderController(self)
+        self.learning_controller = LearningController(self)
         self.statusBar().showMessage("Ready · FFmpeg exports H.264 MP4 at 30 fps")
         self.refresh_title()
 

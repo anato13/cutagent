@@ -1,5 +1,75 @@
 # Test results and verification history
 
+## Version 0.4.0a1 — Auto Edit and learning foundation
+
+Final extracted-package suite: **144 passed, 0 failed, 0 skipped in 83.04 seconds**.
+Tests ran from the extracted app directory with its code first on PYTHONPATH and
+an isolated profile. The final 76-file ZIP matches that extraction except for this
+updated verification note. User recordings, profiles and model weights are excluded.
+
+Workspace suite: **144 passed, 0 failed, 0 skipped in 81.45 seconds**. The final
+source-data deletion refresh was then verified in the real desktop workflow
+(1 test, 10.01 seconds) before the extracted-package suite. Ruff, Git whitespace
+and offline lock checks passed. Earlier focused post-publication/history and
+relative-profile checks also passed (3 cases, 23.86 seconds).
+
+The new tests use isolated profiles, a fixture local-model HTTP server and real
+FFmpeg/Qt. They cover automatic main/Shorts export without fabricated approval,
+source/timeline preservation, full decode and caption checks, rejected overlaps,
+missing/stale evidence, incomplete callback context, whole-line boundaries,
+budget skipping, cancellation/quality failure before publication, fresh-folder
+retry after interrupted jobs, capability failure and engine-specific retesting,
+and late cancellation/history failure after committed output.
+
+Learning regressions cover schema-2 migration rollback, prior feedback consent,
+durable searchable citations, actual PNG frames, correction preservation on
+reindex, separate own-note sharing/revocation, data export/deletion, saved URLs
+remaining NOT_ANALYZED, exact unique dialogue matches, and persistent failed-job
+progress/retry. A real black-to-white video produces one measured scene-change
+candidate at 2 seconds; silent-source indexing still creates a frame example.
+That synthetic detector check is not recognition of editing demonstrations.
+
+The actual desktop workflow imports a video, indexes it, shows an extracted
+frame, saves a shared correction, stores an unviewed URL, connects to the fixture
+model, runs Auto Edit, checks its exports and reopens the persisted profile. It
+has a 100-second outer process timeout. Screenshots were inspected for the new
+scrollable tabs; the earlier editor/finder desktop regressions also passed.
+
+### Genuine-dialogue model check
+
+Ollama with downloaded **qwen3:8b Q4_K_M** (digest
+`500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`)
+ran the new Auto Edit pipeline on an existing 19-line genuine transcript sample
+from the user's recording, using a fresh isolated profile. With an empty query
+and no manual clip approval, it selected source **457.100–516.100 seconds** and
+created a **59-second** main MP4 and a **59-second** Short. Both had the expected
+1920×1080 / 1080×1920 dimensions, an audio stream, full successful decode and
+matching SRT captions. The original source fingerprint and unreviewed decision
+were unchanged. The run took 99.178 seconds on the cloud CPU; this is an observed
+run time, not a Windows/GPU benchmark. Two extracted frames were visually checked:
+captions were readable and portrait fit preserved the whole source with bars.
+
+A second run supplied a targeted query for that conversation. It selected
+478.108–516.092 seconds; boundary preservation expanded the actual output to
+461.100–516.100 seconds to keep intersecting transcript lines. Both 55-second
+outputs passed the same checks in a 62.116-second run. This query was supplied
+through the backend test harness; the Auto Edit UI uses an empty query. Outputs
+remained unreviewed and source identity remained unchanged.
+
+This is one successful sampled exchange, not analysis of the entire recording,
+human-rated humor acceptance, or evidence of consistent model behavior. Earlier
+tests of the same model missed this sample. B20 and broad semantic acceptance
+remain open. Private reports/videos stay under `.verification/learning-real/`
+and are excluded from the distribution.
+
+**NOT_TESTED:** native Windows file behavior and UI, RTX acceleration, genuine
+full-length unattended editing, audience engagement, automatic semantic tutorial
+understanding and learned comedy effectiveness. **NOT_IMPLEMENTED:** semantic
+hook/story planning, audiovisual original/finished alignment, URL acquisition,
+novel executable recipe synthesis, automatic SFX selection and crash-atomic
+publication/history updates. Technical mechanics are VERIFIED_WORKING in the
+tested Linux cases; the overall requested learning system is PARTIALLY_IMPLEMENTED.
+
 ## Version 0.3.0a7 paired export recovery
 
 Final extracted-package suite: **117 passed, 0 failed, 0 skipped in 30.96 seconds**.

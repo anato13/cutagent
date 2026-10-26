@@ -1,9 +1,39 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anato12 Studio — beginner guide</title><style>body{font:17px/1.7 system-ui,Segoe UI,sans-serif;max-width:880px;margin:40px auto;padding:0 24px;color:#1b2331;background:#f8fafc}h1{color:#182338;font-size:2.2em}h2{margin-top:2em;border-bottom:2px solid #e8b94b;padding-bottom:8px}h3{margin-top:1.8em}a{color:#145cb5}pre{background:#17202d;color:#f5f7fa;padding:18px;overflow:auto;border-radius:8px}code{font-family:Consolas,monospace}li{margin:8px 0}strong{color:#122338}</style></head><body><h1>Anato12 Studio — start here</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anato12 Studio — beginner guide</title><style>body{font:17px/1.7 system-ui,Segoe UI,sans-serif;max-width:880px;margin:40px auto;padding:0 24px;color:#1b2331;background:#f8fafc}h1{color:#182338;font-size:2.2em}h2{margin-top:2em;border-bottom:2px solid #e8b94b;padding-bottom:8px}h3{margin-top:1.8em}a{color:#145cb5}pre{background:#17202d;color:#f5f7fa;padding:18px;overflow:auto;border-radius:8px}code{font-family:Consolas,monospace}li{margin:8px 0}strong{color:#122338}</style></head><body>
+<h1>Anato12 Studio — start here</h1>
 <p>Anato12 Studio edits recordings <strong>on your own computer</strong>. There is no 32 MB upload
 limit, paid API, subscription, or account requirement. Keep your original recording:
 the app exports a new MP4.</p>
-<p>This is version 0.3 alpha, supplied as a Python desktop project with Windows
+<p>This is version 0.4 alpha, supplied as a Python desktop project with Windows
 launchers. It is not a prebuilt or signed Windows installer.</p>
+<h2>New: Auto Edit and the learning library</h2>
+<p>Finish the setup steps below first. For <strong>Auto Edit</strong>:</p>
+<ol>
+<li>Import your raw recording and select it in <strong>Recordings</strong>.</li>
+<li>In <strong>AI Clip Finder</strong>, connect to your local Ollama installation and select a
+downloaded model. Install the optional speech tools below if you need automatic
+transcription. An existing transcript or imported SRT also works.</li>
+<li>Open <strong>Auto Edit</strong>, choose maximum lengths, clip count and optional captions,
+then click <strong>Auto Edit selected recording</strong> and choose an output folder.</li>
+<li>Studio selects and exports without asking you to mark clips. The finished
+folder contains a YouTube MP4, Shorts MP4s, editable projects and a check report.
+If no usable complete exchanges are found, it explains why and creates no bundle.</li>
+</ol>
+<p>This is an experimental editor. Its file checks do not establish that the choices
+are funny or tell a good story. Main clips stay in recording order. No video is
+uploaded to YouTube. First-run operation checks and local inference can take time.
+Cancel is available; <strong>Jobs &amp; clip feedback → Resume</strong> retries using analysis
+caches, with rendering starting again. See LEARNING_SYSTEM.md for recovery limits.</p>
+<p>For <strong>Learning library</strong>, import a tutorial, authorized creator video or your own
+finished video; select its type and click <strong>Index selected recording</strong>. Search
+its dialogue, inspect sampled frames and possible scene changes, preview examples,
+and save corrections. A saved YouTube URL is only a bookmark, not an analyzed video.
+Drag the divider above the tabs upward or scroll inside the tab to see all controls.</p>
+<p>To guide future edits, confirm an own-video example, write your preference and
+check <strong>Use this own-video note in Auto Edit</strong>. You can revoke this later. For
+original/finished comparison, index both, choose the finished source in the main
+dropdown and the original in <strong>Original for comparison</strong>, then click Compare.
+This finds unique matching dialogue; it does not yet identify every retained joke.
+See <a href="LEARNING_SYSTEM.md">LEARNING_SYSTEM.md</a> for exactly what is implemented.</p>
 <h2>1. Put the app in a folder</h2>
 <p>If you downloaded a ZIP, right-click it and choose <strong>Extract All</strong>. Do not run the
 app from inside the ZIP. Put the extracted folder somewhere simple, such as
@@ -305,4 +335,6 @@ but still needs FFmpeg. Speech models are downloaded separately and are not bund
 To add speech to an EXE built without it, rebuild after installing speech support.</p>
 <p>An EXE must be built and tested on Windows; the provided build script and Windows
 CI workflow do that on a Windows machine. No prebuilt Windows EXE is included here.</p>
-</body></html>
+
+</body>
+</html>

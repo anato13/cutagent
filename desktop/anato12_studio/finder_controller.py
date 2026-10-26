@@ -359,7 +359,12 @@ class FinderController:
                 media = w.project.add_media(source["path"], **{k: source[k] for k in
                                             ("duration", "width", "height", "has_audio")})
                 w.refresh_library(media.id)
-                self.start(resume=job)
+                if json.loads(job['params']).get('kind') == 'auto_edit':
+                    self.w.learning_controller.start_auto(resume=job)
+                elif json.loads(job['params']).get('kind') == 'learn_video':
+                    self.w.learning_controller.index_selected(resume=job)
+                else:
+                    self.start(resume=job)
             elif action == "cache":
                 if QMessageBox.question(w, "Clear processing caches?",
                     "Delete cached transcripts and model responses? Reviewed highlights and feedback stay. "
@@ -395,5 +400,7 @@ class FinderController:
                 if path:
                     self.store.export_data(Path(path).with_suffix(".json"))
             self.refresh_data()
+            if action == "source" and hasattr(w, "learning_controller"):
+                w.learning_controller.refresh()
         except Exception as error:
             w.fail(str(error))

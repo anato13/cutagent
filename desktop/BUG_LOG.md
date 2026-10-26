@@ -1,5 +1,28 @@
 # Bug log
 
+B27 — VERIFIED_WORKING (Linux regression): Auto Edit now extends boundaries to
+retain intersecting transcript lines, rejects stale/missing evidence and absent
+callback setup, and respects rejected overlaps. This prevents those structural
+failures; it does not establish semantic completeness or fix unsupported reasons.
+
+B28 — VERIFIED_WORKING (Linux regression): a committed Auto Edit result is reported
+as saved even if Cancel arrives after folder publication. Job-history update
+failures report the saved folder separately. Crash-atomic folder/history updates
+are NOT_IMPLEMENTED; see recovery limitations before retrying interrupted jobs.
+
+B29 — VERIFIED_WORKING (Linux regression): newly introduced learning tables migrate
+transactionally from schema 2. Injected migration failure keeps the old schema and
+feedback; ordinary reindexing preserves existing confirmed/rejected corrections.
+
+B30 — VERIFIED_WORKING (Linux regression): relative profile paths are normalized
+before FFmpeg changes its working directory, preventing nested/incorrect paths
+for capability fixtures and thumbnails.
+
+Open: semantic visual tutorial/creator analysis, supported humor explanations
+(B20), reliable automatic hook/story selection, Windows acceptance, and forced-stop
+cleanup. Technical checks and example confirmation must not be presented as
+evidence that these open issues are solved.
+
 B26 — Export publication could replace an existing MP4 before caption copying/replacement failed, leaving mismatched versions. Both files are now staged first; sibling backups support rollback on ordinary errors and cancellation. Failed recovery preserves originals in named backups and reports their paths. Process termination/power-loss recovery is not implemented.
 
 

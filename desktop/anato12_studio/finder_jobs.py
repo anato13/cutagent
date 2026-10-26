@@ -37,14 +37,15 @@ def make_thumbnail(store, item, ffmpeg, runner):
     return output
 
 
-def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, progress):
-    store.update_job(job_id, "running", 0, "Starting")
+def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, progress, track_job=True):
+    if track_job:
+        store.update_job(job_id, "running", 0, "Starting")
     last_update = [0.0]
     last_progress = [0.0]
     def report(value, message):
         last_progress[0] = value
         progress(value, message)
-        if time.monotonic()-last_update[0] >= 1:
+        if track_job and time.monotonic()-last_update[0] >= 1:
             store.update_job(job_id, "running", value, message)
             last_update[0] = time.monotonic()
     try:
@@ -73,14 +74,17 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
         runner.check()
         if fingerprint(media.path) != source:
             raise ValueError("The recording changed during analysis. Results require a new source inspection.")
-        store.update_job(job_id, "completed", 1, f"Complete · {len(segments)} lines, {len(ids)} highlights")
+        if track_job:
+            store.update_job(job_id, "completed", 1, f"Complete · {len(segments)} lines, {len(ids)} highlights")
         return {"segments": segments, "ids": ids, "source": source, "job_id": job_id}
     except Cancelled:
-        store.update_job(job_id, "cancelled", last_progress[0], "Cancelled; completed chunks/windows are cached")
+        if track_job:
+            store.update_job(job_id, "cancelled", last_progress[0], "Cancelled; completed chunks/windows are cached")
         raise
     except Exception as error:
         try:
-            store.update_job(job_id, "failed", last_progress[0], str(error))
+            if track_job:
+                store.update_job(job_id, "failed", last_progress[0], str(error))
         except Exception:
             pass
         raise

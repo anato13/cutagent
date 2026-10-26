@@ -1,0 +1,177 @@
+"""Experimental unattended selection with conservative boundaries and checked exports."""
+import copy
+from dataclasses import dataclass
+import json
+from pathlib import Path
+import time
+
+from .drafts import DraftOptions, create_bundle
+from .finder import rows_for
+from .finder_jobs import run_pipeline
+from .local_model import LocalModel
+from .model import Clip, number
+from .quality import ensure_capabilities, verify_bundle
+from .store import fingerprint
+from .video import Cancelled
+
+
+@dataclass
+class AutoOptions:
+    max_main_seconds: float = 600
+    max_ranges: int = 5
+    max_short_seconds: float = 60
+    burn_captions: bool = False
+    save_srt: bool = False
+
+    def validate(self):
+        self.max_main_seconds = number(self.max_main_seconds, 1, 7200, 'Main video limit')
+        self.max_short_seconds = number(self.max_short_seconds, 1, 180, 'Maximum Short length')
+        if type(self.max_ranges) is not int or not 1 <= self.max_ranges <= 20:
+            raise ValueError('Choose between 1 and 20 complete ranges.')
+        DraftOptions(self.max_short_seconds, burn_captions=self.burn_captions,
+                     save_srt=self.save_srt).validate()
+
+
+def union_duration(items):
+    ranges = sorted(Clip('', h['start'], h['end']).frame_range() for h in items)
+    total, previous_end = 0, 0
+    for start, duration in ranges:
+        end = start + duration
+        total += max(0, end - max(start, previous_end))
+        previous_end = max(previous_end, end)
+    return total
+
+
+def select_ranges(media, source, candidates, rejected, preferences, options):
+    """No fabricated approvals; reject stale evidence and absent callback setup."""
+    options.validate()
+    for segment in media.transcript:
+        segment.validate(media.duration)
+    rows = rows_for(media.transcript)
+    actual = {r['id']: r for r in rows}
+    chosen, skipped = [], []
+    ordered = sorted(candidates, key=lambda h: (h['status'] != 'approved',
+        -(h['rank'] + preferences.get(h['category'], 0)), h['start'], h['id']))
+    for candidate in ordered:
+        item = copy.deepcopy(candidate)
+        reason = ''
+        if item['source'] != source or item['status'] not in {'approved', 'unreviewed'}:
+            reason = 'Wrong source or rejected decision'
+        elif item['status'] != 'approved':
+            if item['method'] != 'local model order':
+                reason = 'Unreviewed cue/search results are not autonomous model selections'
+            else:
+                try:
+                    evidence = json.loads(item['evidence'])
+                    valid = isinstance(evidence, list) and bool(evidence) and all(
+                        isinstance(e, dict) and type(e.get('id')) is int and actual.get(e['id']) == e
+                        for e in evidence)
+                    if not valid:
+                        reason = 'Evidence no longer matches this transcript'
+                    elif any(e['start'] < item['start'] or e['end'] > item['end'] for e in evidence):
+                        reason = 'Required setup/callback evidence is outside the selected range'
+                except (ValueError, TypeError, KeyError):
+                    reason = 'Invalid transcript evidence'
+        if not reason:
+            try:
+                Clip(media.id, item['start'], item['end']).validate(media)
+                # Extend, never cut off a transcript line intersecting either boundary.
+                # Frame-aligned outer bounds prevent rounding into a line.
+                import math
+                changed = True
+                while changed:
+                    a, b = item['start'], item['end']
+                    for row in rows:
+                        if row['end'] > a and row['start'] < b:
+                            item['start'] = min(item['start'], row['start'])
+                            item['end'] = max(item['end'], row['end'])
+                    item['start'] = max(0, math.floor(item['start'] * 30 + 1e-7) / 30)
+                    item['end'] = min(media.duration, math.ceil(item['end'] * 30 - 1e-7) / 30)
+                    changed = (a, b) != (item['start'], item['end'])
+                    if item['end'] - item['start'] > 90:
+                        reason = 'Whole dialogue exceeds the 90-second selection limit'
+                        break
+                if any(r['start'] < item['end'] and r['end'] > item['start'] for r in rejected):
+                    reason = 'Overlaps a range you rejected'
+                elif any(h['start'] <= item['start'] and h['end'] >= item['end'] for h in chosen):
+                    reason = 'Already covered by a selected range'
+                elif len(chosen) >= options.max_ranges or union_duration(chosen + [item]) > options.max_main_seconds:
+                    reason = 'Would exceed the selected budget; dialogue was not truncated'
+            except (ValueError, TypeError):
+                reason = 'Invalid source boundaries'
+        if reason:
+            skipped.append({'highlight': item['id'], 'reason': reason})
+        else:
+            item['original_range'] = [candidate['start'], candidate['end']]
+            chosen.append(item)
+    return sorted(chosen, key=lambda h: (h['start'], h['end'])), skipped
+
+
+def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner, progress):
+    options = AutoOptions(**params['auto_options'])
+    current = [0.0, 0.0]
+    def report(value, message):
+        current[0] = max(current[0], value)
+        progress(current[0], message)
+        if time.monotonic() - current[1] > .5:
+            store.update_job(job_id, 'running', current[0], message)
+            current[1] = time.monotonic()
+    store.update_job(job_id, 'running', 0, 'Starting Auto Edit')
+    try:
+        options.validate()
+        if not params.get('contextual') or not params.get('model') or params.get('transcribe_only'):
+            raise ValueError('Auto Edit needs an explicitly selected local model in AI Clip Finder.')
+        runner.check()
+        if not Path(params['output_parent']).is_dir():
+            raise ValueError('The output folder is unavailable. Choose an existing folder for a new run.')
+        if fingerprint(media.path) != source:
+            raise ValueError('The source changed. Import it again before Auto Edit.')
+        client = LocalModel(params['url'], params['model'])
+        identity = client.identity(runner)
+        result = run_pipeline(store, source, media, params, job_id, ffmpeg, runner,
+                              lambda v, m: report(v*.45, m), track_job=False)
+        if client.identity(runner) != identity:
+            raise ValueError('The local model changed during Auto Edit. Rerun with a stable model.')
+        media = copy.deepcopy(media)
+        media.transcript = result['segments']
+        by_id = {h['id']: h for h in store.approved_for_source(source)}
+        by_id.update({identifier: store.highlight(identifier) for identifier in result['ids']})
+        selected, skipped = select_ranges(media, source, list(by_id.values()), store.rejected_for_source(source),
+                                           store.preferences(), options)
+        if not selected:
+            raise ValueError('No usable complete exchanges were found. No video was created. '
+                             'Inspect the transcript/model results or approve a complete range and rerun.')
+        if not any(Clip(media.id, h['start'], h['end']).frame_range()[1] <= options.max_short_seconds
+                   for h in selected):
+            raise ValueError('No complete range fits the Short limit. Increase the limit and rerun; no dialogue was truncated.')
+        recipes = ['trim_join', 'portrait_fit']
+        if options.burn_captions or options.save_srt:
+            recipes.append('captions')
+        engine = ensure_capabilities(store, recipes, ffmpeg, ffprobe, runner,
+                                     lambda v, m: report(.45+v*.1, m))
+        def check(folder, manifest):
+            verify_bundle(folder, manifest, ffmpeg, ffprobe, runner, lambda v, m: report(.9+v*.09, m))
+        details = {'status': 'EXPERIMENTAL', 'job': job_id, 'engine': engine, 'tested_recipes': recipes,
+                   'selection': [{k: h[k] for k in ('id', 'start', 'end', 'status', 'original_range')} for h in selected],
+                   'skipped': skipped, 'preferences': store.model_preferences(),
+                   'model': params['model'], 'model_identity': identity, 'query': params.get('query', ''),
+                   'story_strategy': 'Chronological complete exchanges; no semantic hook or narrative rewriting.',
+                   'humor_quality': 'NOT_EVALUATED'}
+        output = create_bundle(media, source, selected, params['output_parent'],
+                               DraftOptions(options.max_short_seconds, 'fit', options.burn_captions,
+                                            options.save_srt, True), ffmpeg, runner,
+                               lambda v, m: report(.55+v*.35, m), selection='automatic',
+                               before_publish=check, extra_manifest=details)
+        history_warning = ''
+        try:
+            store.update_job(job_id, 'completed', 1, 'Auto Edit saved: ' + output['directory'])
+        except Exception as error:
+            history_warning = f'Videos were saved, but job history could not be updated: {error}'
+        # Once the whole checked folder is published, late Cancel must not report a false rollback.
+        return {**output, 'committed': True, 'job_id': job_id, 'history_warning': history_warning}
+    except Cancelled:
+        store.update_job(job_id, 'cancelled', current[0], 'Cancelled; rerun uses completed analysis caches')
+        raise
+    except Exception as error:
+        store.update_job(job_id, 'failed', current[0], str(error))
+        raise

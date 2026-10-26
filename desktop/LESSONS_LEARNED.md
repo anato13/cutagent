@@ -1,5 +1,21 @@
 # Engineering lessons
 
+Automatic selection is not approval. Keep its provenance distinct, validate
+evidence against the current transcript, preserve complete boundary lines, and
+reject a callback when the cited setup is absent. Budget limits should skip whole
+exchanges rather than truncate a setup or reaction.
+
+Persist observations, confirmed preferences and executable capability tests
+separately. A transcript mentioning "zoom" is not proof of a demonstrated zoom;
+a scene-score spike is not necessarily a cut; matching words are not audiovisual
+alignment. Imported text must never become executable commands or silently become
+personal preferences. Deletion/revocation must remove future prompt influence.
+
+Check staged exports before publishing an automatic bundle. Full decode and
+duration/dimension checks prove technical properties, not humor or story quality.
+Once publication has completed, a late cancellation cannot honestly promise that
+no output was created. Record both the completed files and any job-history failure.
+
 Atomic replacement of one file does not make an MP4/SRT pair transactional. Stage both before touching old outputs, preserve originals through all file swaps, and test failures between swaps. Recovery itself can fail: retain backups, report their locations, and do not mask that error with a later cleanup failure.
 
 

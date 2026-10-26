@@ -4,8 +4,41 @@ Anato12 Studio edits recordings **on your own computer**. There is no 32 MB uplo
 limit, paid API, subscription, or account requirement. Keep your original recording:
 the app exports a new MP4.
 
-This is version 0.3 alpha, supplied as a Python desktop project with Windows
+This is version 0.4 alpha, supplied as a Python desktop project with Windows
 launchers. It is not a prebuilt or signed Windows installer.
+
+## New: Auto Edit and the learning library
+
+Finish the setup steps below first. For **Auto Edit**:
+
+1. Import your raw recording and select it in **Recordings**.
+2. In **AI Clip Finder**, connect to your local Ollama installation and select a
+   downloaded model. Install the optional speech tools below if you need automatic
+   transcription. An existing transcript or imported SRT also works.
+3. Open **Auto Edit**, choose maximum lengths, clip count and optional captions,
+   then click **Auto Edit selected recording** and choose an output folder.
+4. Studio selects and exports without asking you to mark clips. The finished
+   folder contains a YouTube MP4, Shorts MP4s, editable projects and a check report.
+   If no usable complete exchanges are found, it explains why and creates no bundle.
+
+This is an experimental editor. Its file checks do not establish that the choices
+are funny or tell a good story. Main clips stay in recording order. No video is
+uploaded to YouTube. First-run operation checks and local inference can take time.
+Cancel is available; **Jobs & clip feedback → Resume** retries using analysis
+caches, with rendering starting again. See LEARNING_SYSTEM.md for recovery limits.
+
+For **Learning library**, import a tutorial, authorized creator video or your own
+finished video; select its type and click **Index selected recording**. Search
+its dialogue, inspect sampled frames and possible scene changes, preview examples,
+and save corrections. A saved YouTube URL is only a bookmark, not an analyzed video.
+Drag the divider above the tabs upward or scroll inside the tab to see all controls.
+
+To guide future edits, confirm an own-video example, write your preference and
+check **Use this own-video note in Auto Edit**. You can revoke this later. For
+original/finished comparison, index both, choose the finished source in the main
+dropdown and the original in **Original for comparison**, then click Compare.
+This finds unique matching dialogue; it does not yet identify every retained joke.
+See [LEARNING_SYSTEM.md](LEARNING_SYSTEM.md) for exactly what is implemented.
 
 ## 1. Put the app in a folder
 

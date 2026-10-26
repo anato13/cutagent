@@ -1,0 +1,140 @@
+# Auto Edit and the learning library — 0.4 alpha 1
+
+This extends the existing editor. Import, preview, trim, manual projects, clip
+review, transcription and approved draft bundles remain available.
+
+## What this milestone does
+
+**Auto Edit:** select a recording and a downloaded local Ollama model, choose
+output limits and a folder, then start one run. Studio transcribes if necessary,
+requests clip suggestions, selects whole exchanges, builds a chronological main
+video and independent portrait Shorts, renders them and checks each output.
+You do not need to mark or approve each clip for this experimental workflow.
+
+Model suggestions are not human approvals. Automatic selection preserves that
+distinction, respects rejected ranges, validates quoted source evidence against
+the current transcript, skips callbacks whose cited setup is outside the range,
+and extends boundaries to retain intersecting transcript lines. It never cuts a
+range merely to fill a time budget. Approved ranges get priority, followed by
+model order and explicitly shared category preferences. Main ranges merge in
+recording order. Each selected range can produce one Short; overlong ranges and
+duplicates are skipped and reported. At least one complete Short must fit or the
+run stops without publishing a bundle. Output durations can be below your limit.
+
+This is **experimental editorial selection**, not reliable learned comedy or
+semantic story construction. A model can still miss good exchanges, invent a
+reason, or select material that depends on unrecognized earlier context. Source
+timestamps and successful decode checks do not establish an engaging story.
+There is no inferred confidence percentage, invented dialogue, automatic hook,
+face tracking, copied creator asset, or automatic YouTube upload.
+
+## Sources, observations and preferences
+
+The Learning library accepts the currently selected local video as a tutorial,
+another creator's video, or your own finished video. Use authorized local copies.
+Transcription is local and optional packages/models must be installed as described
+in START_HERE.md. Existing dialogue or imported SRT can be used instead.
+
+It saves searchable dialogue with absolute timestamps; keyword mentions become
+**possible** trim/join, portrait, caption or zoom techniques with a fixed purpose
+description. FFmpeg measures possible scene changes at 2 fps and 160 pixels wide
+with a score threshold of 0.30. These are not verified cuts: motion and flashes
+can trigger them and fast cuts can be missed. At most 200 change timestamps and
+24 frame samples are retained per indexing pass. Silent/empty-transcript videos
+still receive frame references. Sampled frames have not been understood by a
+vision model; important demonstrations are not reliably identified yet.
+
+Saved YouTube URLs are **reference_only / NOT_ANALYZED**. This version does not
+download, watch or transcribe URLs. Import an accessible authorized local copy to
+index it. It never reports a saved URL as an analyzed video.
+
+Examples start as `observed`. You can confirm/reject them, add a correction,
+preview the cited range, search them, inspect source history, delete source
+knowledge and export the data from Jobs & clip feedback. Confirmation of an
+example does not certify an executable technique.
+
+A confirmed, nonempty correction about an **own** video can optionally guide Auto
+Edit. The sharing box is off by default and separate from confirmation. Shared
+notes join existing feedback in a bounded list of at most eight recent notes,
+240 characters each. View the actual context in Jobs & clip feedback. Editing,
+revoking or deleting shared notes invalidates model-response caches. Imported
+creator/tutorial text never automatically becomes a personal preference. This
+is persistent prompt guidance and category ranking, not model-weight training.
+
+Choose an indexed original and an indexed own-video finished source to compare.
+Only unique exact transcript matches of six or more words become match records,
+with both source fingerprints and both timestamp ranges. Repeated text is
+excluded. Results persist in Source history; they do not establish audiovisual
+alignment, identify all retained jokes, or automatically change preferences.
+
+## Tested capabilities and technical output checks
+
+The executable library is a fixed allowlist: trim/join, portrait fit, captions and
+fixed zoom. Tutorial/model text is data and cannot generate shell commands,
+FFmpeg filters, Python code or new executable recipes. Learned observations are
+stored separately from capability test results.
+
+Before Auto Edit uses required operations, real synthetic FFmpeg render/decode
+tests must pass on this installation. Results bind to the engine executables'
+path/size/mtime and the implementation's content hashes; a changed engine/code
+causes retesting. This is a practical local compatibility identity, not a
+cryptographic attestation of executable bytes. The library can test all supported
+operations on request. Execution/decode success is not visual-quality acceptance.
+Zoom is available to manual editing and testing, but automatic zoom timing is not
+implemented. Auto Edit currently uses trim/join, portrait fit and optional captions.
+
+Every Auto Edit output must have the planned dimensions and duration (within
+0.15 seconds), an audio stream, a successful full FFmpeg audio/video decode, and
+exact expected SRT content when enabled. These checks do not measure joke quality,
+story coherence, face framing, caption transcription accuracy, clipping/loudness,
+or audience engagement. Silent sources receive the renderer's silent audio track.
+
+All projects, videos, captions and a `draft-manifest.json` are staged in a new
+owned directory. The whole folder is published only after checks and a final
+source-identity check pass. Ordinary failure/cancellation removes staged files;
+original media, earlier exports, reviews and the open editor timeline stay intact.
+The manifest records choices, skips, original/expanded ranges, model identity,
+shared preference context, tested operations and per-output quality results.
+It contains private source paths and dialogue-related preferences; share it deliberately.
+
+## Persistence and recovery
+
+SQLite schema 3 adds learning documents/examples/events and technique-test
+history in the same local profile. Migration preserves schema-2 reviews, feedback
+and note-sharing consent. The migration transaction is tested with an injected
+failure. Older Studio versions refuse this newer profile; use the new version.
+Back up the profile with Studio closed before moving it between machines.
+
+Jobs & clip feedback records Auto Edit and learning-index progress and errors. After a stop or app
+restart, Resume retries a run using available transcription/model caches; learning
+indexing repeats visual sampling and keeps existing confirmed corrections. Video
+rendering starts again in a fresh folder. Completed batch rendering does not
+resume at the last encoded frame. Forced termination can leave an unpublished
+temporary folder; power-loss cleanup and crash-atomic publication/job-history
+updates are not implemented. A crash after folder publication but before job
+history update can leave a valid bundle with an interrupted job. Check your
+chosen output folder before retrying to avoid unnecessary duplicate exports.
+
+Knowledge survives cache clearing. Source-knowledge deletion removes its examples,
+corrections, comparison history and future preference influence, while originals
+and existing exports remain. Disposable thumbnail cache files can remain until
+the recording's app data is deleted. Export local data includes the learning
+tables and test history. No recordings or model weights are embedded in the ZIP.
+
+## Remaining acceptance
+
+- Reliable humor selection and semantic story/hook planning: PARTIALLY_IMPLEMENTED
+  for model suggestions; story/hook planning itself is NOT_IMPLEMENTED.
+- Tutorial/creator learning: PARTIALLY_IMPLEMENTED. Searchable evidence, sampled
+  frames and technical observations exist; semantic visual demonstrations,
+  sound-effect recognition, engagement analysis and novel technique synthesis
+  are NOT_IMPLEMENTED.
+- Own-style learning: PARTIALLY_IMPLEMENTED. Shared confirmed notes and existing
+  category feedback affect future analysis; exact dialogue comparison is available.
+  Automatic audiovisual alignment and inference of retained comedic patterns are
+  NOT_IMPLEMENTED.
+- Native Windows/RTX validation, signed installer, genuine long-recording
+  unattended quality acceptance: NOT_TESTED in this milestone.
+
+See TEST_RESULTS.md for actual test outcomes. Use High for the remaining semantic
+evidence/learning work; Medium is suitable for small UI and documentation fixes.

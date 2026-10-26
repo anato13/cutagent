@@ -18,7 +18,8 @@ class Job(QThread):
     def run(self):
         try:
             value = self.operation(self.runner, self.progress.emit)
-            self.runner.check()
+            if not (isinstance(value, dict) and value.get('committed') is True):
+                self.runner.check()
             self.result.emit(value)
         except Cancelled as error:
             self.cancelled.emit(str(error))

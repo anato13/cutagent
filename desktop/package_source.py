@@ -11,6 +11,7 @@ FILES = [
     "AGENTS.md", "PROJECT_AUDIT.md", "LESSONS_LEARNED.md", "BUG_LOG.md",
     "TEST_RESULTS.md", "DEVELOPMENT_ROADMAP.md",
     "CHECK_LOCAL_AI.bat",
+    "LEARNING_SYSTEM.md",
 ]
 
 

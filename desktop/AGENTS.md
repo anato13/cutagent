@@ -46,6 +46,18 @@ suitable setting; do not claim to see/change the selected setting or live allowa
 Image generation is last, after higher-priority milestones have been tested and
 accepted. Do not add unrelated optional features ahead of clip-finder reliability.
 
+Schema 3 adds learning evidence/events and capability tests without changing
+schema-2 feedback consent. Imported tutorial/creator text is never executable.
+Keep scene-change measurements and exact text matches explicitly unverified as
+editing/comedy judgments. Only confirmed own-video notes with separate use_note
+consent enter the shared eight-note context; revocation/deletion clears caches.
+Auto Edit may use unreviewed local-model selections without marking them approved.
+Preserve whole transcript lines, reject missing callback evidence and rejected
+overlaps, test the required built-in operations against the current engine, and
+validate every staged output before publishing the bundle. Never equate these
+checks with story quality. Resume retries analysis from caches and rerenders;
+it does not resume encoded batches or guarantee recovery after power loss.
+
 Model cache keys must include installed digest/configuration. Never cache an
 incomplete response or one whose proposals all have invalid source evidence.
 Keep evaluation-harness tests separate from real-model acceptance. evaluate_model

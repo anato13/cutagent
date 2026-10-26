@@ -7,6 +7,14 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
 
 ## What works
 
+- Experimental Auto Edit: one run from a selected recording/local model to a
+  checked main MP4 and Shorts, with complete-range selection, rejected-range
+  protection, operation tests and a per-output report. Editorial quality is unverified.
+- Persistent learning library: local-video transcripts, sampled frames, possible
+  scene-change measurements, timestamped references, searchable examples,
+  corrections, separately shared own-video preferences and exact dialogue comparison.
+  YouTube URLs are stored as references only. See [LEARNING_SYSTEM.md](LEARNING_SYSTEM.md).
+
 - Import MP4/MOV/MKV/WebM recordings; inspect metadata with FFprobe.
 - Native Qt preview, seeking, volume, in/out points and selected-range playback.
 - A clip list with inclusion checkboxes, naming, reordering and saved projects.
@@ -25,8 +33,9 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
   explicitly opted-in category feedback with view/delete/export controls.
 - Separately opted-in note preferences for local-model analysis; edit/revoke them
   and inspect the bounded personalization preview. Existing notes remain unshared.
-- Optional loopback Ollama adapter for downloaded local models. HTTP behavior is
-  tested; real semantic-model inference and humor quality are still unverified.
+- Optional loopback Ollama adapter for downloaded local models. Real CPU inference
+  has run; genuine-dialogue checks found missed exchanges and unsupported explanations.
+  Reliable humor/story quality remains unverified.
 
 The core editor does not depend on speech packages, credentials or a model. The app
 uses CPU encoding/speech inference and works without a GPU. Recordings stay local.
@@ -85,7 +94,12 @@ See [TEST_RESULTS.md](TEST_RESULTS.md), [PROJECT_AUDIT.md](PROJECT_AUDIT.md) and
 
 ## Current limits
 
-Version 0.3.0a4 adds cancellable local-model connections, total request deadlines,
+Version 0.4.0a1 adds experimental Auto Edit and the learning foundation described
+in LEARNING_SYSTEM.md. It does not yet understand tutorial demonstrations,
+reliably learn comedic structure, or construct semantic hooks/stories. Saved URLs
+are unviewed references. Native Windows acceptance remains outstanding.
+
+The retained 0.3.0a4 work added cancellable local-model connections, total request deadlines,
 and reports containing raw proposals plus server token/timing measurements.
 Official model downloads now work in the development environment. Real CPU
 inference was tested with Qwen2.5 3B/7B and Qwen3 8B, but valid transcript IDs
@@ -109,7 +123,8 @@ acceptance still need verification.
   The new approved-draft button creates those separate projects automatically.
   This is chronological assembly from user decisions; story/hook selection,
   face tracking and a general personal assistant are not implemented.
-- Feedback is bounded category reordering, not model training.
+- Feedback and shared own-video notes provide bounded ranking and prompt guidance,
+  not model-weight training.
 - Hard cuts and fixed per-clip zoom; no animated keyframes, transitions, waveform
   editor, multitrack compositing or automatic face tracking yet.
 - Output is 30 fps at the two fixed 1080p aspect-ratio presets. Export cannot add
@@ -131,5 +146,10 @@ acceptance still need verification.
 `store.py`, `finder_jobs.py` — transactional reviews, caches and resumable jobs
 
 `finder_ui.py`, `finder_controller.py` — clip finder and feedback/job controls
+
+`auto_edit.py`, `quality.py` — automatic selection, tested capabilities and output checks
+
+`knowledge.py`, `learning_visual.py`, `learning_ui.py` — persistent examples,
+scene-change observations, corrections and learning/Auto Edit controls
 
 See [THIRD_PARTY.md](THIRD_PARTY.md) for open-source dependencies.

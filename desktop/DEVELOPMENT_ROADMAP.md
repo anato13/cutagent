@@ -1,5 +1,31 @@
 # Development roadmap
 
+## 0.4.0a1 learning-system expansion
+
+The existing editor now has an experimental Auto Edit path and persistent
+learning library. Reliable extraction and checked publication come before
+advanced interpretation. LEARNING_SYSTEM.md defines the implemented scope.
+
+Next priorities, in order:
+
+1. Evaluate automatic selections against labeled genuine setup/reaction/callback
+   examples; reduce unsupported explanations and missed complete exchanges.
+2. Test the new workflow on native Windows/RTX and genuine 60/120-minute recordings,
+   including cancellation, memory, disk use and ordinary file-lock failures.
+3. Add supported story/hook planning without losing dependencies, then improve
+   automatic framing and editorial quality checks with available user feedback.
+4. Extend tutorial/creator observations with grounded visual demonstrations and
+   sound-effect/pacing interpretation. Keep proposed techniques nonexecutable
+   until an allowlisted implementation passes technical tests.
+5. Add authorized accessible URL acquisition, audiovisual original/finished
+   alignment and learned keep/discard preferences with reviewable provenance.
+6. Add robust crash recovery and a tested Windows distribution. Advanced assistant,
+   analytics and image generation remain later work; image generation stays last.
+
+High remains suitable for semantic evidence, persistence and autonomous selection.
+Medium is sufficient for small UI/documentation fixes. Do not claim access to the
+user's reasoning setting or remaining credits.
+
 Version 0.3.0a7 adds ordinary-error/cancellation recovery for paired video/caption exports. Abrupt process termination and power-loss recovery remain NOT_IMPLEMENTED; native Windows file-lock behavior remains NOT_TESTED. Next priorities remain semantic explanation quality and native Windows acceptance. High is appropriate for this file-recovery work; Medium is sufficient for routine UI fixes.
 
 

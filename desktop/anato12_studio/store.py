@@ -9,6 +9,8 @@ import tempfile
 import time
 import uuid
 
+from .knowledge import KnowledgeMixin
+
 
 def data_folder() -> Path:
     if os.environ.get("ANATO12_DATA_DIR"):
@@ -36,14 +38,14 @@ def fingerprint(path: str) -> str:
     return digest.hexdigest()
 
 
-class Store:
+class Store(KnowledgeMixin):
     def __init__(self, root: Path | None = None):
-        self.root = root or data_folder()
+        self.root = (root or data_folder()).expanduser().resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self.path = self.root / "studio.sqlite3"
         with self.connect() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 2:
+            if version > 3:
                 raise ValueError("This app-data database was made by a newer Studio. Keep it and upgrade.")
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS sources (
@@ -73,7 +75,8 @@ class Store:
             columns = {r["name"] for r in db.execute("PRAGMA table_info(feedback)")}
             if "use_note" not in columns:
                 db.execute("ALTER TABLE feedback ADD COLUMN use_note INTEGER NOT NULL DEFAULT 0")
-            db.execute("PRAGMA user_version=2")
+            self.initialize_knowledge(db)
+            db.execute("PRAGMA user_version=3")
 
     @contextmanager
     def connect(self):
@@ -156,6 +159,11 @@ class Store:
             return [dict(row) for row in db.execute(
                 "SELECT * FROM highlights WHERE source=? AND status='approved' ORDER BY start,end,id", (source,))]
 
+    def rejected_for_source(self, source):
+        with self.connect() as db:
+            return [dict(row) for row in db.execute(
+                "SELECT * FROM highlights WHERE source=? AND status='rejected' ORDER BY start", (source,))]
+
     def highlight(self, identifier):
         with self.connect() as db:
             row = db.execute("SELECT * FROM highlights WHERE id=?", (identifier,)).fetchone()
@@ -209,10 +217,17 @@ class Store:
     def model_preferences(self):
         with self.connect() as db:
             notes = [dict(r) for r in db.execute("""
-                SELECT category,decision,substr(note,1,240) AS note FROM feedback
+                SELECT category,decision,substr(note,1,240) AS note,created FROM feedback
                 WHERE use_note=1 AND decision IN ('approved','rejected') AND trim(note)<>''
                 ORDER BY created DESC,id DESC LIMIT 8""")]
-        return {"category_weights": self.preferences(), "notes": notes}
+            notes += [dict(r) for r in db.execute("""
+                SELECT 'other' AS category,'approved' AS decision,substr(e.note,1,240) AS note,
+                    e.updated AS created FROM learning_examples e JOIN learning_documents d ON d.id=e.document
+                WHERE e.use_note=1 AND e.status='confirmed' AND d.kind='own'
+                    AND trim(e.note)<>'' ORDER BY e.updated DESC,e.id DESC LIMIT 8""")]
+        notes.sort(key=lambda r: r['created'], reverse=True)
+        return {"category_weights": self.preferences(),
+                "notes": [{k: r[k] for k in ('category', 'decision', 'note')} for r in notes[:8]]}
 
     def feedback(self):
         with self.connect() as db:
@@ -262,6 +277,8 @@ class Store:
 
     def delete_source_data(self, source):
         with self.connect() as db:
+            for row in db.execute("SELECT id FROM learning_documents WHERE source=?", (source,)).fetchall():
+                self.delete_learning_document_rows(db, row['id'])
             db.execute("DELETE FROM feedback WHERE highlight IN (SELECT id FROM highlights WHERE source=?)", (source,))
             db.execute("DELETE FROM cache WHERE kind='analysis_window'")
             for table in ("highlights", "cache", "jobs"):
@@ -282,7 +299,8 @@ class Store:
                    for r in db.execute("SELECT path FROM sources")):
                 raise ValueError("Application data cannot replace a source recording.")
             data = {table: [dict(r) for r in db.execute(f"SELECT * FROM {table}")]
-                    for table in ("sources", "highlights", "feedback", "jobs")}
+                    for table in ("sources", "highlights", "feedback", "jobs", "learning_documents",
+                                  "learning_examples", "learning_events", "technique_tests")}
         temporary = None
         try:
             with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".tmp",
