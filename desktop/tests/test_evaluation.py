@@ -20,7 +20,7 @@ def test_http_evaluation_report_retains_evidence_without_claiming_quality(tmp_pa
     project = make_project(tmp_path)
     before = project.read_bytes()
     destination = evaluate(project, tmp_path / "report", LocalModel(url, "fixture-local"), progress=lambda *a: None)
-    report = json.loads(destination.read_text())
+    report = json.loads(destination.read_text(encoding="utf-8"))
     assert report["status"] == "completed" and len(report["windows"]) == 2
     assert report["humor_quality"] == "NOT_EVALUATED"
     assert report["model_identity"]["digest"] == "fixture-sha256"
@@ -52,7 +52,7 @@ def test_failure_report_preserves_completed_windows(tmp_path):
                      "setup_ids": [0], "payoff_ids": [1], "reaction_ids": [], "needs_context": False}]
     with pytest.raises(RuntimeError, match="outage"):
         evaluate(make_project(tmp_path), tmp_path / "report", Failing(), progress=lambda *a: None)
-    report = json.loads((tmp_path / "report/model-evaluation.json").read_text())
+    report = json.loads((tmp_path / "report/model-evaluation.json").read_text(encoding="utf-8"))
     assert report["status"] == "failed" and len(report["windows"]) == 1
     assert report["candidates"]
 
@@ -65,6 +65,6 @@ def test_empty_model_response_is_distinct_from_invalid_evidence(tmp_path):
         def analyze(self, *args):
             return []
     destination = evaluate(make_project(tmp_path), tmp_path / "report", Empty(), progress=lambda *a: None)
-    report = json.loads(destination.read_text())
+    report = json.loads(destination.read_text(encoding="utf-8"))
     assert not report["candidates"] and report["windows_with_invalid_evidence"] == 0
     assert all(w["outcome"] == "no_proposals" and w["raw_proposals"] == [] for w in report["windows"])

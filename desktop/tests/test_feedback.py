@@ -85,7 +85,7 @@ def test_context_is_bounded_and_data_export_contains_consent(feedback_source, tm
     assert all(len(n["note"]) == 240 and set(n) == {"category", "decision", "note"} for n in context["notes"])
     output = tmp_path / "data.json"
     store.export_data(output)
-    exported = json.loads(output.read_text())
+    exported = json.loads(output.read_text(encoding='utf-8'))
     assert all(f["use_note"] == 1 for f in exported["feedback"])
     store.delete_source_data(store.highlight(identifier)["source"])
     assert store.model_preferences() == {"category_weights": {}, "notes": []}

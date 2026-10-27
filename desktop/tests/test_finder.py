@@ -61,7 +61,7 @@ def test_cache_deletion_preserves_reviews_and_source_deletion_preserves_video(re
     original = Path(media.path).read_bytes()
     export = tmp_path / "data.json"
     store.export_data(export)
-    assert json.loads(export.read_text())["highlights"][0]["id"] == identifier
+    assert json.loads(export.read_text(encoding='utf-8'))["highlights"][0]["id"] == identifier
     store.delete_source_data(source)
     assert not store.highlights() and not store.feedback() and not thumb.exists()
     assert Path(media.path).read_bytes() == original
@@ -417,7 +417,7 @@ def test_invalid_adjustment_and_export_cannot_destroy_source(review, tmp_path, m
     monkeypatch.setattr("anato12_studio.store.json.dump", full_disk)
     with pytest.raises(OSError):
         store.export_data(destination)
-    assert destination.read_text() == "preserve"
+    assert destination.read_text(encoding='utf-8') == "preserve"
     assert not list(tmp_path.glob(".anato12-data-*"))
 
 

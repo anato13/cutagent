@@ -58,7 +58,7 @@ def test_correction_consent_revocation_export_delete(learned, tmp_path):
     assert store.model_preferences()['notes'] == []
     output = tmp_path / 'export.json'
     store.export_data(output)
-    data = json.loads(output.read_text())
+    data = json.loads(output.read_text(encoding='utf-8'))
     assert data['learning_documents'] and data['learning_events'] and data['learning_examples']
     original = Path(media.path).read_bytes()
     store.delete_source_data(source)

@@ -180,3 +180,8 @@ real semantic quality still needs separate human evaluation.
     several valid ranges, but a one-candidate Finder result necessarily gives
     both formats the same moment. Search uncovered dialogue again with explicit
     excluded IDs, validate every cited exchange, and report a shortage honestly.
+18. Read UTF-8 project, manifest and evaluation files with explicit encoding in
+    Windows tests. A test using the machine default code page can falsely report
+    corrupted Unicode. Cancellation must be observed by the calling thread;
+    shutting down a socket from another thread does not always unblock a Windows
+    buffered HTTP read promptly.

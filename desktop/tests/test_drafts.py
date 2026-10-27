@@ -41,7 +41,7 @@ def test_bundle_projects_and_real_mp4s_both_ratios(tmp_path, recording, binaries
                            DraftOptions(burn_captions=True, save_srt=True, render=True),
                            binaries[0], Runner(), lambda *a: None)
     folder = Path(result["directory"])
-    manifest = json.loads((folder / "draft-manifest.json").read_text())
+    manifest = json.loads((folder / "draft-manifest.json").read_text(encoding="utf-8"))
     assert len(manifest["outputs"]) == 3 and result["main_clips"] == 1 and result["shorts"] == 2
     assert asdict(media) == original
     for entry in manifest["outputs"]:
@@ -52,7 +52,7 @@ def test_bundle_projects_and_real_mp4s_both_ratios(tmp_path, recording, binaries
         assert (exported["width"], exported["height"]) == expected and exported["has_audio"]
         assert abs(exported["duration"]-entry["duration_seconds"]) < .06
         assert (folder / entry["captions"]).is_file()
-    assert "00:00:00,000 --> 00:00:00,500" in (folder / "YouTube.srt").read_text()
+    assert "00:00:00,000 --> 00:00:00,500" in (folder / "YouTube.srt").read_text(encoding="utf-8-sig")
     assert not list(tmp_path.glob(".anato12-drafts-*"))
 
 

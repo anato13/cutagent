@@ -6,6 +6,7 @@ import time
 import pytest
 
 from anato12_studio.local_transport import request_json
+from anato12_studio import local_transport
 from anato12_studio.local_model import LocalModel
 from anato12_studio.video import Cancelled, Runner
 
@@ -84,6 +85,48 @@ def test_cancelled_request_does_not_contact_server(stalled_endpoint):
     with pytest.raises(Cancelled):
         request_json(url, "/api/tags", runner=runner)
     assert not entered.is_set()
+
+
+def test_cancel_returns_even_when_socket_shutdown_does_not_wake_reader(monkeypatch):
+    entered, release = threading.Event(), threading.Event()
+    class Socket:
+        def settimeout(self, value):
+            pass
+        def shutdown(self, how):
+            pass  # Reproduce a platform that leaves getresponse blocked.
+        def close(self):
+            pass
+    class Connection:
+        def __init__(self, *args, **kwargs):
+            self.sock = Socket()
+        def connect(self):
+            pass
+        def request(self, *args):
+            entered.set()
+        def getresponse(self):
+            release.wait(5)
+            raise OSError('fixture reader released')
+        def close(self):
+            pass
+    monkeypatch.setattr(local_transport.http.client, 'HTTPConnection', Connection)
+    runner, errors = Runner(), []
+    def call():
+        try:
+            request_json('http://127.0.0.1:11434', '/api/tags', runner=runner)
+        except Exception as error:
+            errors.append(error)
+    thread = threading.Thread(target=call, daemon=True)
+    thread.start()
+    try:
+        assert entered.wait(1)
+        tick = time.monotonic()
+        runner.cancel()
+        thread.join(1)
+        assert not thread.is_alive() and time.monotonic() - tick < 1
+        assert len(errors) == 1 and isinstance(errors[0], Cancelled)
+    finally:
+        release.set()
+        thread.join(1)
 
 
 @pytest.mark.parametrize("url", ["http://example.com", "http://localhost@evil.test", "http://localhost/path"])

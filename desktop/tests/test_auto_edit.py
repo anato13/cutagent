@@ -84,7 +84,7 @@ def test_one_run_checked_main_and_shorts_without_manual_approval(auto_source, bi
         monkeypatch.setattr(store, 'update_job', fail_completed)
     result = run_auto_edit(store, source, media, params, job, *binaries, Runner(), lambda *_: None)
     folder = Path(result['directory'])
-    manifest = json.loads((folder / 'draft-manifest.json').read_text())
+    manifest = json.loads((folder / 'draft-manifest.json').read_text(encoding='utf-8'))
     assert result['committed'] and result['shorts'] == 1 and result['main_clips'] == 1
     assert 'approved_highlights' not in manifest
     assert manifest['automation']['selection'][0]['status'] == 'unreviewed'
@@ -295,7 +295,7 @@ def test_reserved_short_runs_through_real_checked_export(auto_source, binaries, 
                         lambda *a, **kw: {'segments': media.transcript, 'ids': ids})
     job = store.create_job(source, params)
     result = run_auto_edit(store, source, media, params, job, *binaries, Runner(), lambda *_: None)
-    manifest = json.loads((Path(result['directory']) / 'draft-manifest.json').read_text())
+    manifest = json.loads((Path(result['directory']) / 'draft-manifest.json').read_text(encoding='utf-8'))
     assert result['shorts'] == 1 and store.jobs()[0]['status'] == 'completed'
     assert manifest['automation']['selection'][0]['id'] == ids[1]
     assert manifest['automation']['skipped'][0]['highlight'] == ids[0]

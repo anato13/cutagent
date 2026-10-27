@@ -91,7 +91,7 @@ def test_project_and_caption_offsets(tmp_path, recording, binaries):
     assert Project.load(path).clips == clips
     srt = tmp_path / "out.srt"
     write_srt(srt, clips, project.media)
-    text = srt.read_text()
+    text = srt.read_text(encoding='utf-8-sig')
     assert "00:00:00,000 --> 00:00:00,250" in text
     assert "00:00:00,500 --> 00:00:01,000" in text
 

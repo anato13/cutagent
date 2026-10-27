@@ -668,3 +668,15 @@ too long for the 60-second Short limit and was reported as skipped. These are
 **reviewable suggestions and technically valid drafts**, not a human finding
 that the moments are funny or that the edit is ready to publish. This was a
 sampled subset, not a whole-recording scan of the user's current project.
+
+## Windows build follow-up
+
+The previous GitHub Windows run for the local-AI baseline failed four tests:
+three tests decoded UTF-8 draft/evaluation files with Windows' cp1252 default,
+and one cancellation test observed a blocked HTTP header read after socket
+shutdown. The production files already used UTF-8; the tests now decode that
+format explicitly. The loopback transport now watches the transfer from the
+calling thread, so Cancel returns even if the socket read does not wake.
+A stubborn-socket regression verifies the cancellation behavior. The complete
+Linux Studio suite passed **215 tests**, including these changes. A fresh
+Windows CI run is required before claiming a working Windows artifact.

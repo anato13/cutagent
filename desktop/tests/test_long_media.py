@@ -45,7 +45,7 @@ def test_full_duration_import_find_end_and_export(tmp_path, binaries, duration):
     data = json.loads(subprocess.check_output([binaries[1], "-v", "error", "-show_streams",
                                                "-of", "json", str(dest)]))
     assert all(abs(float(s["duration"])-1) < .08 for s in data["streams"])
-    assert "00:00:00,200 --> 00:00:01,000" in dest.with_suffix(".srt").read_text()
+    assert "00:00:00,200 --> 00:00:01,000" in dest.with_suffix(".srt").read_text(encoding="utf-8-sig")
     subprocess.run([binaries[0], "-v", "error", "-xerror", "-i", str(dest), "-f", "null", "-"],
                    check=True, timeout=15)
     print(f"\nsynthetic_source={duration}s source_bytes={source_path.stat().st_size} "
