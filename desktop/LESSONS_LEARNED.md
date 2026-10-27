@@ -1,5 +1,14 @@
 # Engineering lessons
 
+## 0.4.0a5
+
+A successful Ollama connection verifies availability, not that Analyze is using
+it. Bind the selected UI engine to the connection and report the actual method,
+source-line count and model-window count after processing. Keep genuine empty
+model responses distinct from parsing/evidence failures. General chat should use
+the established local-only transport, bounded session history and plain-text
+output; a chat reply cannot claim video analysis without video evidence.
+
 ## 0.4.0a4
 
 The creator's stated taste is valuable initial guidance, but it must stay

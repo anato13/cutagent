@@ -151,6 +151,60 @@ def test_real_pipeline_generates_frame_and_cancel_is_durable(review, binaries):
     assert next(j for j in store.jobs() if j["id"] == cancelled_job)["status"] == "cancelled"
 
 
+@pytest.mark.parametrize('propose', [False, True])
+def test_timestamped_absurd_exchange_reaches_model_and_reports_zero_honestly(tmp_path, recording, binaries,
+                                                                              monkeypatch, propose):
+    media = Media('m', str(recording), **probe(str(recording), binaries[1]), transcript=[
+        Segment(.1, .6, 'Why did you bring a potato to court?'),
+        Segment(.8, 1.3, 'He is my lawyer.'),
+        Segment(1.5, 2.0, 'Your lawyer is a potato?'),
+        Segment(2.2, 2.8, 'The potato objects!')])
+    store = Store(tmp_path / 'profile')
+    source = store.source(media)
+    calls = []
+    class FixtureModel:
+        base, model = 'http://localhost', 'fixture'
+        def __init__(self, *args):
+            pass
+        def identity(self, runner=None):
+            return {'digest': 'fixture'}
+        def analyze(self, rows, references, query, preferences, runner):
+            calls.append([(r['id'], r['start'], r['text']) for r in rows])
+            if not propose:
+                return []
+            return [{'first_id': 0, 'last_id': 3, 'setup_ids': [0], 'payoff_ids': [2],
+                     'reaction_ids': [3], 'evidence_ids': [], 'needs_context': False,
+                     'category': 'absurd', 'reason': 'The potato is said to be the lawyer.',
+                     'subjective_humor_score': 4}]
+    monkeypatch.setattr('anato12_studio.finder_jobs.LocalModel', FixtureModel)
+    job = store.create_job(source, {'contextual': True})
+    result = run_pipeline(store, source, media, {'contextual': True, 'url': 'http://localhost',
+        'model': 'fixture'}, job, binaries[0], Runner(), lambda *_: None)
+    assert len(calls) == 1 and calls[0][2][1] == 1.5
+    assert result['diagnostics'] == {'lines': 4, 'windows': 1, 'returned': int(propose),
+                                      'valid': int(propose), 'mode': 'local Ollama'}
+    assert len(result['ids']) == int(propose)
+    if propose:
+        item = store.highlight(result['ids'][0])
+        assert item['start'] == 0 and item['end'] > 2.8
+        assert json.loads(item['structure'])['payoff_ids'] == [2]
+    else:
+        assert 'local Ollama' in store.jobs()[0]['message']
+
+
+def test_invalid_model_reference_reports_section_and_time(review):
+    store, media, source, _ = review
+    class BadModel:
+        base, model = 'http://localhost', 'bad'
+        def identity(self, runner=None):
+            return {'digest': 'bad'}
+        def analyze(self, *args):
+            return [{'first_id': 0, 'last_id': 1, 'setup_ids': [99], 'payoff_ids': [1],
+                     'reaction_ids': [], 'needs_context': False}]
+    with pytest.raises(ValueError, match=r'section 1/1 .*0\.1–3\.2s.*valid source evidence'):
+        analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None, BadModel())
+
+
 def test_newer_database_refused_without_erasing_data(tmp_path):
     root = tmp_path / "future"
     store = Store(root)

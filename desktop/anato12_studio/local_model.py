@@ -101,3 +101,27 @@ class LocalModel:
             "eval_count", "eval_duration")
             if type(response.get(key)) is int and response[key] >= 0}
         return value["highlights"]
+
+    def chat(self, question, history, runner):
+        """Bounded, session-only conversation through the selected local model."""
+        if not isinstance(question, str) or not question.strip() or len(question) > 2000:
+            raise ValueError('Write a question of 1–2000 characters for your local AI.')
+        if (not isinstance(history, list) or len(history) > 8 or
+                any(not isinstance(m, dict) or m.get('role') not in ('user', 'assistant') or
+                    not isinstance(m.get('content'), str) or len(m['content']) > 8000 for m in history) or
+                sum(len(m['content']) for m in history) > 8000):
+            raise ValueError('Conversation history is invalid; reconnect and try again.')
+        self.identity(runner)  # Also refuses missing or remote-backed models.
+        messages = [{'role': 'system', 'content': 'You are Anato12 Studio’s local editing assistant. '
+                     'Answer clearly. Do not claim to have watched or analyzed video unless it was supplied in this chat.'}]
+        messages += history + [{'role': 'user', 'content': question}]
+        response = self.request('/api/chat', {'model': self.model, 'stream': False,
+            'messages': messages, 'options': {'num_ctx': 4096, 'num_predict': 600}}, runner)
+        runner.check()
+        if response.get('done') is False or response.get('done_reason') == 'length':
+            raise ValueError('The local AI reply was cut off. Ask a shorter question.')
+        message = response.get('message')
+        content = message.get('content') if isinstance(message, dict) else None
+        if not isinstance(content, str) or not content.strip() or len(content) > 8000:
+            raise ValueError('The local AI returned an empty or invalid reply. Try again.')
+        return content.strip()

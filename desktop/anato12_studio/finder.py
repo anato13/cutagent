@@ -175,10 +175,13 @@ def literal_search(rows, query, duration):
     return deduplicate(result)
 
 
-def analyze(store, source, segments, duration, runner, progress, model=None, query=""):
+def analyze(store, source, segments, duration, runner, progress, model=None, query="", diagnostics=None):
     for s in segments:
         s.validate(duration)
     rows = rows_for(segments)
+    if diagnostics is not None:
+        diagnostics.update(lines=len(rows), windows=0, returned=0, valid=0,
+                           mode='local Ollama' if model else 'context cues')
     if not rows:
         return []
     transcript_hash = hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()
@@ -192,6 +195,8 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
         chunks = list(bounded_windows(rows, repeated, query, preferences, runner)) if model else list(windows(rows))
         for i, chunk in enumerate(chunks):
             runner.check()
+            if diagnostics is not None:
+                diagnostics['windows'] += 1
             window = chunk.rows if model else chunk
             relevant = chunk.callbacks if model else {
                 r["id"]: repeated[r["id"]][:2] for r in window if r["id"] in repeated}
@@ -208,8 +213,13 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
                     if model.identity(runner) != identity:
                         raise ValueError("The local model changed during analysis. Retry with a stable model.")
                 valid = model_proposals(raw, window, relevant, duration)
+                if diagnostics is not None:
+                    diagnostics['returned'] += len(raw)
+                    diagnostics['valid'] += len(valid)
                 if raw and not valid:
-                    raise ValueError("The model proposed clips without valid source evidence. "
+                    raise ValueError(f"The model proposed clips in section {i+1}/{len(chunks)} "
+                                     f"({window[0]['start']:.1f}–{window[-1]['end']:.1f}s) "
+                                     "without valid source evidence. "
                                      "Each needs ordered setup/payoff references and a context assessment. "
                                      "Try another model or review the transcript; this is not a no-match result.")
                 if fresh:

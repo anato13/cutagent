@@ -42,6 +42,8 @@ def endpoint():
             self.requests.append((self.path, payload))
             if self.path == "/api/show":
                 self.respond({"remote_model": "remote"} if self.remote else {})
+            elif 'format' not in payload:
+                self.respond({'message': {'content': 'Local chat reply'}})
             else:
                 self.respond({"message": {"content": json.dumps({"highlights": [
                     {"first_id": 0, "last_id": 1, "evidence_ids": [0, 1], "category": "banter",
@@ -90,6 +92,20 @@ def test_real_http_contract_and_cloud_backends_rejected(endpoint):
     client.model = "fixture:cloud"
     with pytest.raises(ValueError, match="Cloud-backed"):
         client.analyze(rows, {}, "", {}, Runner())
+
+
+def test_local_chat_uses_selected_model_and_bounded_history(endpoint):
+    url, handler = endpoint
+    client = LocalModel(url, 'fixture-local')
+    assert client.chat('Can we keep this setup?', [{'role': 'user', 'content': 'Hello'}], Runner()) == 'Local chat reply'
+    path, payload = handler.requests[-1]
+    assert path == '/api/chat' and payload['model'] == 'fixture-local'
+    assert [m['role'] for m in payload['messages']] == ['system', 'user', 'user']
+    with pytest.raises(ValueError, match='2000'):
+        client.chat('x'*2001, [], Runner())
+    handler.remote = True
+    with pytest.raises(ValueError, match='remote backend'):
+        client.chat('hello', [], Runner())
 
 
 def test_loopback_redirect_cannot_send_transcript_elsewhere(endpoint):

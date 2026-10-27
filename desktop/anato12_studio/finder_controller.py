@@ -31,6 +31,9 @@ class FinderController:
         p.search.connect(lambda: self.start(query=p.query.text()))
         p.connect_model.connect(self.connect_model)
         p.refresh.connect(self.refresh_all)
+        p.ask_ai.connect(self.ask_ai)
+        self.chat_history = []
+        self.chat_model = None
         p.selected.connect(self.selected)
         p.action.connect(self.action)
         p.drafts.connect(self.create_drafts)
@@ -115,10 +118,17 @@ class FinderController:
     def connect_model(self):
         w, p = self.w, self.w.finder
         def done(models):
+            previous = p.model.currentText()
             p.model.clear()
             p.model.addItems(models)
+            if previous in models:
+                p.model.setCurrentText(previous)
+            if models:
+                p.engine.setCurrentIndex(1)
             p.notice.setText(f"Local endpoint connected · {len(models)} downloaded model names available. "
-                             "Known cloud-backed models are excluded. Nothing has been analyzed yet.")
+                             + (f"Local Ollama ({p.model.currentText()}) is now selected for Analyze. "
+                                "Nothing has been analyzed yet."
+                                if models else "Download a local model before analyzing."))
         try:
             client = LocalModel(p.url.text())
             w.start_job(lambda runner, progress: client.models(runner), done, "Connecting to local Ollama")
@@ -159,14 +169,55 @@ class FinderController:
                 self.ids_filter = set(result["ids"]) if not params["transcribe_only"] else None
                 self.refresh()
                 self.refresh_data()
-                p.notice.setText(
-                    f'{len(result["ids"])} candidates · ' +
-                    ("local model output requires review; humor quality is unverified."
-                     if params["contextual"] else
-                     "context cues/literal search only; these are not validated humor judgments."))
+                diag = result.get('diagnostics', {})
+                if params['transcribe_only']:
+                    message = f"Transcribed {len(result['segments'])} timestamped lines. Analyze in AI Clip Finder to find moments."
+                elif not result['ids'] and params['contextual']:
+                    message = (f"0 candidates from {diag.get('lines', 0)} timestamped lines in "
+                               f"{diag.get('windows', 0)} model sections. "
+                               f"{params['model']} returned no usable moments. Try Search with a specific phrase "
+                               "or inspect the transcript; a successful connection does not guarantee suggestions.")
+                elif not result['ids']:
+                    message = (f"0 candidates from {diag.get('lines', 0)} timestamped lines using context cues. "
+                               "Choose Local Ollama for conversational analysis, or Search for exact dialogue.")
+                else:
+                    message = (f'{len(result["ids"])} candidates from {diag.get("lines", len(result["segments"]))} '
+                               'timestamped lines · model suggestions require review.' if params['contextual'] else
+                               f'{len(result["ids"])} context-cue/search matches · review before editing.')
+                if diag.get('returned', 0) > diag.get('valid', 0):
+                    message += (f" {diag['returned']-diag['valid']} model proposals had invalid references "
+                                'and were ignored.')
+                p.notice.setText(message)
                 w.tabs.setCurrentWidget(w.transcript if params["transcribe_only"] else p)
             w.start_job(lambda runner, progress: run_pipeline(
                 self.store, source, snapshot, params, identifier, ffmpeg, runner, progress), done, "Analyzing recording")
+        except Exception as error:
+            w.fail(str(error))
+
+    def ask_ai(self):
+        p, w = self.w.finder, self.w
+        question = p.chat_input.text().strip()
+        if not question or w.job:
+            return
+        try:
+            client = LocalModel(p.url.text(), p.model.currentText())
+            if not client.model:
+                raise ValueError('Connect to Ollama and select a downloaded local model first.')
+            model_key = (client.base, client.model)
+            if self.chat_model != model_key:
+                self.chat_history = []
+                self.chat_model = model_key
+                p.chat_output.clear()
+            history = self.chat_history[-8:]
+            p.chat_output.setPlainText(p.chat_output.toPlainText() + 'You: ' + question + '\n')
+            p.chat_input.clear()
+            def done(answer):
+                self.chat_history.extend([{'role': 'user', 'content': question},
+                                          {'role': 'assistant', 'content': answer}])
+                self.chat_history = self.chat_history[-8:]
+                p.chat_output.setPlainText(p.chat_output.toPlainText() + 'AI: ' + answer + '\n\n')
+            w.start_job(lambda runner, progress: client.chat(question, history, runner), done,
+                        'Talking to local AI')
         except Exception as error:
             w.fail(str(error))
 

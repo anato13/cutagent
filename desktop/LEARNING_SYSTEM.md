@@ -53,6 +53,17 @@ timestamps and successful decode checks do not establish an engaging story.
 There is no inferred confidence percentage, invented dialogue, automatic hook,
 face tracking, copied creator asset, or automatic YouTube upload.
 
+## Finder and local chat diagnostics
+
+Connecting to Ollama now selects the local-model analysis mode. Analyze reports
+its actual method, timestamped dialogue count and number of model windows; empty
+model output is distinguished from empty cue matches or missing transcript. Model
+proposals without valid source references raise a section/time-specific error;
+individual invalid proposals in a partly valid response are counted in the UI.
+The chat box sends only typed text and limited in-session conversation history to
+the selected loopback Ollama model. It does not read the video, transcript, profile
+or past chat sessions. Model replies are unverified.
+
 ## Initial creator profile
 
 PERSONAL_STYLE.md records Anato12's stated taste. The local model prompt now

@@ -63,10 +63,13 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
         store.cache_put(f"analysis-transcript:{source}", source, "analysis_transcript",
                         [asdict(s) for s in segments])
         ids = []
+        diagnostics = {}
         if not params.get("transcribe_only"):
+            if not segments:
+                raise ValueError('No timestamped dialogue was found. Import an SRT or check local transcription, then analyze again.')
             model = LocalModel(params["url"], params["model"]) if params.get("contextual") else None
             ids = analyze(store, source, segments, media.duration, runner,
-                          lambda v, m: report(.65+v*.3, m), model, params.get("query", ""))
+                          lambda v, m: report(.65+v*.3, m), model, params.get("query", ""), diagnostics)
             for i, identifier in enumerate(ids):
                 runner.check()
                 make_thumbnail(store, store.highlight(identifier), ffmpeg, runner)
@@ -75,8 +78,9 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
         if fingerprint(media.path) != source:
             raise ValueError("The recording changed during analysis. Results require a new source inspection.")
         if track_job:
-            store.update_job(job_id, "completed", 1, f"Complete · {len(segments)} lines, {len(ids)} highlights")
-        return {"segments": segments, "ids": ids, "source": source, "job_id": job_id}
+            store.update_job(job_id, "completed", 1, f"Complete · {len(segments)} lines, {len(ids)} highlights · {diagnostics.get('mode', 'transcript only')}")
+        return {"segments": segments, "ids": ids, "source": source, "job_id": job_id,
+                "diagnostics": diagnostics}
     except Cancelled:
         if track_job:
             store.update_job(job_id, "cancelled", last_progress[0], "Cancelled; completed chunks/windows are cached")

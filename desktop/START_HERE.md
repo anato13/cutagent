@@ -45,6 +45,13 @@ conversation you enjoy. Model taste scores are subjective 1–5 suggestions, not
 proof a clip is funny. Save corrections and confirmed own-video notes in the
 Learning library to refine future suggestions.
 
+In AI Clip Finder, **Connect local model** now chooses Local Ollama for Analyze.
+The result message tells you whether the app used Ollama or basic context cues,
+how many timestamped lines and model sections it checked, and why zero results
+may need a more specific search. A connection by itself only lists models.
+Use **Ask AI** for a simple conversation with the selected local model. Chat is
+session-only and does not send your recording or transcript automatically.
+
 For **Learning library**, import a tutorial, authorized creator video or your own
 finished video; select its type and click **Index selected recording**. Search
 its dialogue, inspect sampled frames and possible scene changes, preview examples,

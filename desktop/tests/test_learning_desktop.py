@@ -54,6 +54,11 @@ def run_learning(recording, output, url):
         w.finder_controller.connect_model()
         wait_until(app, lambda: w.job is None)
         assert w.finder.model.currentText() == 'fixture-local'
+        assert w.finder.engine.currentIndex() == 1  # Connecting selects Ollama for Analyze.
+        w.finder.chat_input.setText('How should I start a video?')
+        w.finder.ask_ai.emit()
+        wait_until(app, lambda: w.job is None)
+        assert 'AI: Local chat reply' in w.finder.chat_output.toPlainText()
         QFileDialog.getExistingDirectory = lambda *a, **k: str(output)
         QDesktopServices.openUrl = lambda *a: True
         before = asdict(w.project)

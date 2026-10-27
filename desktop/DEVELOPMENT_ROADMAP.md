@@ -1,5 +1,16 @@
 # Development roadmap
 
+## 0.4.0a5 — diagnosis and direct local chat
+
+Finder mode, empty-result and invalid-reference diagnostics are implemented.
+Basic session chat with the selected local model is available in AI Clip Finder.
+The genuine qwen2.5:7b sample produced timestamped references, but one selected
+sample does not establish general humor quality. Next: capture user-run job logs,
+review genuine clip boundaries with audio, and handle partially invalid model
+windows without losing valid later sections. A richer recording-aware assistant,
+speaker identification and reliable story planning remain later work. Medium is
+appropriate for UI polish; High for semantic evaluation or selection changes.
+
 ## 0.4.0a4 — personal style foundation
 
 Anato12's explicit conversation and editing preferences now guide local model

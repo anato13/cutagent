@@ -34,6 +34,11 @@ def run_finder(recording, destination):
                             Segment(1.6, 2.2, "Wait what?"),
                             Segment(2.3, 3.2, "[laughing] Oh my god")]
         window.refresh_transcript()
+        window.finder.query.setText('unmatched phrase')
+        window.finder.search.emit()
+        wait_until(app, lambda: window.job is None)
+        assert window.finder.table.rowCount() == 0
+        assert 'context cues' in window.finder.notice.text() and 'timestamped lines' in window.finder.notice.text()
         window.finder.analyze.emit()
         wait_until(app, lambda: window.job is None)
         assert not failures, failures

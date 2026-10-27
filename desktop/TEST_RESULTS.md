@@ -1,5 +1,32 @@
 # Test results and verification history
 
+## Version 0.4.0a5 — finder diagnostics and local text chat
+
+The workspace suite passed **197 tests, 0 failed, 0 skipped in 92.35 seconds**
+with isolated application data. The extracted source package passed **197 tests,
+0 failed, 0 skipped in 90.19 seconds**; only this verification note was updated
+after extraction. The focused finder/model/desktop suite passed
+**52 tests**, and two real Qt interface checks passed after the final UI changes.
+Regressions cover a timestamped absurd exchange (proposed and valid-empty model
+responses), source-reference failure with section/time, automatic switch from
+Connect to Local Ollama, a visible zero-result cue message, and bounded local
+chat. Existing import, transcription, project, preview and FFmpeg export tests
+remain in the full suite. Ruff, offline dependency lock and whitespace checks
+passed. Native Windows remains NOT_TESTED.
+
+The actual qwen2.5:7b model, with prompt `anato-personal-style-7`, processed
+19 timestamped lines from the genuine photo conversation. It returned one
+structurally valid proposal at **457.108–516.092 s** in **52.057 s**, with cited
+source lines and a subjective 3/5 taste estimate. The local chat adapter also
+returned a real text reply from qwen2.5:7b. This demonstrates model connection,
+request, parsing and timestamped candidate creation for this sample; clip humor,
+role meanings and whole-recording recall remain NOT_EVALUATED. Earlier
+qwen2.5:7b reports under an older prompt included both valid and empty samples,
+so a successful connection never guarantees candidates. The user's earlier
+zero-result run has no captured job log. The confirmed UI defect is that Connect
+left Analyze on Context cues; the UI now selects Local Ollama and reports the
+actual mode and inputs. Private model reports and recordings are not packaged.
+
 ## Version 0.4.0a4 — selection, packaged-code and initial style reliability
 
 Workspace suite before the creator-style change: **188 passed**. The extracted

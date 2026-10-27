@@ -1,5 +1,18 @@
 # Bug log
 
+B40 — VERIFIED_WORKING: connecting to Ollama populated model names but left
+AI Clip Finder on the default Context cues engine. Analyze could then report
+zero without calling Ollama. Connecting now selects local-model mode, and the
+result names the actual analysis method and transcript/window counts. A real
+qwen2.5:7b sample yielded a reviewable timestamped candidate after direct
+model evaluation; the specific user's earlier run has no captured job log.
+
+B41 — VERIFIED_WORKING: an empty cue/model result previously displayed only
+"0 candidates", obscuring the method and input. Empty transcript now stops with
+a useful message; an invalid source-reference response names its section and
+time. Partial invalid proposals are reported. A valid empty model response remains
+possible and is not labeled a malfunction.
+
 B39 — OPEN: a local qwen3:8b run over 28 windows of the supplied 28-minute
 recording (previous prompt version) yielded three structurally usable candidates,
 while two windows had proposals with invalid references. A known photo dispute

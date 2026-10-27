@@ -1,5 +1,16 @@
 # Project audit — 2026-10-26
 
+## 0.4.0a5 — finder diagnosis and local conversation
+
+A connected model was listed in the UI while the Analyze engine remained on
+Context cues. Connecting now selects Local Ollama. The completed job reports
+the actual method, timestamped transcript count and context-window count; a
+missing transcript and invalid model references have actionable errors. The
+bounded session chat uses only the selected loopback local model and typed
+messages. No source media is sent by chat. Video import, speech and export paths
+are unchanged. See TEST_RESULTS.md for real qwen2.5:7b evidence and remaining
+humor-quality limits.
+
 ## 0.4.0a4 — initial Anato12 humor profile
 
 Anato12's stated preferences are documented in PERSONAL_STYLE.md and used in
