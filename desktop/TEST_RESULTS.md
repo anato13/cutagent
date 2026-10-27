@@ -1,5 +1,21 @@
 # Test results and verification history
 
+## Version 0.4.0a6 — partial invalid-window recovery
+
+The focused Finder/Auto Edit suite passed **53 tests** from isolated app data.
+It covers malformed first/second timestamped sections followed by a validated
+absurd dialogue, explicit failure when all sections are invalid, absent caching
+of bad responses, preserved Auto Edit manifest diagnostics and prior export
+regressions. The final extracted-package suite passed **199 tests, 0 failed, 0 skipped
+in 91.59 seconds** with isolated app data. Only this verification note was
+updated after the tested extraction.
+The real qwen3:8b 28-window report from the previous release recorded two
+all-invalid model-reference windows before three structurally valid candidates.
+That report motivated this code change but is not a fresh full-recording run of
+0.4.0a6. No human humor score was inferred; native Windows and GPU acceptance
+remain NOT_TESTED. Adult Mode is NOT_IMPLEMENTED while editor reliability work
+continues.
+
 ## Version 0.4.0a5 — finder diagnostics and local text chat
 
 The workspace suite passed **197 tests, 0 failed, 0 skipped in 92.35 seconds**

@@ -1,5 +1,16 @@
 # Bug log
 
+B42 — VERIFIED_WORKING (fixture regression): a long recording could abort on
+the first all-invalid model window even though later windows had valid source
+references. Finder now continues across invalid-reference windows, records
+section/time, skips caching them, and keeps later valid proposals. An all-invalid
+run still raises an error. The existing real 28-window report had two such early
+windows followed by three valid candidates; the report predates this code and
+is diagnostic evidence, not a claim that a new full-model run passed.
+
+B39 remains OPEN for missed moments, role meaning and humor quality. This change
+addresses one failure path, not the broader recall/context problem.
+
 B40 — VERIFIED_WORKING: connecting to Ollama populated model names but left
 AI Clip Finder on the default Context cues engine. Analyze could then report
 zero without calling Ollama. Connecting now selects local-model mode, and the

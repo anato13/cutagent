@@ -69,7 +69,8 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
                 raise ValueError('No timestamped dialogue was found. Import an SRT or check local transcription, then analyze again.')
             model = LocalModel(params["url"], params["model"]) if params.get("contextual") else None
             ids = analyze(store, source, segments, media.duration, runner,
-                          lambda v, m: report(.65+v*.3, m), model, params.get("query", ""), diagnostics)
+                          lambda v, m: report(.65+v*.3, m), model, params.get("query", ""), diagnostics,
+                          bool(model))
             for i, identifier in enumerate(ids):
                 runner.check()
                 make_thumbnail(store, store.highlight(identifier), ffmpeg, runner)
@@ -78,7 +79,10 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
         if fingerprint(media.path) != source:
             raise ValueError("The recording changed during analysis. Results require a new source inspection.")
         if track_job:
-            store.update_job(job_id, "completed", 1, f"Complete · {len(segments)} lines, {len(ids)} highlights · {diagnostics.get('mode', 'transcript only')}")
+            incomplete = len(diagnostics.get('invalid_sections', []))
+            store.update_job(job_id, "completed", 1, f"Complete · {len(segments)} lines, {len(ids)} highlights · "
+                             f"{diagnostics.get('mode', 'transcript only')}" +
+                             (f' · {incomplete} invalid sections skipped' if incomplete else ''))
         return {"segments": segments, "ids": ids, "source": source, "job_id": job_id,
                 "diagnostics": diagnostics}
     except Cancelled:

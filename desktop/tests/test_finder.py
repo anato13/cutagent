@@ -182,7 +182,7 @@ def test_timestamped_absurd_exchange_reaches_model_and_reports_zero_honestly(tmp
         'model': 'fixture'}, job, binaries[0], Runner(), lambda *_: None)
     assert len(calls) == 1 and calls[0][2][1] == 1.5
     assert result['diagnostics'] == {'lines': 4, 'windows': 1, 'returned': int(propose),
-                                      'valid': int(propose), 'mode': 'local Ollama'}
+                                      'valid': int(propose), 'invalid_sections': [], 'mode': 'local Ollama'}
     assert len(result['ids']) == int(propose)
     if propose:
         item = store.highlight(result['ids'][0])
@@ -203,6 +203,66 @@ def test_invalid_model_reference_reports_section_and_time(review):
                      'reaction_ids': [], 'needs_context': False}]
     with pytest.raises(ValueError, match=r'section 1/1 .*0\.1–3\.2s.*valid source evidence'):
         analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None, BadModel())
+
+
+def test_invalid_early_section_does_not_hide_later_valid_exchange(tmp_path):
+    path = tmp_path / 'source.mp4'
+    path.write_bytes(b'fixture identity')
+    media = Media('m', str(path), 150, 320, 180, transcript=[
+        Segment(1, 2, 'An ordinary earlier conversation.'),
+        Segment(3, 4, 'Nothing happens.'),
+        Segment(120, 121, 'Why did you bring a potato to court?'),
+        Segment(122, 123, 'The potato is my lawyer, and it objects!')])
+    store = Store(tmp_path / 'profile')
+    source = store.source(media)
+    class MixedModel:
+        base, model = 'http://localhost', 'fixture'
+        calls = []
+        def identity(self, runner=None):
+            return {'digest': 'fixture'}
+        def analyze(self, rows, *args):
+            self.calls.append(rows[0]['id'])
+            if rows[0]['id'] < 2:
+                return [{'first_id': 0, 'last_id': 1, 'setup_ids': [999],
+                         'payoff_ids': [1], 'reaction_ids': [], 'needs_context': False}]
+            return [{'first_id': 2, 'last_id': 3, 'setup_ids': [2], 'payoff_ids': [3],
+                     'reaction_ids': [], 'needs_context': False, 'subjective_humor_score': 4}]
+    model = MixedModel()
+    diagnostics = {}
+    ids = analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None,
+                  model, diagnostics=diagnostics, allow_partial=True)
+    assert len(ids) == 1 and store.highlight(ids[0])['start'] == 116
+    assert diagnostics['lines'] == 4 and diagnostics['windows'] == 3
+    assert diagnostics['returned'] == 3 and diagnostics['valid'] == 1
+    assert diagnostics['invalid_sections'] == [
+        {'section': 1, 'start': 1, 'end': 4, 'rejected_proposals': 1},
+        {'section': 2, 'start': 3, 'end': 4, 'rejected_proposals': 1}]
+    assert model.calls == [0, 1, 2]
+    assert analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None,
+                   model, allow_partial=True) == ids
+    assert model.calls == [0, 1, 2, 0, 1]  # Invalid responses were never cached as no-matches.
+
+
+def test_all_invalid_sections_still_fail_in_partial_mode(tmp_path):
+    path = tmp_path / 'source.mp4'
+    path.write_bytes(b'fixture identity')
+    media = Media('m', str(path), 150, 320, 180,
+                  transcript=[Segment(1, 2, 'A'), Segment(120, 121, 'B')])
+    store = Store(tmp_path / 'profile')
+    source = store.source(media)
+    class InvalidModel:
+        base, model = 'http://localhost', 'fixture'
+        def identity(self, runner=None):
+            return {'digest': 'fixture'}
+        def analyze(self, rows, *args):
+            return [{'first_id': rows[0]['id'], 'last_id': rows[0]['id'],
+                     'setup_ids': [999], 'payoff_ids': [999], 'reaction_ids': [],
+                     'needs_context': False}]
+    diagnostics = {}
+    with pytest.raises(ValueError, match='No validated candidates remain'):
+        analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None,
+                InvalidModel(), diagnostics=diagnostics, allow_partial=True)
+    assert len(diagnostics['invalid_sections']) == 2
 
 
 def test_newer_database_refused_without_erasing_data(tmp_path):

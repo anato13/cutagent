@@ -187,6 +187,9 @@ class FinderController:
                 if diag.get('returned', 0) > diag.get('valid', 0):
                     message += (f" {diag['returned']-diag['valid']} model proposals had invalid references "
                                 'and were ignored.')
+                if diag.get('invalid_sections'):
+                    message += (f" {len(diag['invalid_sections'])} model sections were skipped; "
+                                'these suggestions cover only validated sections. Review before editing.')
                 p.notice.setText(message)
                 w.tabs.setCurrentWidget(w.transcript if params["transcribe_only"] else p)
             w.start_job(lambda runner, progress: run_pipeline(

@@ -203,6 +203,7 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
                    'selection': [{k: h[k] for k in ('id', 'start', 'end', 'status', 'original_range', 'exchange')}
                                  for h in selected],
                    'skipped': skipped, 'preferences': store.model_preferences(),
+                   'analysis_diagnostics': result.get('diagnostics', {}),
                    'model': params['model'], 'model_identity': identity, 'query': params.get('query', ''),
                    'story_strategy': 'Chronological complete exchanges; no semantic hook or narrative rewriting.',
                    'short_strategy': 'Preserve ranked selection when possible; otherwise reserve one complete eligible Short.',

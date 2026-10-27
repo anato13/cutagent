@@ -64,6 +64,17 @@ The chat box sends only typed text and limited in-session conversation history t
 the selected loopback Ollama model. It does not read the video, transcript, profile
 or past chat sessions. Model replies are unverified.
 
+## Partial model section recovery
+
+When a local model gives source references that fail validation in one analysis
+window, Finder records the section and time range, does not cache that response,
+and continues to other windows. It saves suggestions only if at least one window
+produces valid referenced candidates; an all-invalid run fails explicitly. The
+UI and job history say how many sections were skipped. Auto Edit carries those
+diagnostics into its export manifest. This protects long runs from one malformed
+section but does not certify comic timing, speaker identity, or full-recording
+recall. Network, model and transcript failures still stop the job.
+
 ## Initial creator profile
 
 PERSONAL_STYLE.md records Anato12's stated taste. The local model prompt now

@@ -1,5 +1,16 @@
 # Project audit — 2026-10-26
 
+## 0.4.0a6 — bounded recovery from invalid analysis windows
+
+Continues from 124caf3 with a recoverable branch and local Git bundle. A long
+recording could stop at an early invalid model-reference window before later
+valid windows were analyzed. Finder now skips only those invalid-reference
+windows, never caches their responses, and reports each skipped section. If no
+validated proposal survives, it fails with an actionable error. Auto Edit keeps
+the diagnostic in its manifest. Import, transcription, review decisions, stored
+feedback and media export code are unchanged. This is source-reference recovery,
+not verified humor understanding or full editorial autonomy. See TEST_RESULTS.md.
+
 ## 0.4.0a5 — finder diagnosis and local conversation
 
 A connected model was listed in the UI while the Analyze engine remained on

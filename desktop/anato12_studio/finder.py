@@ -175,12 +175,13 @@ def literal_search(rows, query, duration):
     return deduplicate(result)
 
 
-def analyze(store, source, segments, duration, runner, progress, model=None, query="", diagnostics=None):
+def analyze(store, source, segments, duration, runner, progress, model=None, query="", diagnostics=None,
+            allow_partial=False):
     for s in segments:
         s.validate(duration)
     rows = rows_for(segments)
     if diagnostics is not None:
-        diagnostics.update(lines=len(rows), windows=0, returned=0, valid=0,
+        diagnostics.update(lines=len(rows), windows=0, returned=0, valid=0, invalid_sections=[],
                            mode='local Ollama' if model else 'context cues')
     if not rows:
         return []
@@ -193,6 +194,7 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
         candidates = []
         preferences = store.model_preferences() if model else store.preferences()
         chunks = list(bounded_windows(rows, repeated, query, preferences, runner)) if model else list(windows(rows))
+        invalid_sections = []
         for i, chunk in enumerate(chunks):
             runner.check()
             if diagnostics is not None:
@@ -217,17 +219,30 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
                     diagnostics['returned'] += len(raw)
                     diagnostics['valid'] += len(valid)
                 if raw and not valid:
-                    raise ValueError(f"The model proposed clips in section {i+1}/{len(chunks)} "
-                                     f"({window[0]['start']:.1f}–{window[-1]['end']:.1f}s) "
-                                     "without valid source evidence. "
-                                     "Each needs ordered setup/payoff references and a context assessment. "
-                                     "Try another model or review the transcript; this is not a no-match result.")
+                    issue = {'section': i+1, 'start': window[0]['start'],
+                             'end': window[-1]['end'], 'rejected_proposals': len(raw)}
+                    invalid_sections.append(issue)
+                    if diagnostics is not None:
+                        diagnostics['invalid_sections'].append(issue)
+                    if not allow_partial:
+                        raise ValueError(f"The model proposed clips in section {i+1}/{len(chunks)} "
+                                         f"({issue['start']:.1f}–{issue['end']:.1f}s) "
+                                         "without valid source evidence. "
+                                         "Each needs ordered setup/payoff references and a context assessment. "
+                                         "Try another model or review the transcript; this is not a no-match result.")
+                    progress((i+1)/len(chunks), f"Skipping invalid model section {i+1}/{len(chunks)}")
+                    continue  # Never cache an all-invalid section as a no-match.
                 if fresh:
                     store.cache_put(key, source, "analysis_window", raw)
                 candidates.extend(valid)
             else:
                 candidates.extend(context_cues(window, relevant, duration))
             progress((i+1)/len(chunks), f"Analyzing context window {i+1}/{len(chunks)}")
+        if invalid_sections and not candidates:
+            first = invalid_sections[0]
+            raise ValueError(f"The model gave invalid source references in {len(invalid_sections)} "
+                             f"of {len(chunks)} sections, starting at {first['start']:.1f}–{first['end']:.1f}s. "
+                             "No validated candidates remain. Review the transcript or try another local model.")
         candidates = deduplicate(candidates)
     identifiers = []
     for item in candidates:

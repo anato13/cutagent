@@ -88,6 +88,7 @@ def test_one_run_checked_main_and_shorts_without_manual_approval(auto_source, bi
     assert result['committed'] and result['shorts'] == 1 and result['main_clips'] == 1
     assert 'approved_highlights' not in manifest
     assert manifest['automation']['selection'][0]['status'] == 'unreviewed'
+    assert manifest['automation']['analysis_diagnostics']['mode'] == 'local Ollama'
     assert store.highlights(source)[0]['status'] == 'unreviewed'
     for entry in manifest['outputs']:
         assert entry['quality']['full_decode'] == 'passed'

@@ -52,6 +52,12 @@ may need a more specific search. A connection by itself only lists models.
 Use **Ask AI** for a simple conversation with the selected local model. Chat is
 session-only and does not send your recording or transcript automatically.
 
+For long recordings, an invalid model section is now skipped when other
+sections contain validated suggestions. The result shows how many sections were
+skipped. If every model proposal has invalid transcript references, analysis
+stops with an error instead of presenting a false "no funny moments" result.
+Review the suggested clips against the recording before using them.
+
 For **Learning library**, import a tutorial, authorized creator video or your own
 finished video; select its type and click **Index selected recording**. Search
 its dialogue, inspect sampled frames and possible scene changes, preview examples,

@@ -1,5 +1,17 @@
 # Development roadmap
 
+## 0.4.0a6 — long-recording finder recovery
+
+Finder can now return later validated exchanges despite earlier malformed model
+references, with visible partial-result diagnostics. Next priorities remain:
+review genuine candidate setup/reactions against source audio; improve safe
+context and boundary selection; test unattended YouTube and Shorts on full
+recordings; improve correction-driven ranking. Successful reference checks do
+not prove a clip is funny. The optional Adult Mode request remains deferred
+while editor and learning reliability are incomplete; no Adult Mode backend or
+content generation is claimed. High suits semantic evaluation; Medium suits
+small UI and documentation follow-ups.
+
 ## 0.4.0a5 — diagnosis and direct local chat
 
 Finder mode, empty-result and invalid-reference diagnostics are implemented.

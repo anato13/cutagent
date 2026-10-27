@@ -1,5 +1,14 @@
 # Engineering lessons
 
+## 0.4.0a6
+
+Analysis windows are independent enough to retain later valid, source-checked
+candidates after one malformed model response. Doing so requires a visible
+partial-result warning and no cache entry for an all-invalid window. Re-run the
+invalid section on retry; never call an all-invalid recording a normal empty
+result. Persist the count in the job message and output manifest so a checked
+export does not imply every analysis window was accepted.
+
 ## 0.4.0a5
 
 A successful Ollama connection verifies availability, not that Analyze is using

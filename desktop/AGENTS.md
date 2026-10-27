@@ -110,3 +110,8 @@ check cancellation. Final history errors must not mask the original failure.
 Capability identity must work for archived PyInstaller modules without reading
 loose `.py` files. Fingerprint installed code via its loader; unknown identity
 must not reuse prior passes. Frozen Linux checks are not native Windows tests.
+
+Invalid model-reference windows may be skipped only when a run finds later
+validated proposals. Never cache an all-invalid response; record skipped
+section/time in diagnostics, job messages and Auto Edit manifests. An all-invalid
+run still fails. Technical recovery does not establish semantic quality.
