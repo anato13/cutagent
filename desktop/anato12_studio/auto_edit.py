@@ -190,6 +190,15 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
             raise ValueError('No usable complete exchanges were found. No video was created. '
                              'Inspect the transcript/model results or approve a complete range and rerun.' +
                              (' Selection checks: ' + reasons if reasons else ''))
+        if params.get('require_multi') and options.max_ranges > 1 and len(selected) < 2:
+            diag = result.get('diagnostics', {})
+            reasons = '; '.join(dict.fromkeys(s['reason'] for s in skipped))[:500]
+            raise ValueError('Only one distinct complete moment is usable after checking '
+                             f"{diag.get('windows', 0)} first-pass and {diag.get('coverage_windows', 0)} "
+                             'second-pass dialogue sections. No one-moment main video or duplicate Short '
+                             'was exported. Review the timestamped transcript, approve more distinct clips, '
+                             'or try another local model.' +
+                             (' Selection checks: ' + reasons if reasons else ''))
         if not any(fits_short(h, options) for h in selected):
             raise ValueError('No complete range fits the Short limit. Increase the limit and rerun; no dialogue was truncated.')
         recipes = ['trim_join', 'portrait_fit']

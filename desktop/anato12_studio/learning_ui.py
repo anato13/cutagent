@@ -150,7 +150,8 @@ class LearningController:
                 'model_folder': w.settings.value('model_folder', '', type=str),
                 'url': p.url.text(), 'model': name,
                 'personal_memory': p.personal_memory.isChecked(),
-                'ai_mode': p.ai_mode.currentText()}
+                'ai_mode': p.ai_mode.currentText(), 'coverage': True,
+                'coverage_target': min(3, self.ranges.value())}
 
     def start_auto(self, checked=False, resume=None):
         w = self.w
@@ -176,7 +177,8 @@ class LearningController:
                     return
                 options = AutoOptions(self.minutes.value()*60, self.ranges.value(), self.short_seconds.value(),
                                       self.burn.isChecked(), self.srt.isChecked())
-                params.update(kind='auto_edit', auto_options=asdict(options), output_parent=parent)
+                params.update(kind='auto_edit', auto_options=asdict(options), output_parent=parent,
+                              require_multi=options.max_ranges > 1)
                 identifier = self.store.create_job(source, params)
             snapshot = copy.deepcopy(media)
             previous = w.finder_controller.last_studio_model

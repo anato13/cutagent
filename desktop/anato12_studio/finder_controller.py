@@ -214,7 +214,8 @@ class FinderController:
                       "contextual": p.engine.currentIndex() == 1,
                       "url": p.url.text(), "model": p.model.currentText(),
                       "personal_memory": p.personal_memory.isChecked(),
-                      "ai_mode": p.ai_mode.currentText()}
+                      "ai_mode": p.ai_mode.currentText(),
+                      "coverage": True, "coverage_target": 3}
             selection_note = ""
             if params["contextual"] and not params["transcribe_only"] and not resume:
                 params["model"], selection_note = self.chosen_model("analysis", params["query"])
@@ -247,7 +248,8 @@ class FinderController:
                 elif not result['ids'] and params['contextual']:
                     message = (f"0 candidates from {diag.get('lines', 0)} timestamped lines in "
                                f"{diag.get('windows', 0)} model sections. "
-                               f"{params['model']} returned no usable moments. Try Search with a specific phrase "
+                               f"{params['model']} returned no usable moments after "
+                               f"{diag.get('coverage_windows', 0)} additional reviews. Try Search with a specific phrase "
                                "or inspect the transcript; a successful connection does not guarantee suggestions.")
                 elif not result['ids']:
                     message = (f"0 candidates from {diag.get('lines', 0)} timestamped lines using context cues. "
@@ -256,9 +258,21 @@ class FinderController:
                     message = (f'{len(result["ids"])} candidates from {diag.get("lines", len(result["segments"]))} '
                                'timestamped lines · model suggestions require review.' if params['contextual'] else
                                f'{len(result["ids"])} context-cue/search matches · review before editing.')
+                if params['contextual'] and not params['query'] and not params['transcribe_only']:
+                    message += (f" Second review checked {diag.get('coverage_windows', 0)} dialogue sections "
+                                f"and added {diag.get('coverage_added', 0)} distinct moments.")
+                    if len(result['ids']) <= 1 and diag.get('long_lines', 0) >= max(2, diag.get('lines', 0)//4):
+                        message += (f" {diag['long_lines']} transcript lines last at least 15 seconds. "
+                                    'A whole exchange in one line cannot cite separate setup and payoff; '
+                                    'try local transcription or import an SRT with real phrase timestamps.')
+                    if len(result['ids']) == 1:
+                        message += (' Only one validated moment is available. Auto Edit needs more distinct '
+                                    'moments for a multi-moment video; review the transcript or try another model.')
                 if diag.get('returned', 0) > diag.get('valid', 0):
                     message += (f" {diag['returned']-diag['valid']} model proposals had invalid references "
                                 'and were ignored.')
+                    if diag.get('rejection_reasons'):
+                        message += f" First issue: {diag['rejection_reasons'][0]['reason']}"
                 if diag.get('invalid_sections'):
                     message += (f" {len(diag['invalid_sections'])} model sections were skipped; "
                                 'these suggestions cover only validated sections. Review before editing.')

@@ -209,6 +209,127 @@ def test_invalid_model_reference_reports_section_and_time(review):
         analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None, BadModel())
 
 
+def test_second_review_finds_distinct_timestamped_exchanges_and_reuses_cache(tmp_path):
+    store = Store(tmp_path / 'profile')
+    dialogue = [
+        ('Why did you bring a potato to court?', 'He is my lawyer.',
+         'Your lawyer is a potato?', 'The potato objects!'),
+        ('Why is the moon on your team?', 'It signed the contract.',
+         'The moon has a pen?', 'It uses a crater.'),
+        ('Who hired the ghost?', 'The ghost hired itself.',
+         'That is not how jobs work.', 'It already quit twice.'),
+    ]
+    segments = []
+    for exchange, lines in enumerate(dialogue):
+        for offset, sentence in enumerate(lines):
+            start = exchange * 120 + offset * 2
+            segments.append(Segment(start, start + 1, sentence))
+    calls = []
+    class FixtureModel:
+        base, model = 'http://localhost', 'fixture'
+        def identity(self, runner=None):
+            return {'digest': 'fixture'}
+        def analyze(self, rows, references, query, preferences, runner,
+                    focus='standard', excluded_ids=()):
+            calls.append((focus, rows[0]['id'], tuple(excluded_ids)))
+            if focus == 'standard' and rows[0]['id'] != 0:
+                return []
+            first = rows[0]['id']
+            return [{'first_id': first, 'last_id': first + 3, 'setup_ids': [first],
+                     'payoff_ids': [first + 2], 'reaction_ids': [first + 3],
+                     'evidence_ids': [], 'needs_context': False, 'category': 'banter',
+                     'reason': 'The explanation turns into an absurd claim.',
+                     'subjective_humor_score': 4}]
+    diagnostics = {}
+    ids = analyze(store, 'source', segments, 300, Runner(), lambda *_: None,
+                  FixtureModel(), diagnostics=diagnostics, allow_partial=True,
+                  coverage=True, coverage_target=3)
+    assert len(ids) == 3
+    assert sorted(store.highlight(i)['start'] for i in ids) == [0, 116, 236]
+    assert diagnostics['windows'] == 3
+    assert diagnostics['coverage_windows'] == 2
+    assert diagnostics['coverage_added'] == 2
+    assert [c[:2] for c in calls] == [('standard', 0), ('standard', 4),
+                                     ('standard', 8), ('coverage', 4), ('coverage', 8)]
+    calls.clear()
+    again = analyze(store, 'source', segments, 300, Runner(), lambda *_: None,
+                    FixtureModel(), allow_partial=True, coverage=True, coverage_target=3)
+    assert again == ids and calls == []
+
+
+def test_second_review_does_not_reuse_the_only_moment(tmp_path):
+    store = Store(tmp_path / 'profile')
+    segments = [Segment(i * 2, i * 2 + 1, text) for i, text in enumerate((
+        'Why did you bring a potato to court?', 'He is my lawyer.',
+        'Your lawyer is a potato?', 'The potato objects!',
+        'I have another question.', 'The potato refuses to answer.'))]
+    class RepeatingModel:
+        base, model = 'http://localhost', 'fixture'
+        def identity(self, runner=None):
+            return {'digest': 'fixture'}
+        def analyze(self, rows, references, query, preferences, runner,
+                    focus='standard', excluded_ids=()):
+            return [{'first_id': 0, 'last_id': 3, 'setup_ids': [0], 'payoff_ids': [2],
+                     'reaction_ids': [3], 'evidence_ids': [], 'needs_context': False,
+                     'category': 'banter', 'reason': 'The potato is the lawyer.',
+                     'subjective_humor_score': 4}]
+    diag = {}
+    ids = analyze(store, 'source', segments, 20, Runner(), lambda *_: None,
+                  RepeatingModel(), diagnostics=diag, allow_partial=True,
+                  coverage=True, coverage_target=3)
+    assert len(ids) == 1 and diag['coverage_added'] == 0
+
+
+def test_coarse_timestamped_lines_are_counted_for_zero_result_message(tmp_path):
+    store = Store(tmp_path / 'profile')
+    segments = [Segment(0, 21, 'Several speakers and a complete joke in one long caption.'),
+                Segment(30, 51, 'Another whole conversation in one caption.')]
+    class EmptyModel:
+        base, model = 'http://localhost', 'fixture'
+        def identity(self, runner=None):
+            return {'digest': 'fixture'}
+        def analyze(self, *args):
+            return []
+    diagnostics = {}
+    ids = analyze(store, 'source', segments, 60, Runner(), lambda *_: None,
+                  EmptyModel(), diagnostics=diagnostics)
+    assert ids == [] and diagnostics['long_lines'] == 2
+    class InvalidModel(EmptyModel):
+        model = 'invalid-fixture'
+        def analyze(self, *args):
+            return [{'first_id': 0, 'last_id': 1, 'setup_ids': [999],
+                     'payoff_ids': [1], 'reaction_ids': [], 'needs_context': False}]
+    with pytest.raises(ValueError, match='First issue: Invalid or missing setup_ids.*2 of 2 transcript lines'):
+        analyze(store, 'source', segments, 60, Runner(), lambda *_: None, InvalidModel())
+
+
+def test_second_review_can_recover_from_invalid_first_pass(tmp_path):
+    store = Store(tmp_path / 'profile')
+    segments = [Segment(i*2, i*2+1, text) for i, text in enumerate((
+        'Who hired the ghost?', 'The ghost hired itself.',
+        'That is not how jobs work.', 'It already quit twice.'))]
+    class RecoveringModel:
+        base, model = 'http://localhost', 'fixture'
+        def identity(self, runner=None):
+            return {'digest': 'fixture'}
+        def analyze(self, rows, references, query, preferences, runner,
+                    focus='standard', excluded_ids=()):
+            return [{'first_id': 0, 'last_id': 3, 'setup_ids': [999 if focus == 'standard' else 0],
+                     'payoff_ids': [2], 'reaction_ids': [3], 'evidence_ids': [],
+                     'needs_context': False, 'category': 'banter', 'reason': 'The ghost quits.',
+                     'subjective_humor_score': 4}]
+    diagnostics = {}
+    progress = []
+    ids = analyze(store, 'source', segments, 20, Runner(), lambda value, _: progress.append(value),
+                  RecoveringModel(), diagnostics=diagnostics, allow_partial=True,
+                  coverage=True, coverage_target=3)
+    assert len(ids) == 1
+    assert progress == sorted(progress)
+    assert diagnostics['invalid_sections'][0]['section'] == 1
+    assert diagnostics['rejection_reasons'][0]['reason'] == 'Invalid or missing setup_ids; use supplied transcript IDs.'
+    assert diagnostics['coverage_added'] == 1
+
+
 def test_invalid_early_section_does_not_hide_later_valid_exchange(tmp_path):
     path = tmp_path / 'source.mp4'
     path.write_bytes(b'fixture identity')
@@ -236,15 +357,14 @@ def test_invalid_early_section_does_not_hide_later_valid_exchange(tmp_path):
     ids = analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None,
                   model, diagnostics=diagnostics, allow_partial=True)
     assert len(ids) == 1 and store.highlight(ids[0])['start'] == 116
-    assert diagnostics['lines'] == 4 and diagnostics['windows'] == 3
-    assert diagnostics['returned'] == 3 and diagnostics['valid'] == 1
+    assert diagnostics['lines'] == 4 and diagnostics['windows'] == 2
+    assert diagnostics['returned'] == 2 and diagnostics['valid'] == 1
     assert diagnostics['invalid_sections'] == [
-        {'section': 1, 'start': 1, 'end': 4, 'rejected_proposals': 1},
-        {'section': 2, 'start': 3, 'end': 4, 'rejected_proposals': 1}]
-    assert model.calls == [0, 1, 2]
+        {'section': 1, 'start': 1, 'end': 4, 'rejected_proposals': 1}]
+    assert model.calls == [0, 2]
     assert analyze(store, source, media.transcript, media.duration, Runner(), lambda *_: None,
                    model, allow_partial=True) == ids
-    assert model.calls == [0, 1, 2, 0, 1]  # Invalid responses were never cached as no-matches.
+    assert model.calls == [0, 2, 0]  # Invalid responses were never cached as no-matches.
 
 
 def test_all_invalid_sections_still_fail_in_partial_mode(tmp_path):

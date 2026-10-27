@@ -176,3 +176,7 @@ real semantic quality still needs separate human evaluation.
     `/api/ps` and release the previous app-selected model on switches. Inference
     is serialized by Studio jobs; external Ollama clients remain outside Studio's
     control. `nvidia-smi` absence means GPU use is NOT_MEASURED, not zero.
+17. Distinguish candidate discovery from clip assembly. The editor can combine
+    several valid ranges, but a one-candidate Finder result necessarily gives
+    both formats the same moment. Search uncovered dialogue again with explicit
+    excluded IDs, validate every cited exchange, and report a shortage honestly.

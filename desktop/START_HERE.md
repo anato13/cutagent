@@ -345,6 +345,20 @@ requests have a one-minute limit. Completed analysis sections remain cached.
 
 Dense dialogue now uses smaller overlapping sections automatically. Each section
 keeps complete transcript lines with their original IDs and timestamps.
+When AI Clip Finder finds fewer than three distinct moments, it runs a second
+review of uncovered conversations. This can take longer because Ollama makes
+more requests. The result shows how many sections were reviewed and how many
+new moments passed the source checks. A model may still find only one usable
+exchange; Studio will say so instead of filling the video with repeats.
+For a longer edit, check that the transcript reaches the end, try a different
+installed model, or approve additional complete clips after reviewing playback.
+If you selected more than one range, Auto Edit stops before exporting when only
+one usable moment remains. Choosing one range deliberately still permits a
+single-moment draft.
+If Studio says many captions last 15 seconds or more, the model may see a whole
+setup and payoff inside a single caption. It cannot cite them as separate lines.
+Use local transcription or an SRT with real phrase timestamps; the app will not
+guess split times.
 If one line is too large, Studio names its ID and source time so you can shorten
 it or split it at real timestamps in an SRT and reimport. Long search text or
 shared notes also consume the input budget; shortening them may resolve the error.

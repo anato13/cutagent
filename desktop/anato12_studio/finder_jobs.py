@@ -94,7 +94,8 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
                               if model and params.get("personal_memory") else None)
             ids = analyze(store, source, segments, media.duration, runner,
                           lambda v, m: report(.65+v*.3, m), model, params.get("query", ""), diagnostics,
-                          bool(model), personal_notes)
+                          bool(model), personal_notes, bool(params.get('coverage', False)),
+                          int(params.get('coverage_target', 3)))
             if model:
                 diagnostics['resources_after_analysis'] = resource_snapshot()
                 try:

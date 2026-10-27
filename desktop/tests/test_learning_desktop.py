@@ -64,6 +64,7 @@ def run_learning(recording, output, url):
         before = asdict(w.project)
         was_dirty = w.dirty
         w.tabs.setCurrentWidget(learning.auto_tab)
+        learning.ranges.setValue(1)  # This four-second fixture has one complete exchange.
         learning.burn.setChecked(True)
         learning.srt.setChecked(True)
         learning.run_button.click()

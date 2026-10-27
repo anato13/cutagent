@@ -620,3 +620,51 @@ Python compilation passed. This is not a native Windows or RTX acceptance run.
 After adding Personal AI timing to the Studio bridge and the single-frame
 vision path, **71 affected Studio/model/GUI tests passed** and all **8 Personal
 AI tests passed** again. The ZIPs were rebuilt only after these checks.
+
+## 2026-10-27 multi-moment Finder increment
+
+The complete Linux Studio regression run passed **214 tests** after updating
+the single-exchange GUI fixture to deliberately request one range. It includes
+offscreen Qt review/export, real FFmpeg draft rendering, finder caches and
+source-citation validation. Focused second-review and input-budget tests passed.
+`git diff --check` and Python compilation passed. The first full run exposed
+the fixture's default multi-range request; after correcting the fixture, the
+full suite passed. No shipped behavior was weakened to satisfy that test.
+
+With installed local `qwen3:8b`, a separate 12-line synthetic transcript
+produced three validated timestamped candidates at 0–12, 116–132 and
+236–252 seconds. The ordinary first pass found all three. A direct second-pass
+request produced one valid candidate for an isolated ghost exchange, and no
+candidate when another exchange was surrounded by excluded dialogue. These
+are model behavior observations, not a humor-quality rating. The user's current
+recording, native Windows UI, RTX usage and completed long-form output remain
+**NOT_TESTED** in this run.
+
+An earlier actual Anato12 recording (`1024.mp4`, 28m 45s) was checked with its
+80-line chunk-level ASR transcript. With `qwen2.5:7b`, all 24 first-pass sections
+returned either empty results or invalid source references; three sections had
+invalid references. The job failed with an explicit source-evidence error. That
+transcript has 60 captions lasting at least 15 seconds, so some exchanges cannot
+be cited as separate setup/payoff lines. This finding applies to the older
+transcript, not automatically to the user's current Studio project.
+
+A second diagnostic used 489 valid phrase-level timestamped lines from the same
+recording. It was deliberately stopped after ten of 30 sections. One cached
+model proposal from those ten sections validated as a broad 440.8–525.3s
+candidate; it is a partial scan and has not been rated for humor. The finer
+transcript does not by itself guarantee more distinct clips from Qwen2.5.
+
+A sampled real-footage check used 82 phrase-timestamped lines from five
+conversation-heavy regions of the same older recording with installed local
+`qwen3:8b`. The six first-pass sections produced one validated candidate; the
+second review checked ten more sections and added one distinct candidate. The
+saved source ranges are 323.92–356.42s and 422.18–506.092s. Three first-pass
+and one second-pass sections contained invalid model proposals and were skipped;
+eight second-pass sections returned empty. The selected ranges passed the
+existing exchange/evidence checks. A real FFmpeg bundle then rendered a
+two-range 120.3-second YouTube draft and one 34.5-second Short. Full decode,
+audio/video and duration checks passed for both MP4s. The second exchange was
+too long for the 60-second Short limit and was reported as skipped. These are
+**reviewable suggestions and technically valid drafts**, not a human finding
+that the moments are funny or that the edit is ready to publish. This was a
+sampled subset, not a whole-recording scan of the user's current project.

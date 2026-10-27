@@ -138,6 +138,16 @@ def test_missing_model_fails_without_fallback(auto_source, binaries):
     assert store.jobs()[0]['status'] == 'failed'
 
 
+def test_auto_edit_refuses_single_moment_for_multimoment_request(auto_source, binaries):
+    store, media, source, params = auto_source
+    params['require_multi'] = True
+    job = store.create_job(source, params)
+    with pytest.raises(ValueError, match='Only one distinct complete moment'):
+        run_auto_edit(store, source, media, params, job, *binaries, Runner(), lambda *_: None)
+    assert store.jobs()[0]['status'] == 'failed'
+    assert not list(Path(params['output_parent']).glob('Anato12-auto-*'))
+
+
 def test_rejected_model_results_produce_no_auto_output(auto_source, binaries):
     from anato12_studio.finder_jobs import run_pipeline
     store, media, source, params = auto_source

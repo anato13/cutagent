@@ -192,3 +192,19 @@ quality and integration into autonomous editing remain NOT_TESTED.
 Keep voice, automatic scene humor judgments and weight training below this
 real-recording acceptance work. High remains the lowest suitable reasoning
 setting for the next bounded evaluation and correction pass.
+
+## Multi-moment candidate discovery increment
+
+The second-pass Finder review and the one-moment Auto Edit guard are implemented
+and fixture-tested. The next acceptance step is an actual Anato12 recording:
+inspect timestamped candidates across the whole source, approve/reject them
+against playback, and check the main video and Shorts for distinct content.
+Measure local Ollama time and resource use on the user's Windows machine. Do not
+promote humor quality to VERIFIED_WORKING from synthetic dialogue tests alone.
+
+The older `1024.mp4` recording now has a technically checked two-moment draft
+from five sampled regions. Next, run Finder on the user's current saved project
+and review every proposed range against playback, then test a complete source
+and a native Windows export. A second distinct moment in a sample is evidence
+of the recovery path, not proof that the model will find enough clips in every
+recording.

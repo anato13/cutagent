@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import bisect
 import json
 
-PROMPT_VERSION = "anato-personal-style-8"
+PROMPT_VERSION = "anato-personal-style-9"
 CONTEXT_TOKENS = 8192
 OUTPUT_TOKENS = 1200
 MAX_INPUT_BYTES = 6000
@@ -46,6 +46,15 @@ SYSTEM_PROMPT = (
     "or events, assert contested claims as facts, or output confidence percentages."
 )
 
+COVERAGE_PROMPT = (
+    " This is a second review for distinct moments the first pass may have missed. "
+    "Consider quiet absurd claims, social misunderstandings, awkward reactions, "
+    "sarcasm and supported callbacks. Do not propose an exchange containing any "
+    "excluded segment ID. Keep every setup/payoff/reaction rule above; return an "
+    "empty list if no additional complete exchange is supported. Do not turn "
+    "ordinary talk, volume or laughter alone into a joke."
+)
+
 
 def response_schema(rows, callbacks):
     """Constrain JSON shape/IDs server-side; client checks still enforce semantics of references."""
@@ -69,10 +78,18 @@ def response_schema(rows, callbacks):
                   'additionalProperties': False}}}, 'required': ['highlights'], 'additionalProperties': False}
 
 
-def messages_for(rows, callbacks, query, preferences):
+def messages_for(rows, callbacks, query, preferences, focus="standard", excluded_ids=()):
+    if focus not in {"standard", "coverage"}:
+        raise ValueError("Unknown local-model analysis focus.")
+    if (focus == "standard" and excluded_ids) or any(type(i) is not int or i not in
+            {r["id"] for r in rows} for i in excluded_ids):
+        raise ValueError("Excluded dialogue references must belong to this window.")
     data = {"segments": rows, "earlier_repeated_phrases": callbacks,
             "search": query, "opted_in_feedback": preferences}
-    return [{"role": "system", "content": SYSTEM_PROMPT},
+    if focus == "coverage":
+        data["excluded_segment_ids"] = sorted(set(excluded_ids))
+    return [{"role": "system", "content": SYSTEM_PROMPT +
+             (COVERAGE_PROMPT if focus == "coverage" else "")},
             {"role": "user", "content": json.dumps(data, ensure_ascii=False, separators=(",", ":"))}]
 
 
@@ -81,8 +98,8 @@ def input_bytes(messages):
     return sum(len(m["content"].encode("utf-8")) for m in messages)
 
 
-def checked_messages(rows, callbacks, query, preferences):
-    messages = messages_for(rows, callbacks, query, preferences)
+def checked_messages(rows, callbacks, query, preferences, focus="standard", excluded_ids=()):
+    messages = messages_for(rows, callbacks, query, preferences, focus, excluded_ids)
     if input_bytes(messages) > MAX_INPUT_BYTES:
         raise ValueError("This dialogue request exceeds the local-model input budget. "
                          "Use smaller transcript sections or shorten the search/shared notes.")
@@ -97,10 +114,10 @@ class ContextWindow:
     omitted_callback_links: int
 
 
-def bounded_windows(rows, repeats, query="", preferences=None, runner=None):
+def bounded_windows(rows, repeats, query="", preferences=None, runner=None, focus="standard"):
     """Keep every row intact and cover every ID; overlap never prevents forward progress."""
     preferences = preferences or {}
-    base = input_bytes(messages_for([], {}, query, preferences))
+    base = input_bytes(messages_for([], {}, query, preferences, focus))
     if base >= MAX_INPUT_BYTES:
         raise ValueError("Search text and shared notes exceed the input budget. Shorten them and retry.")
     starts = [r["start"] for r in rows]
@@ -115,7 +132,10 @@ def bounded_windows(rows, repeats, query="", preferences=None, runner=None):
                 runner.check()
             extra = len(json.dumps(rows[end], ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
             extra += int(end > start)  # Comma between rows; base already contains the empty list.
-            limit = MAX_INPUT_BYTES if end == start else MAX_INPUT_BYTES - CALLBACK_RESERVE
+            # Leave room for IDs of already selected dialogue lines supplied in
+            # the second pass. Dense timestamped captions can have many IDs.
+            reserve = 1024 if focus == "coverage" else 0
+            limit = MAX_INPUT_BYTES - reserve if end == start else MAX_INPUT_BYTES - CALLBACK_RESERVE - reserve
             if size + extra > limit:
                 if end == start:
                     row = rows[start]
@@ -141,15 +161,21 @@ def bounded_windows(rows, repeats, query="", preferences=None, runner=None):
                     continue
                 proposed = {k: list(v) for k, v in context.items()}
                 proposed.setdefault(row["id"], []).append(earlier)
-                if input_bytes(messages_for(window, proposed, query, preferences)) > MAX_INPUT_BYTES:
+                if input_bytes(messages_for(window, proposed, query, preferences, focus)) > MAX_INPUT_BYTES - reserve:
                     omitted += 1
                     continue
                 context = proposed
                 added += 1
-        size = input_bytes(checked_messages(window, context, query, preferences))
+        size = input_bytes(checked_messages(window, context, query, preferences, focus))
         yield ContextWindow(window, context, size, omitted)
         if end == len(rows):
             break
+        # A quiet gap longer than the overlap requires no duplicate partial
+        # window. Jump to the next actual dialogue instead of reprocessing the
+        # tail of the previous exchange.
+        if rows[end]["start"] - window[-1]["end"] >= 30:
+            start = end
+            continue
         target = min(rows[start]["start"] + 90, window[-1]["end"]) - 30
         # At most half the rows overlap when dense dialogue forces short windows.
         start = max(start+1, start+(end-start)//2, bisect.bisect_left(starts, target, start+1, end))

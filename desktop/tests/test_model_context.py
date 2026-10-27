@@ -77,6 +77,29 @@ def test_sparse_timestamps_and_single_large_row_still_progress():
         list(bounded_windows(rows, {}, runner=runner))
 
 
+def test_separate_conversations_do_not_create_partial_duplicate_windows():
+    rows = rows_for([Segment(t+i*3, t+i*3+2, f"exchange {t}, line {i}")
+                     for t in (0, 120, 240) for i in range(6)])
+    chunks = list(bounded_windows(rows, {}))
+    assert [(c.rows[0]["id"], c.rows[-1]["id"]) for c in chunks] == [
+        (0, 5), (6, 11), (12, 17)]
+    assert {r["id"] for c in chunks for r in c.rows} == set(range(18))
+
+
+def test_coverage_messages_keep_exclusions_in_budget_and_validate_ids():
+    rows = rows_for([Segment(i*.5, i*.5+.4, f'conversation line {i}') for i in range(90)])
+    chunks = list(bounded_windows(rows, {}, focus='coverage'))
+    assert {r['id'] for c in chunks for r in c.rows} == set(range(90))
+    for chunk in chunks:
+        blocked = tuple(r['id'] for r in chunk.rows)
+        messages = checked_messages(chunk.rows, chunk.callbacks, '', {},
+                                    focus='coverage', excluded_ids=blocked)
+        assert input_bytes(messages) <= MAX_INPUT_BYTES
+        assert 'excluded_segment_ids' in messages[1]['content']
+    with pytest.raises(ValueError, match='must belong'):
+        checked_messages(chunks[0].rows, {}, '', {}, focus='coverage', excluded_ids=(999,))
+
+
 def test_dense_analysis_resume_uses_matching_bounded_windows(tmp_path):
     path = tmp_path / "source.mp4"
     path.write_bytes(b"identity fixture")

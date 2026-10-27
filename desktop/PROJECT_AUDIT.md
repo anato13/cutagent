@@ -271,3 +271,33 @@ and model configuration, so revoked notes or model switches cannot reuse stale
 window answers. Studio chat can use the separate Personal AI service for durable
 history; when disabled, chat remains session-only but survives model switches
 within that session. Auto Edit uses the same installed-model routing.
+
+## 2026-10-27 multi-moment Finder correction
+
+The user's report is that a full timestamped transcript yields one Finder moment,
+so Auto Edit uses that moment for both the main video and a Short. The selector
+and bundle builder accept multiple distinct candidates; the shortage arises
+before assembly. This environment does not contain the user's current Studio
+project or its Finder logs, so that project's model responses remain unverified.
+
+| Capability | Status | Evidence / limit |
+| --- | --- | --- |
+| Sparse-window advance | VERIFIED_WORKING | A 30-second-plus dialogue gap no longer creates a redundant partial window; unchanged IDs/times covered in regression |
+| Second distinct-dialogue review | PARTIALLY_IMPLEMENTED | Local-model focus, excluded IDs, separate identity-aware cache and citation validation covered by fixtures; real user recording NOT_TESTED |
+| Multi-moment export safeguard | VERIFIED_WORKING | Auto Edit refuses a requested multi-range export when only one complete range survives; FFmpeg fixture verifies no bundle is published |
+| Real humor recall / finished multi-moment Anato12 video | BLOCKED | Requires the actual recording, reviewable source-timestamped suggestions and human playback review |
+
+The Finder UI reports first- and second-pass sections and newly validated
+distinct moments. Requests remain cancellable and the source/reviews are not
+rewritten. The second pass may still return no additional supported exchange;
+it must not invent moments to satisfy a target count.
+
+An older real Anato12 recording supplied a bounded acceptance sample: 82
+phrase-timestamped lines from five source regions yielded two cited Qwen3
+suggestions at 323.92–356.42s and 422.18–506.092s. The second was discovered
+in the coverage pass. Both passed automatic complete-range checks, and FFmpeg
+rendered a two-range main MP4 plus one complete Short with full-decode checks.
+This verifies **technical multi-moment assembly on that sample**. The whole
+recording, the user's current Windows project, humor quality and publication
+readiness remain NOT_TESTED. The other chosen exchange exceeded the 60-second
+Short limit and was reported as skipped.
