@@ -1,5 +1,30 @@
 # Project audit — 2026-10-27
 
+## 0.4.0a9 — friend-edited example added to the style profile
+
+The user-shared 10:26 finished Omegle edit was downloaded to private scratch
+space and inspected through its embedded subtitle track and sampled frames.
+It uses a brief spoken hook, a short title card, speaker captions, occasional
+close-ups and recurring conversational bits. Source-caption references include
+one bit around 0:12 with returns after 4:00 and 6:00. Its original raw footage
+was not available: the older 1024.mp4 recording has different dialogue, so
+raw-to-finished keep/discard learning remains NOT_IMPLEMENTED for this example.
+
+The existing Anato and group-comedy model prompts now ask for earlier setup
+before a later callback. The group preset modestly raises callback priority
+and blocks an automatic callback cold open when earlier selected context exists.
+Its Finder requests now carry earlier exact-word topic references at least a
+minute apart, with distinct earlier source lines sharing the limited context
+slots. A word match is not a humor or callback classification. A live
+`qwen2.5:7b` request on one 75-second section of this finished edit returned
+zero candidates despite four earlier references, so actual recognition quality
+remains PARTIALLY_IMPLEMENTED and needs broader review.
+PROMPT_VERSION changed to `anato-friend-edit-12` to separate previous cached
+responses. This is hand-curated preference guidance, not model-weight training
+or proof that the autonomous edit matches the friend's final video. Speaker
+labels, face reframing and title cards remain NOT_IMPLEMENTED automatically.
+The reference MP4/SRT are not in Git or the package. See GROUP_COMEDY_STYLE.md.
+
 ## 0.4.0a8 — optional group-comedy pacing
 
 The user-shared 25:36 Gmod Prop Hunt MP4 became accessible after its sharing

@@ -4,7 +4,7 @@ import bisect
 import json
 from .editorial_style import STYLE_DEFAULT, STYLE_GROUP_COMEDY, validate_style
 
-PROMPT_VERSION = "anato-group-comedy-11"
+PROMPT_VERSION = "anato-friend-edit-12"
 CONTEXT_TOKENS = 8192
 OUTPUT_TOKENS = 1200
 MAX_INPUT_BYTES = 6000
@@ -13,19 +13,19 @@ MAX_CALLBACK_LINKS = 4
 HIGHLIGHT_CATEGORIES = ('misunderstanding', 'argument', 'surprise', 'banter', 'callback', 'awkward', 'gameplay', 'other')
 
 PERSONAL_STYLE = (
-    "Anato12 favors natural friend-group chemistry, quiet absurd claims, sudden ridiculous turns, "
-    "playful teasing, awkward explanations, genuine confusion and someone doubling down. "
-    "Value setup, escalation, payoff, timing and clarity without excessive context. "
-    "Gameplay intensity is secondary to the people. Avoid forced memes, effects or fake reactions. "
-    "A recurring story may involve an absurd claim, doubt, proof and a later reveal. "
-    "Prefer exchanges advancing it; never invent missing context or a reveal. "
-    "These are initial preferences, not proven humor rules; opted-in feedback may refine them. "
+    "Anato12 favors friend-group chemistry, quiet absurd claims, teasing, awkward explanations, "
+    "genuine confusion and someone doubling down. Keep the first setup of a recurring bit "
+    "before its later callback, then the real reaction or useful silence. Value escalation, "
+    "payoff, timing and clarity; people matter more than gameplay. Avoid fake reactions, "
+    "forced effects, invented context or a made-up ending. These preferences are provisional; "
+    "opted-in feedback may refine them. "
 )
 
 GROUP_STYLE = (
     "Anato12 wants original group-comedy pacing. Prefer complete friend exchanges: "
     "a playful premise, misunderstanding, escalation, reaction or callback. "
-    "Let setup and banter breathe; do not select loud gameplay without a supported social beat. "
+    "Preserve the first setup of a recurring bit before its later callback. "
+    "Let banter and meaningful pauses breathe; do not select loud gameplay without a social beat. "
     "Do not imitate another creator's assets or invent dialogue. Model role meaning is unverified. "
 )
 
@@ -46,6 +46,7 @@ SYSTEM_PROMPT = (
     "IDs or be empty. Payoff/reaction must be inside "
     "the selected range. Cite minimal supporting lines. Payoff is the actual twist or contradiction, "
     "not a generic closing reply. Reaction IDs must follow all payoff IDs without reusing them. "
+    "Earlier source references can share only a word; they do not prove a callback. "
     "Earlier callback setup may use supplied earlier references. Set needs_context "
     "true if understanding depends on missing earlier events, omitted setup or a missing ending. "
     "A specific twist, contradiction, joke or revealing reaction is needed; loudness, profanity, "
@@ -96,7 +97,7 @@ def messages_for(rows, callbacks, query, preferences, focus="standard", excluded
     if (focus == "standard" and excluded_ids) or any(type(i) is not int or i not in
             {r["id"] for r in rows} for i in excluded_ids):
         raise ValueError("Excluded dialogue references must belong to this window.")
-    data = {"segments": rows, "earlier_repeated_phrases": callbacks,
+    data = {"segments": rows, "earlier_source_references": callbacks,
             "search": query, "opted_in_feedback": preferences}
     if focus == "coverage":
         data["excluded_segment_ids"] = sorted(set(excluded_ids))
@@ -168,7 +169,10 @@ def bounded_windows(rows, repeats, query="", preferences=None, runner=None, focu
         seen = set()
         for row in window:
             for earlier in repeats.get(row["id"], []):
-                key = (row["id"], earlier["id"])
+                # One earlier line is enough to cite it in this window. Repeating
+                # the same source line for several later rows wastes the small
+                # callback budget and hides other distinct earlier setups.
+                key = earlier["id"]
                 if key in seen or earlier["id"] in current_ids:
                     continue
                 seen.add(key)

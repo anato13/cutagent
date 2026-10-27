@@ -65,6 +65,16 @@ def test_callback_budget_excludes_unsent_evidence():
     assert model_proposals(raw, last.rows, last.callbacks, 130) == []
 
 
+def test_repeated_earlier_line_uses_one_callback_slot_across_later_rows():
+    rows = rows_for([Segment(0, 1, 'first setup'), Segment(3, 4, 'other setup'),
+                     Segment(300, 301, 'later one'), Segment(302, 303, 'later two')])
+    references = {2: [rows[0], rows[1]], 3: [rows[0], rows[1]]}
+    last = list(bounded_windows(rows, references))[-1]
+    supplied = [item['id'] for linked in last.callbacks.values() for item in linked]
+    assert supplied == [0, 1]
+    assert last.omitted_callback_links == 0
+
+
 def test_sparse_timestamps_and_single_large_row_still_progress():
     rows = rows_for([Segment(0, 1, "a"*3200), Segment(7180, 7182, "last conversation")])
     chunks = list(bounded_windows(rows, {}))

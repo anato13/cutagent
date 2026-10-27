@@ -64,6 +64,34 @@ def callbacks(rows):
     return result
 
 
+def possible_topic_refs(rows):
+    """Supply earlier exact-word context, never classify a joke from the word alone."""
+    stop = frozenset('''about after again also because been before being could didn't does
+    don't everyone from gonna have here just know like literally maybe more never okay
+    only over people really said some something still sure than that their them then there
+    these they thing think this those through time what when where which while with would
+    yeah your you're fucking fuck shit damn hell game good look real'''.split())
+    first, result = {}, {}
+    for row in rows:
+        words = {word for word in re.findall(r"[a-z]{4,}", row['text'].casefold())
+                 if word not in stop}
+        matches = []
+        for word in words:
+            old = first.get(word)
+            if old and row['start'] - old['start'] >= 60:
+                matches.append((-len(word), old['start'], word, old))
+        seen_ids = set()
+        for _, _, _, old in sorted(matches):
+            if old['id'] not in seen_ids:
+                result.setdefault(row['id'], []).append(old)
+                seen_ids.add(old['id'])
+            if len(seen_ids) >= 2:
+                break
+        for word in words:
+            first.setdefault(word, row)
+    return result
+
+
 def proposal(first, last, evidence, duration, category, reason, rank, method, title=None):
     start, end = max(0, first["start"]-4), min(duration, last["end"]+5)
     if end <= start or end-start > 90:
@@ -214,6 +242,11 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
         candidates = literal_search(rows, query, duration)
     else:
         repeated = callbacks(rows)
+        if model and editing_style == STYLE_GROUP_COMEDY:
+            for identifier, earlier in possible_topic_refs(rows).items():
+                known = {item['id'] for item in repeated.get(identifier, [])}
+                repeated.setdefault(identifier, []).extend(
+                    item for item in earlier if item['id'] not in known)
         candidates = []
         preferences = store.model_preferences() if model else store.preferences()
         if model and personal_notes:

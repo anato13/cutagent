@@ -1,5 +1,15 @@
 # Engineering lessons
 
+## 0.4.0a9
+
+A finished own-video example is more relevant to personal taste than a generic
+creator reference, but without its matching raw recording it cannot reveal
+which source clips were rejected. Extract only visible, timestamped lessons:
+a short spoken hook, real response time and later returns to an established
+bit. Keep automatic callback ordering conservative, label model categories
+unverified, and do not claim speaker-aware captions or face cuts until those
+capabilities have source-grounded tests.
+
 ## 0.4.0a8
 
 A creator reference should be inspected before describing its edit patterns.

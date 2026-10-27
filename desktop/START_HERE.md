@@ -40,6 +40,9 @@ user-shared Gmod Prop Hunt example. It favors complete friend-group exchanges
 and may move a short, source-cited reaction to the opening. It uses your own
 recording and does not copy another creator's footage or graphics. The local
 model's reaction label still needs your review; see [GROUP_COMEDY_STYLE.md](GROUP_COMEDY_STYLE.md).
+The preset also uses the finished video your friend edited as a reference for
+keeping the setup before recurring jokes. Speaker-labeled captions and face
+close-ups from that example are not generated automatically.
 The updated selection prompt reruns local-model analysis instead of using an
 older cached response. Your approved and rejected clips remain saved.
 

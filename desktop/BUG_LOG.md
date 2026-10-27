@@ -1,5 +1,12 @@
 # Bug log
 
+B46 — PARTIALLY_IMPLEMENTED: a later model-labeled callback could be moved
+ahead of an earlier selected setup by the optional group-comedy opening rule.
+The group preset now keeps that callback in source order and records the reason.
+The category comes from an unverified local-model interpretation, so this is a
+conservative guard, not reliable callback detection. The friend-edited example
+motivated the rule but could not be compared to its unavailable raw recording.
+
 B45 — PARTIALLY_IMPLEMENTED: Auto Edit previously had one fixed editorial
 priority for every recording. The optional group-comedy preset now changes only
 this run's unreviewed clip priority and can choose a source-cited reaction-led

@@ -40,3 +40,10 @@ The separate, optional [group-comedy preset](GROUP_COMEDY_STYLE.md) uses a
 sampled creator reference to favor complete group banter and a compact opening.
 It does not change this profile, approved decisions or model weights. Its
 source-cited reaction labels remain unverified interpretations.
+
+Anato12's friend-edited finished video gives another initial preference:
+return to an earlier joke only after its setup has been established, and leave
+room for the response. The local prompts now include that preference; the group
+preset also avoids moving a model-labeled callback ahead of selected earlier
+context. The original recording for that finished video was not available, so
+exact keep/discard decisions have not been learned. See GROUP_COMEDY_STYLE.md.

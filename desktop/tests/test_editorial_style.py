@@ -1,7 +1,7 @@
 """Group-comedy preset changes review priority only with cited source roles."""
-from anato12_studio.finder import analyze, rows_for
+from anato12_studio.finder import analyze, possible_topic_refs, rows_for
 from anato12_studio.editorial_style import (STYLE_DEFAULT, STYLE_GROUP_COMEDY,
-    plan_group_opening, selection_priority, validate_style)
+    guard_callback_opening, plan_group_opening, selection_priority, validate_style)
 from anato12_studio.model import Segment
 from anato12_studio.model_context import bounded_windows, messages_for, MAX_INPUT_BYTES
 from anato12_studio.store import Store
@@ -17,11 +17,14 @@ def item(identifier, start, rank, category='banter', status='unreviewed', reacti
 
 def test_group_priority_favors_social_comedy_without_overriding_approval():
     social = item('social', 20, 20, 'misunderstanding')
+    callback = item('callback', 30, 20, 'callback')
     gameplay = item('game', 50, 20, 'gameplay')
     approved = item('approved', 0, 1, 'gameplay', 'approved')
     assert selection_priority(social, {}, STYLE_DEFAULT) == 20
     assert selection_priority(social, {}, STYLE_GROUP_COMEDY) > selection_priority(
         gameplay, {}, STYLE_GROUP_COMEDY)
+    assert selection_priority(callback, {}, STYLE_GROUP_COMEDY) > selection_priority(
+        social, {}, STYLE_GROUP_COMEDY)
     assert selection_priority(approved, {}, STYLE_GROUP_COMEDY) == 1
     assert selection_priority(social, {'misunderstanding': -20}, STYLE_GROUP_COMEDY) < 20
 
@@ -47,6 +50,15 @@ def test_missing_reaction_extra_context_or_no_later_clip_keeps_source_order():
     assert plan_group_opening(selected, 60)['opening_id'] is None
 
 
+def test_group_callback_stays_after_selected_earlier_setup():
+    selected = [item('setup', 0, 10), item('callback', 40, 50, 'callback'),
+                item('later', 90, 20)]
+    opening, reason = guard_callback_opening(selected, 'callback')
+    assert opening is None and 'kept after' in reason
+    opening, reason = guard_callback_opening(selected, 'later')
+    assert opening == 'later' and reason is None
+
+
 def test_unknown_style_fails_explicitly():
     try:
         validate_style('copy_creator')
@@ -63,6 +75,8 @@ def test_group_model_guidance_keeps_timestamped_rows_within_budget():
     assert windows[0].rows[0]['text'] == 'a'*3200
     message = messages_for(rows[1:], {}, '', {}, editing_style=STYLE_GROUP_COMEDY)[0]['content']
     assert 'complete friend exchanges' in message and 'Do not imitate' in message
+    assert 'first setup of a recurring bit' in message
+    assert 'first setup of a recurring bit' in messages_for(rows[1:], {}, '', {})[0]['content']
 
 
 def test_group_model_request_uses_separate_cache_and_style(tmp_path):
@@ -83,3 +97,35 @@ def test_group_model_request_uses_separate_cache_and_style(tmp_path):
         analyze(store, 'source', segments, 20, Runner(), lambda *_: None,
                 model=model, editing_style=style)
     assert model.calls == [STYLE_DEFAULT, STYLE_GROUP_COMEDY]
+
+
+def test_distant_recurring_topic_supplies_source_context_without_claiming_humor():
+    rows = rows_for([Segment(0, 2, 'Why are we talking about feet?'),
+                     Segment(125, 127, 'Your brother is here.'),
+                     Segment(300, 302, 'Your brother mentioned those feet again.')])
+    refs = possible_topic_refs(rows)
+    assert {item['id'] for item in refs[2]} == {0, 1}
+    assert not possible_topic_refs(rows_for([
+        Segment(0, 1, 'That was really good.'),
+        Segment(100, 101, 'That was really good.')]))
+    windows = list(bounded_windows(rows, refs, editing_style=STYLE_GROUP_COMEDY))
+    assert {item['id'] for prior in windows[-1].callbacks.values() for item in prior} == {0, 1}
+
+
+def test_group_finder_passes_distant_topic_reference_to_model(tmp_path):
+    class Model:
+        base, model = 'http://127.0.0.1:11434', 'fixture-local'
+        def __init__(self):
+            self.references = []
+        def identity(self, runner):
+            return {'digest': 'test-digest', 'configuration': 'fixed'}
+        def analyze(self, rows, references, *args, **kwargs):
+            self.references.append(references)
+            return []
+    model = Model()
+    analyze(Store(tmp_path / 'profile'), 'source', [
+        Segment(0, 2, 'My brother talks about feet.'),
+        Segment(300, 302, 'Your brother mentioned feet again.')],
+        310, Runner(), lambda *_: None, model=model, editing_style=STYLE_GROUP_COMEDY)
+    assert any(any(item['id'] == 0 for item in refs.get(1, []))
+               for refs in model.references)

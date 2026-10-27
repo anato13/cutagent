@@ -8,7 +8,8 @@ import time
 
 from .drafts import DraftOptions, create_bundle
 from .editorial_story import find_context_bridges, plan_story
-from .editorial_style import (STYLE_DEFAULT, STYLE_GROUP_COMEDY, plan_group_opening,
+from .editorial_style import (STYLE_DEFAULT, STYLE_GROUP_COMEDY, guard_callback_opening,
+                              plan_group_opening,
                               selection_priority, validate_style)
 from .exchange import exchange_evidence
 from .finder import rows_for
@@ -228,6 +229,15 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         opening_id = story_plan['opening_id'] if story_plan else None
         if group_plan and not opening_id:
             opening_id = group_plan['opening_id']
+        callback_guard = None
+        if group_plan:
+            opening_id, callback_guard = guard_callback_opening(selected, opening_id)
+            if callback_guard:
+                group_plan['reason'] = callback_guard
+            if callback_guard and story_plan:
+                story_plan['opening_id'] = None
+                story_plan['main_order'] = [item['id'] for item in selected]
+                story_plan['reason'] = callback_guard
         if group_plan:
             group_plan['applied'] = bool(opening_id and opening_id == group_plan['opening_id'])
             if opening_id and not group_plan['applied']:
@@ -262,7 +272,7 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
                        if group_plan else
                        'Chronological complete exchanges; no semantic hook or narrative rewriting.'),
                    'story_plan': story_plan, 'editing_style': editing_style,
-                   'group_comedy_plan': group_plan,
+                   'group_comedy_plan': group_plan, 'callback_guard': callback_guard,
                    'short_strategy': 'Preserve ranked selection when possible; otherwise reserve one complete eligible Short.',
                    'humor_quality': 'NOT_EVALUATED'}
         output = create_bundle(media, source, selected, params['output_parent'],

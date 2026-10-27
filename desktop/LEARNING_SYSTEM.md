@@ -60,6 +60,11 @@ Auto Edit also has an optional **Group comedy (experimental)** approach; see
 executable ranking rules and their limits. It affects this Auto Edit run's
 selection and possible opening. It does not train the local model or alter
 saved approvals.
+The user-shared friend-edited finished video adds a documented preference for
+keeping the first setup before a recurring joke returns. Without its matching
+raw recording, the app cannot infer which source material the editor discarded.
+Speaker-labeled captions and reaction close-ups seen in that reference are not
+automated by this milestone.
 
 The optional checkbox in Auto Edit applies a bounded lesson from the first edit:
 look for a recurring conversation, keep its setup and real reaction, and open

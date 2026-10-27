@@ -1,5 +1,15 @@
 # Development roadmap
 
+## 0.4.0a9 — friend-edited reference
+
+The new finished-video sample guides setup/callback selection, but there is no
+matching raw source for an original-to-finished alignment. Next: review a real
+Auto Edit of Anato12 footage and collect approvals/rejections against this
+reference; add speaker-aware captions and visual reframing only when identities
+and crop targets can be verified. Full-recording semantic quality remains
+PARTIALLY_IMPLEMENTED. High suits this evidence review; Medium is enough for
+routine UI or documentation work.
+
 ## 0.4.0a8 — group-comedy preset
 
 The optional group-comedy priority and source-cited opening are implemented.

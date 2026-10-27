@@ -1,5 +1,33 @@
 # Test results and verification history
 
+## Version 0.4.0a9 — friend-edited reference and recurring context
+
+The workspace suite passed **235 tests, 0 failed in 111.63 seconds** with an
+isolated app-data profile and offscreen Qt under a 300-second outer timeout.
+The extracted source ZIP passed **235 tests, 0 failed in 147.38 seconds**
+under the same isolation; the longer duration overlapped a separate local
+model request. The 89-file ZIP passed its CRC check and contains no media.
+The focused group-style/context/Finder/Auto Edit suite passed **80 tests**.
+New cases cover distant recurring-word source references, avoiding duplicate
+earlier reference slots, separate group-style model input, and keeping a
+model-labeled callback after earlier selected context. Existing import,
+transcription, preview and export regressions are included in the full suite.
+
+The user-provided 10:26 finished edit was inspected using its 290 English
+subtitle entries and sampled frames from four sections. Source references to
+the opening "feet" topic and later "brother" topic were successfully carried
+into a later model-input window without exceeding the input budget. Word
+matches do not prove humor, speaker identity or callback meaning. The matching
+raw recording was unavailable, so cut-by-cut choices could not be measured.
+A live `qwen2.5:7b` request using the updated group-style prompt processed
+32 timestamped subtitle rows from **260.04–335.04 s**, with four earlier source
+reference IDs. It returned **zero raw and zero source-valid candidates** in
+68.31 seconds (server-reported duration). This section-level check does not
+prove humor detection; the result needs review and comparison with other
+windows/models before drawing a quality conclusion. The updated prompt has
+**not** been tested against the whole video or a current Windows raw recording.
+Native Windows and RTX performance remain **NOT_EVALUATED** for this version.
+
 ## Version 0.4.0a8 — group-comedy pacing
 
 The final workspace suite passed **231 tests, 0 failed in 110.05 seconds** with

@@ -4,7 +4,7 @@ STYLE_DEFAULT = 'anato'
 STYLE_GROUP_COMEDY = 'group_comedy'
 STYLES = frozenset({STYLE_DEFAULT, STYLE_GROUP_COMEDY})
 GROUP_CATEGORY_BONUS = {
-    'banter': 12, 'misunderstanding': 12, 'callback': 10,
+    'banter': 12, 'misunderstanding': 12, 'callback': 13,
     'awkward': 8, 'argument': 7, 'surprise': 6,
 }
 
@@ -24,6 +24,21 @@ def selection_priority(item, preferences, style=STYLE_DEFAULT):
         # Favor compact complete exchanges; never shorten an existing range.
         base += max(0, min(8, int((45 - (item['end'] - item['start'])) / 5)))
     return base
+
+
+def guard_callback_opening(selected, opening_id):
+    """Keep a model-labeled callback after selected earlier setup in group style."""
+    if not opening_id:
+        return None, None
+    opening = next((item for item in selected if item['id'] == opening_id), None)
+    if opening is None:
+        raise ValueError('The proposed group-comedy opening is no longer selected.')
+    if (opening['category'] == 'callback' and any(
+            item['end'] <= opening['start'] and not item.get('context_only')
+            for item in selected if item['id'] != opening_id)):
+        return None, ('A model-labeled callback was kept after its earlier selected context; '
+                      'verify the callback meaning in playback.')
+    return opening_id, None
 
 
 def plan_group_opening(selected, max_short_seconds, preferences=None, runner=None):
