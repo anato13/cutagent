@@ -200,3 +200,12 @@ Linux environment; they are not claims of native Windows acceptance.
 | B12 | Medium | Whisper emits BLANK_AUDIO → no spoken caption for control marker | test_transcription_ignores_blank_audio_marker_preserves_reaction plus actual long-file rerun |
 | B13 | Medium | Open styled Finder in a 1400×910 window → export controls remain legible | GUI control-height checks and screenshot; scrollable panels |
 | B14 | Medium | Interrupt analysis with integer timestamps then resume → reuse the completed window | test_interrupted_model_analysis_reuses_completed_windows_and_separates_endpoints |
+
+## 2026-10-27 intelligence upgrade findings
+
+| ID | Problem / root cause | Verified correction / remaining limit |
+| --- | --- | --- |
+| B15 | Studio cleared its session chat whenever the selected model changed | Removed the reset; Personal AI's opt-in conversation ID is retained across model switches and restarts. Deterministic persistence and live bridge checks passed |
+| B16 | Auto Edit read the model dropdown directly, bypassing the new mode policy | Auto Edit now resolves an installed model through the same policy and records it in the job; offscreen learning/Auto Edit GUI regression passed |
+| B17 | Sequential benchmarks left three Ollama models resident together (`/api/ps`) | Added explicit unload on app model switches; live unload reduced the measured list from three to zero. Other Ollama clients can still load models independently |
+| B18 | A plausible Qwen2.5 7B proposal cited a reaction before a later payoff | Existing ordered-role validation rejected it. The synthetic comparison records one rejected raw proposal; this is not proof that the exchange is or is not funny |

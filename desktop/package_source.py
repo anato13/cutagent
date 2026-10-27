@@ -28,6 +28,8 @@ def main():
             for source in sorted((ROOT / folder).rglob("*.py")):
                 if "__pycache__" not in source.parts:
                     archive.write(source, "Anato12-Studio/" + source.relative_to(ROOT).as_posix())
+        for source in sorted((ROOT / "model_checks").glob("*.json")):
+            archive.write(source, "Anato12-Studio/" + source.relative_to(ROOT).as_posix())
         standalone = ROOT / ".github" / "workflows" / "windows.yml"
         repository = ROOT.parent / ".github" / "workflows" / "desktop-windows.yml"
         if standalone.is_file():

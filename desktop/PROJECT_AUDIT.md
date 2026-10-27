@@ -245,3 +245,29 @@ The completed source milestone is preserved by local branch
 `anato12-clip-review-0.2a1`. See Git history for its exact commit; no push or
 deployment is part of this checkpoint. The packaged app includes the audit,
 development rules, lessons, bug log, test results and roadmap.
+
+## 2026-10-27 local AI intelligence increment
+
+The existing desktop editor remains in place. Checkpoint `dedcc58` and local
+branch `anato12-before-intelligence-upgrade` preserve the prior Studio plus
+standalone Personal AI baseline. No user project, recording, model, or existing
+review database was modified for this upgrade.
+
+| Capability | Status | Evidence / limit |
+| --- | --- | --- |
+| Four routing modes and manual installed-model override | VERIFIED_WORKING | Pure routing tests and local model catalog; routing is a heuristic, not a quality guarantee |
+| Explicit single-model install option and progress | PARTIALLY_IMPLEMENTED | Simulated pull/progress, storage checks and registry pages verified; real Windows pull NOT_TESTED |
+| Qwen3 8B contextual inference | PARTIALLY_IMPLEMENTED | One source-valid candidate on a synthetic exchange; no human-reviewed recording acceptance |
+| Qwen3 14B / Gemma 3 12B | IMPLEMENTED_UNTESTED | Official tags available; neither installed here, so generation and RTX fit NOT_TESTED |
+| Single-frame local vision path | PARTIALLY_IMPLEMENTED | FFmpeg JPEG extraction and vision API contract tests; actual Gemma vision NOT_TESTED |
+| Personal AI memory bridge | VERIFIED_WORKING | Live local API switched Qwen2.5 7B to Qwen3 8B in one saved conversation with the same retrieved memory ID |
+| Model process/resource display | PARTIALLY_IMPLEMENTED | Ollama token timings, loaded-model data and host RAM measured in Linux; RTX VRAM/NVIDIA monitoring on Windows NOT_TESTED |
+| Humor quality on actual Anato12 recordings | BLOCKED | No reviewable real-recording comparison in this milestone |
+
+Confirmed Personal AI humor/editing notes enter the bounded clip-analysis prompt
+only after the user enables the new checkbox. They are preferences, not evidence
+or retrained weights. The prompt version and cache key include the changed context
+and model configuration, so revoked notes or model switches cannot reuse stale
+window answers. Studio chat can use the separate Personal AI service for durable
+history; when disabled, chat remains session-only but survives model switches
+within that session. Auto Edit uses the same installed-model routing.

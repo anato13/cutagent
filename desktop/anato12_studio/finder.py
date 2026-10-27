@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 from .model_context import bounded_windows, HIGHLIGHT_CATEGORIES, PROMPT_VERSION
+from .model_policy import context_tokens
 from .exchange import ROLES, quote_title, validate_structure
 
 
@@ -176,13 +177,14 @@ def literal_search(rows, query, duration):
 
 
 def analyze(store, source, segments, duration, runner, progress, model=None, query="", diagnostics=None,
-            allow_partial=False):
+            allow_partial=False, personal_notes=None):
     for s in segments:
         s.validate(duration)
     rows = rows_for(segments)
     if diagnostics is not None:
         diagnostics.update(lines=len(rows), windows=0, returned=0, valid=0, invalid_sections=[],
-                           mode='local Ollama' if model else 'context cues')
+                           mode='local Ollama' if model else 'context cues',
+                           model_eval_count=0, model_eval_duration=0)
     if not rows:
         return []
     transcript_hash = hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()
@@ -193,6 +195,10 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
         repeated = callbacks(rows)
         candidates = []
         preferences = store.model_preferences() if model else store.preferences()
+        if model and personal_notes:
+            preferences = {**preferences, "confirmed_personal_notes": personal_notes}
+        if diagnostics is not None and model:
+            diagnostics['personal_notes'] = len(personal_notes or [])
         chunks = list(bounded_windows(rows, repeated, query, preferences, runner)) if model else list(windows(rows))
         invalid_sections = []
         for i, chunk in enumerate(chunks):
@@ -206,12 +212,17 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
                 identity = model.identity(runner)
                 signature = json.dumps([ANALYSIS_VERSION, source, transcript_hash, window[0]["id"],
                                         window[-1]["id"], relevant, PROMPT_VERSION,
-                                        model.base, model.model, identity, query, preferences], sort_keys=True)
+                                        model.base, model.model, context_tokens(model.model),
+                                        identity, query, preferences], sort_keys=True)
                 key = "analysis:" + hashlib.sha256(signature.encode()).hexdigest()
                 raw = store.cache_get(key)
                 fresh = raw is None
                 if raw is None:
                     raw = model.analyze(window, relevant, query, preferences, runner)
+                    if diagnostics is not None:
+                        metrics = getattr(model, 'last_metrics', {})
+                        diagnostics['model_eval_count'] += metrics.get('eval_count', 0)
+                        diagnostics['model_eval_duration'] += metrics.get('eval_duration', 0)
                     if model.identity(runner) != identity:
                         raise ValueError("The local model changed during analysis. Retry with a stable model.")
                 valid = model_proposals(raw, window, relevant, duration)

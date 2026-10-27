@@ -36,6 +36,13 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
 - Optional loopback Ollama adapter for downloaded local models. Real CPU inference
   has run; genuine-dialogue checks found missed exchanges and unsupported explanations.
   Reliable humor/story quality remains unverified.
+- Automatic/Fast/Balanced/Maximum routing among installed local models, explicit
+  one-at-a-time Ollama pull options with progress, and measured token speed/resource
+  display where the host exposes them. Optional Personal AI memory integration
+  keeps approved preferences and chat history independent of the selected model.
+- A single-frame local vision request for an installed model advertising vision
+  capability. It extracts a bounded JPEG with FFmpeg; whole-video visual humor
+  analysis remains unimplemented.
 
 The core editor does not depend on speech packages, credentials or a model. The app
 uses CPU encoding/speech inference and works without a GPU. Recordings stay local.
@@ -126,8 +133,9 @@ acceptance still need verification.
   checks found both unsupported suggestions and missed exchanges. Review every result.
 - Add to main/Shorts appends to one editor timeline and switches its output ratio.
   The new approved-draft button creates those separate projects automatically.
-  This is chronological assembly from user decisions; story/hook selection,
-  face tracking and a general personal assistant are not implemented.
+  This is chronological assembly from user decisions; story/hook selection and
+  face tracking are not implemented. The separate Personal AI app can now provide
+  confirmed notes and persistent chat when explicitly enabled.
 - Feedback and shared own-video notes provide bounded ranking and prompt guidance,
   not model-weight training.
 - Hard cuts and fixed per-clip zoom; no animated keyframes, transitions, waveform
@@ -147,6 +155,8 @@ acceptance still need verification.
 `moments.py` — conservative, reviewable transcript cues
 
 `finder.py`, `local_model.py` — overlapping context, evidence validation and local-model adapter
+
+`model_policy.py`, `personal_bridge.py` — installed-model routing/resource checks and opt-in local memory API
 
 `store.py`, `finder_jobs.py` — transactional reviews, caches and resumable jobs
 

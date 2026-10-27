@@ -164,3 +164,15 @@ real semantic quality still needs separate human evaluation.
     resumed window miss its cache. A controlled interruption/retry test reproduced
     the extra model call; validating first preserves completed responses and also
     verifies that different endpoints receive separate cache entries.
+14. Keep model routing tied to the downloaded local catalog and show the chosen
+    fallback. A model name on a public registry is not an installed capability.
+    Large models may offload to RAM; neither parameter count nor one synthetic
+    result predicts humor quality on the creator's footage.
+15. Keep Personal AI memory separate from Studio's review database. An explicit
+    toggle shares only bounded confirmed notes; the source transcript still
+    supplies every clip citation. Switching models must not discard the shared
+    conversation ID or imply that model weights were trained.
+16. Ollama may retain several sequentially used models in memory. Inspect
+    `/api/ps` and release the previous app-selected model on switches. Inference
+    is serialized by Studio jobs; external Ollama clients remain outside Studio's
+    control. `nvidia-smi` absence means GPU use is NOT_MEASURED, not zero.

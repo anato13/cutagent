@@ -1,0 +1,183 @@
+{
+  "sample": "synthetic conversation, not a real recording",
+  "results": [
+    {
+      "model": "qwen2.5:7b",
+      "identity": {
+        "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+        "configuration": "de6cfe614d537246e0a7ceda625f60c7fba1b4b33905c5d920b8bd70d345ae57"
+      },
+      "raw": [
+        {
+          "first_id": 0,
+          "last_id": 5,
+          "setup_ids": [
+            0
+          ],
+          "payoff_ids": [
+            2,
+            4
+          ],
+          "reaction_ids": [
+            3
+          ],
+          "evidence_ids": [
+            1,
+            3
+          ],
+          "needs_context": false,
+          "title": "Absurd Claim and Unexpected Reaction",
+          "category": "banter",
+          "reason": "The setup of getting hired by the moon and the payoff of the moon replying with a crater create an absurd and unexpected situation.",
+          "subjective_humor_score": 4
+        }
+      ],
+      "valid_count": 0,
+      "metrics": {
+        "total_duration": 36853945077,
+        "load_duration": 5815300883,
+        "prompt_eval_count": 677,
+        "prompt_eval_duration": 15729650000,
+        "eval_count": 140,
+        "eval_duration": 15300368000
+      },
+      "status": "completed",
+      "wall_seconds": 36.87
+    },
+    {
+      "model": "qwen3:8b",
+      "identity": {
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "configuration": "c68dc3806646264dd40ce297f8c012fdaf9d37ba7df3f6ab8cb482b7499cf68a"
+      },
+      "raw": [
+        {
+          "first_id": 0,
+          "last_id": 5,
+          "setup_ids": [
+            0,
+            1,
+            2
+          ],
+          "payoff_ids": [
+            4
+          ],
+          "reaction_ids": [
+            5
+          ],
+          "evidence_ids": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "needs_context": false,
+          "title": "Moon Payment",
+          "category": "misunderstanding",
+          "reason": "The absurd claim that the moon owes rent and the unexpected reply of a crater creates a humorous misunderstanding.",
+          "subjective_humor_score": 4
+        }
+      ],
+      "valid_count": 1,
+      "metrics": {
+        "total_duration": 45192526041,
+        "load_duration": 5139643757,
+        "prompt_eval_count": 685,
+        "prompt_eval_duration": 21208168000,
+        "eval_count": 146,
+        "eval_duration": 18837156000
+      },
+      "status": "completed",
+      "wall_seconds": 45.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "identity": {
+        "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+        "configuration": "ec097f764a16e7550620c75a918aa539b3d7933e9f82d711ebea679f6518e742"
+      },
+      "raw": [
+        {
+          "first_id": 0,
+          "last_id": 5,
+          "setup_ids": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "payoff_ids": [
+            5
+          ],
+          "reaction_ids": [],
+          "evidence_ids": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "needs_context": false,
+          "title": "Unexpected Payment Method",
+          "category": "surprise",
+          "reason": "The moon pays with a crater, a sudden and absurd claim.",
+          "subjective_humor_score": 4
+        }
+      ],
+      "valid_count": 1,
+      "metrics": {
+        "total_duration": 17767983166,
+        "load_duration": 2315344052,
+        "prompt_eval_count": 677,
+        "prompt_eval_duration": 7930423000,
+        "eval_count": 143,
+        "eval_duration": 7514763000
+      },
+      "status": "completed",
+      "wall_seconds": 17.84
+    }
+  ],
+  "sample_rows": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 3,
+      "text": "I told everyone I got hired by the moon."
+    },
+    {
+      "id": 1,
+      "start": 3,
+      "end": 6,
+      "text": "How does the moon pay you?"
+    },
+    {
+      "id": 2,
+      "start": 6,
+      "end": 10,
+      "text": "It does not. It owes me three months of rent."
+    },
+    {
+      "id": 3,
+      "start": 10,
+      "end": 13,
+      "text": "Did you send it an invoice?"
+    },
+    {
+      "id": 4,
+      "start": 13,
+      "end": 17,
+      "text": "Yes. It replied with a crater."
+    },
+    {
+      "id": 5,
+      "start": 17,
+      "end": 20,
+      "text": "Wait, you are serious about this?"
+    }
+  ],
+  "caveat": "Synthetic dialogue and CPU-only cloud timings. A source-valid proposal is not a human humor-quality judgment. Models ran sequentially."
+}

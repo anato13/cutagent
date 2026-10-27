@@ -1,5 +1,6 @@
 """HTTP contract tests with a fixture server, NOT real model/humor evaluation."""
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import base64
 import json
 import threading
 
@@ -106,6 +107,45 @@ def test_local_chat_uses_selected_model_and_bounded_history(endpoint):
     handler.remote = True
     with pytest.raises(ValueError, match='remote backend'):
         client.chat('hello', [], Runner())
+
+
+def test_release_previous_local_model_uses_ollama_unload_contract(endpoint):
+    url, handler = endpoint
+    client = LocalModel(url, 'fixture-local')
+    client.unload(Runner())
+    path, payload = handler.requests[-1]
+    assert path == '/api/generate'
+    assert payload == {'model': 'fixture-local', 'keep_alive': 0}
+    assert any(row['name'] == 'fixture-local' for row in client.running_models(Runner()))
+
+
+def test_vision_request_sends_one_jpeg_only_to_local_capable_model(monkeypatch):
+    client = LocalModel(model='gemma3:12b')
+    sent = []
+    def request(path, payload=None, runner=None):
+        sent.append((path, payload))
+        if path == '/api/tags':
+            return {'models': [{'name': 'gemma3:12b', 'digest': 'fixture-digest'}]}
+        if path == '/api/show':
+            return {'capabilities': ['completion', 'vision']}
+        return {'message': {'content': 'A game character stands beside a door.'},
+                'eval_count': 20, 'eval_duration': 1_000_000_000}
+    monkeypatch.setattr(client, 'request', request)
+    answer = client.describe_image(b'\xff\xd8test-jpeg', 'What is visible?', Runner())
+    assert 'door' in answer
+    payload = sent[-1][1]
+    assert payload['model'] == 'gemma3:12b' and payload['keep_alive'] == 0
+    assert payload['messages'][1]['images'] == [base64.b64encode(b'\xff\xd8test-jpeg').decode('ascii')]
+    assert client.last_metrics['eval_count'] == 20
+    with pytest.raises(ValueError, match='JPEG'):
+        client.describe_image(b'not an image', 'What?', Runner())
+    def no_vision(path, payload=None, runner=None):
+        if path == '/api/tags':
+            return {'models': [{'name': 'gemma3:12b', 'digest': 'fixture-digest'}]}
+        return {'capabilities': ['completion']}
+    monkeypatch.setattr(client, 'request', no_vision)
+    with pytest.raises(ValueError, match='does not advertise image understanding'):
+        client.describe_image(b'\xff\xd8frame', 'What?', Runner())
 
 
 def test_loopback_redirect_cannot_send_transcript_elsewhere(endpoint):

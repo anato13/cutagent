@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from .auto_edit import AutoOptions, run_auto_edit
+from .local_model import LocalModel
 from .knowledge import RECIPES, compare_transcripts, run_learning_job
 from .model import Media, Segment, timestamp
 from .panels import table
@@ -140,12 +141,16 @@ class LearningController:
         window.tabs.addTab(self.library_tab, 'Learning library')
         self.refresh()
 
-    def analysis_params(self):
+    def analysis_params(self, route_model=False):
         p, w = self.w.finder, self.w
+        name = (w.finder_controller.chosen_model('analysis')[0] if route_model
+                else p.model.currentText())
         return {'query': '', 'transcribe_only': False, 'contextual': True,
                 'speech_model': w.transcript.model.currentText(),
                 'model_folder': w.settings.value('model_folder', '', type=str),
-                'url': p.url.text(), 'model': p.model.currentText()}
+                'url': p.url.text(), 'model': name,
+                'personal_memory': p.personal_memory.isChecked(),
+                'ai_mode': p.ai_mode.currentText()}
 
     def start_auto(self, checked=False, resume=None):
         w = self.w
@@ -163,7 +168,7 @@ class LearningController:
                 params = json.loads(resume['params'])
                 identifier = resume['id']
             else:
-                params = self.analysis_params()
+                params = self.analysis_params(route_model=True)
                 if not params['model']:
                     raise ValueError('Open AI Clip Finder, connect to local Ollama, and select a downloaded model first.')
                 parent = QFileDialog.getExistingDirectory(w, 'Choose where to save completed YouTube and Shorts videos')
@@ -174,8 +179,16 @@ class LearningController:
                 params.update(kind='auto_edit', auto_options=asdict(options), output_parent=parent)
                 identifier = self.store.create_job(source, params)
             snapshot = copy.deepcopy(media)
-            w.start_job(lambda runner, progress: run_auto_edit(self.store, source, snapshot, params, identifier,
-                        ffmpeg, ffprobe, runner, progress), self.auto_ready, 'Auto editing selected recording')
+            previous = w.finder_controller.last_studio_model
+            def operation(runner, progress):
+                if previous and previous != params['model']:
+                    LocalModel(params['url'], previous).unload(runner)
+                return run_auto_edit(self.store, source, snapshot, params, identifier,
+                                     ffmpeg, ffprobe, runner, progress)
+            def done(result):
+                w.finder_controller.last_studio_model = params['model']
+                self.auto_ready(result)
+            w.start_job(operation, done, f"Auto editing with {params['model']}")
         except Exception as error:
             w.fail(str(error))
 

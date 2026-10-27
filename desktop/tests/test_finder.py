@@ -9,7 +9,7 @@ import pytest
 from anato12_studio.finder import (
     analyze, callbacks, context_cues, deduplicate, literal_search, model_proposals, rows_for, windows,
 )
-from anato12_studio.finder_jobs import run_pipeline, thumbnail_path
+from anato12_studio.finder_jobs import extract_frame, run_pipeline, thumbnail_path
 from anato12_studio.model import Media, Segment
 from anato12_studio.store import Store, fingerprint
 from anato12_studio.video import Cancelled, Runner, probe
@@ -181,8 +181,12 @@ def test_timestamped_absurd_exchange_reaches_model_and_reports_zero_honestly(tmp
     result = run_pipeline(store, source, media, {'contextual': True, 'url': 'http://localhost',
         'model': 'fixture'}, job, binaries[0], Runner(), lambda *_: None)
     assert len(calls) == 1 and calls[0][2][1] == 1.5
-    assert result['diagnostics'] == {'lines': 4, 'windows': 1, 'returned': int(propose),
-                                      'valid': int(propose), 'invalid_sections': [], 'mode': 'local Ollama'}
+    for key, expected in {'lines': 4, 'windows': 1, 'returned': int(propose),
+                          'valid': int(propose), 'invalid_sections': [], 'mode': 'local Ollama',
+                          'model_eval_count': 0, 'model_eval_duration': 0,
+                          'personal_notes': 0}.items():
+        assert result['diagnostics'][key] == expected
+    assert result['diagnostics']['resources_after_analysis']['disk_free_gb'] >= 0
     assert len(result['ids']) == int(propose)
     if propose:
         item = store.highlight(result['ids'][0])
@@ -419,3 +423,13 @@ def test_failed_pipeline_keeps_completed_progress(review, monkeypatch):
     saved = next(j for j in store.jobs() if j['id'] == job)
     assert saved['status'] == 'failed'
     assert saved['progress'] == pytest.approx(.8)
+
+
+def test_single_frame_extraction_is_bounded_and_preserves_recording(recording, binaries):
+    media = Media('frame', str(recording), **probe(str(recording), binaries[1]))
+    before = fingerprint(media.path)
+    frame = extract_frame(media, .5, binaries[0], Runner())
+    assert frame.startswith(b'\xff\xd8') and len(frame) < 2_000_000
+    assert fingerprint(media.path) == before
+    with pytest.raises(ValueError, match='playhead'):
+        extract_frame(media, media.duration, binaries[0], Runner())

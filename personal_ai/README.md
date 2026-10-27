@@ -11,6 +11,11 @@ A small, private chat assistant for Windows. It uses your existing local Ollama 
 
 The first message can take a while while Ollama loads the model into memory. If another app already uses port 8766, close it before launching. If you see **Local Ollama is unavailable**, start Ollama and check `ollama list`.
 
+The model menu lists other downloaded local Ollama models too. You can switch
+between `qwen2.5:7b` and `qwen3:8b` without losing the conversation or approved
+memories. When you switch, ANATO12 AI asks Ollama to release its previous model;
+this helps limit RAM/VRAM use. Other Ollama applications manage their own models.
+
 ## How memory works
 
 Use **Remember this** to copy text into the memory editor, review it, choose a type, and press **Save memory**. **Suggest memory** asks Ollama to extract one clearly stated preference from the current conversation. Its result stays **pending** until you review and approve it. The assistant only puts approved memories in its prompt. Memories survive restarts and are separate from conversation history. **Edit** corrects an outdated memory; **Forget** removes it. The chat reply reports how many approved memories were retrieved. The local API also returns the exact memory IDs used.
@@ -38,7 +43,7 @@ This returns confirmed humor and editing preferences with IDs and timestamps. Fo
 | `/api/v1/conversations` | GET/POST | List or create chats; `?q=text` searches titles and messages |
 | `/api/v1/conversations/{id}` | GET/DELETE | Read or delete a chat |
 | `/api/v1/conversations/{id}/suggest-memory` | POST | Suggest a pending preference from recent dialogue |
-| `/api/v1/chat` | POST | `{ "conversation": 1, "message": "...", "model": "qwen2.5:7b" }`; returns reply and retrieved memory/document IDs |
+| `/api/v1/chat` | POST | `{ "conversation": 1, "message": "...", "model": "qwen2.5:7b" }`; returns reply, retrieved memory/document IDs, and Ollama timing metrics when available |
 | `/api/v1/memories` | POST | Save `{ "kind": "humor_like", "content": "...", "confirmed": true }` |
 | `/api/v1/memories/{id}` | PUT/DELETE | Correct, approve, or forget a memory |
 | `/api/v1/documents` | POST | Import `{ "title": "example.srt", "content": "..." }` |
@@ -49,7 +54,7 @@ This returns confirmed humor and editing preferences with IDs and timestamps. Fo
 | `/api/v1/backup` | GET | Export all assistant data as JSON |
 | `/api/v1/restore` | POST | Replace data with a valid backup JSON |
 
-The integration endpoint returns **notes**, not automatic humor rankings or trained weights. A future Studio integration should request relevant preferences and present them as user guidance, then send approved/rejected clip examples back with the user's control.
+The integration endpoint returns **notes**, not automatic humor rankings or trained weights. Studio now has an opt-in **Use Personal AI memory** checkbox. When enabled, its chat uses this local API for durable conversation and memory retrieval, and clip analysis receives up to four short confirmed humor/editing notes. Start ANATO12 AI before enabling it. Studio review decisions remain in Studio's separate database; future work can send specifically approved examples back with the user's control.
 
 ## Design choice and verification
 

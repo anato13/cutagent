@@ -559,3 +559,64 @@ gaming recording. The full file went through FFmpeg mono WAV preparation and
 
 Synthetic long-file tests, local HTTP contract fixtures and short genuine speech
 tests must be reported separately. Passing one does not imply the others passed.
+
+## 2026-10-27 local AI intelligence upgrade
+
+The unchanged Studio and editor baseline was preserved at Git checkpoint
+`dedcc58` / `anato12-before-intelligence-upgrade`. The current increment adds
+model routing, explicit install controls, opt-in Personal AI memory, and a
+single-frame vision path. Tests use an isolated `ANATO12_DATA_DIR`.
+
+Official Ollama library pages returned HTTP 200 for `qwen3:14b` and
+`gemma3:12b`. Neither model was downloaded here. The local `/api/tags` catalog
+contained `qwen2.5:3b`, `qwen2.5:7b` and `qwen3:8b`; each resolved an installed
+digest and completed real CPU inference. Disk free in the Ollama model volume
+was 15.3 GB after these checks; measured available host RAM after unloading was
+33.3 GB. `nvidia-smi` was absent and Ollama reported `size_vram: 0`, so RTX
+3060 Ti behavior, GPU offload and Windows RAM usage are **NOT_TESTED**.
+
+The [reviewable synthetic comparison](model_checks/2026-10-27-synthetic-comparison.json)
+uses the same six timestamped dialogue lines and JSON contract for each model.
+These are one-run CPU observations, including load time, not a reliable speed
+distribution or a humor-quality benchmark:
+
+| Installed model | Wall time | Ollama generation speed | Raw / source-valid proposals |
+| --- | ---: | ---: | ---: |
+| Qwen2.5 3B Q4 | 17.84 s | 19.0 tokens/s | 1 / 1 |
+| Qwen2.5 7B Q4 | 36.87 s | 9.2 tokens/s | 1 / 0 |
+| Qwen3 8B Q4 | 45.20 s | 7.8 tokens/s | 1 / 1 |
+
+Qwen2.5 7B cited a reaction before a later payoff, and the existing validator
+rejected it. The 3B answer passed structural checks but its chosen payoff is
+semantically questionable. The 8B answer had ordered citations. No conclusion
+about funny-moment recall or actual creator footage follows from this example.
+There was no duplicate across windows in this one-window sample.
+
+A live loopback Personal AI API check used `qwen2.5:7b`, then `qwen3:8b` in the
+same conversation. Both replies reported the same stored humor memory ID and
+the database contained four messages after switching. Personal AI's deterministic
+tests also cover restart, correction retrieval, deletion and backup/restore.
+Ollama `/api/ps` showed three benchmarked models resident after sequential runs;
+explicit unload requests reduced that list to zero. Studio now releases its
+previous app-selected model when switching, and Personal AI serializes chat and
+unloads its previous model. External Ollama clients may still keep models loaded.
+
+Single-frame extraction from a real FFmpeg test video produced a JPEG under the
+2 MB bound. A fixture Ollama contract checked that the vision request includes
+exactly that image and rejects a model without advertised vision capability.
+Actual `gemma3:12b` image understanding is **NOT_TESTED** because the model is
+not installed. The explicit install flow was tested with a simulated Ollama
+pull/progress stream and low-disk rejection; a real Windows download is
+**NOT_TESTED**. Native Windows playback, model speed, RTX VRAM and a human-reviewed
+Anato12 recording remain **NOT_TESTED**.
+
+Final regression run in the Linux cloud environment: **206 Studio tests passed,
+1 optional sherpa-onnx speech test skipped**. This includes offscreen Qt import,
+preview, clip review, Auto Edit and export subprocess checks. The separate core
+editor suite passed **330 tests**. Personal AI passed **8 tests**, including
+memory persistence and model switching. After the final Fast-route adjustment,
+the focused model/transport suite passed **43 tests**. `git diff --check` and
+Python compilation passed. This is not a native Windows or RTX acceptance run.
+After adding Personal AI timing to the Studio bridge and the single-frame
+vision path, **71 affected Studio/model/GUI tests passed** and all **8 Personal
+AI tests passed** again. The ZIPs were rebuilt only after these checks.

@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import secrets
 import sqlite3
+import threading
 import time
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
@@ -225,6 +226,13 @@ class Ollama:
         if base != "http://127.0.0.1:11434":
             raise ValueError("Only local Ollama is supported")
         self.base = base
+        self._lock = threading.Lock()
+        self._loaded_model = None
+        self._metrics = threading.local()
+
+    @property
+    def last_metrics(self):
+        return getattr(self._metrics, "data", {})
 
     def request(self, path, payload=None):
         body = json.dumps(payload).encode() if payload is not None else None
@@ -243,6 +251,11 @@ class Ollama:
         return json.loads(raw)
 
     def chat(self, model, messages):
+        with self._lock:
+            return self._chat_locked(model, messages)
+
+    def _chat_locked(self, model, messages):
+        self._metrics.data = {}
         if not isinstance(model, str) or not model or model.endswith(("-cloud", ":cloud")):
             raise ValueError("Choose a downloaded local Ollama model")
         entries = self.request("/api/tags").get("models", [])
@@ -252,14 +265,23 @@ class Ollama:
         details = self.request("/api/show", {"model": model})
         if details.get("remote_host") or details.get("remote_model"):
             raise ValueError("Remote-backed models are unavailable")
+        if self._loaded_model and self._loaded_model != model:
+            self.request("/api/generate", {"model": self._loaded_model, "keep_alive": 0})
+            self._loaded_model = None
         result = self.request("/api/chat", {"model": model, "stream": False,
-            "messages": messages, "options": {"num_ctx": 4096, "num_predict": 650}})
+            "messages": messages, "options": {"num_ctx": 4096, "num_predict": 650},
+            **({"keep_alive": 0} if model == "qwen3:14b" else {})})
         if result.get("done") is False or result.get("done_reason") == "length":
             raise ValueError("Local model reply was incomplete; try a shorter message")
         message = result.get("message")
         content = message.get("content") if isinstance(message, dict) else None
         if not isinstance(content, str) or not content.strip() or len(content) > 12_000:
             raise ValueError("Local model returned an empty or invalid reply")
+        self._metrics.data = {key: result[key] for key in (
+            "total_duration", "load_duration", "prompt_eval_count", "prompt_eval_duration",
+            "eval_count", "eval_duration")
+            if type(result.get(key)) is int and result[key] >= 0}
+        self._loaded_model = None if model == "qwen3:14b" else model
         return content.strip()
 
 
@@ -302,4 +324,5 @@ class Assistant:
                        (question.strip()[:80], conversation))
         return {"answer": answer, "message_id": result.lastrowid,
                 "used_memories": [m["id"] for m in memories],
-                "used_documents": [d["id"] for d in documents]}
+                "used_documents": [d["id"] for d in documents],
+                "model_metrics": dict(getattr(self.model, "last_metrics", {}))}

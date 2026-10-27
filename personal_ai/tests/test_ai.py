@@ -8,7 +8,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from anato12_ai.core import Assistant, Store
+from anato12_ai.core import Assistant, Ollama, Store
 from anato12_ai.server import make_server
 
 
@@ -67,6 +67,16 @@ class StoreTests(unittest.TestCase):
         self.store.delete_conversation(cid)
         self.assertEqual(self.store.rows("memories")[0]["id"], mid)
 
+    def test_switching_local_models_keeps_conversation_and_memory(self):
+        cid = self.store.new_conversation()
+        mid = self.store.add_memory("preference", "I prefer purple thumbnails.")
+        assistant = Assistant(self.store, self.model)
+        first = assistant.chat(cid, "Which thumbnail color?", "qwen2.5:7b")
+        second = Assistant(Store(self.tmp.name), self.model).chat(cid, "Which thumbnail color now?", "qwen3:8b")
+        self.assertEqual([first["used_memories"], second["used_memories"]], [[mid], [mid]])
+        self.assertEqual([call[0] for call in self.model.calls], ["qwen2.5:7b", "qwen3:8b"])
+        self.assertEqual(len(Store(self.tmp.name).messages(cid)), 4)
+
     def test_documents_feedback_personality_and_backup_restore(self):
         cid = self.store.new_conversation()
         mid = self.store.add_memory("editing_style", "Keep the setup before the punchline.")
@@ -87,6 +97,24 @@ class StoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.store.restore_data({"version": 1})
         self.assertEqual(self.store.export_data(), snapshot)
+
+    def test_ollama_releases_previous_model_on_switch(self):
+        ollama = Ollama()
+        calls = []
+        def fake_request(path, payload=None):
+            calls.append((path, payload))
+            if path == "/api/tags":
+                return {"models": [{"name": "qwen2.5:7b"}, {"name": "qwen3:8b"}]}
+            if path == "/api/chat":
+                return {"message": {"content": "Hello"}, "eval_count": 20,
+                        "eval_duration": 1_000_000_000}
+            return {}
+        ollama.request = fake_request
+        ollama.chat("qwen2.5:7b", [{"role": "user", "content": "hi"}])
+        ollama.chat("qwen3:8b", [{"role": "user", "content": "hi"}])
+        self.assertEqual([payload for path, payload in calls if path == "/api/generate"],
+                         [{"model": "qwen2.5:7b", "keep_alive": 0}])
+        self.assertEqual(ollama.last_metrics["eval_count"], 20)
 
 
 class ApiTests(unittest.TestCase):

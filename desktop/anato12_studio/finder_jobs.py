@@ -3,10 +3,13 @@ from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import time
 
 from .finder import analyze
 from .local_model import LocalModel
+from .personal_bridge import PersonalAIClient
+from .model_policy import resource_snapshot
 from .model import Media, Segment
 from .store import fingerprint
 from .video import Cancelled
@@ -35,6 +38,25 @@ def make_thumbnail(store, item, ffmpeg, runner):
     finally:
         part.unlink(missing_ok=True)
     return output
+
+
+def extract_frame(media, second, ffmpeg, runner):
+    """Decode one bounded JPEG at the playhead without loading the recording."""
+    if not 0 <= second < media.duration:
+        raise ValueError('Move the playhead inside the selected recording.')
+    original = fingerprint(media.path)
+    with TemporaryDirectory(prefix='anato12-frame-') as folder:
+        root = Path(folder)
+        target = root / 'frame.jpg'
+        runner.run([ffmpeg, '-nostdin', '-hide_banner', '-y', '-ss', str(second),
+                    '-i', media.path, '-frames:v', '1', '-vf', 'scale=640:-2',
+                    '-q:v', '5', '-progress', 'pipe:1', '-nostats', str(target)], root, 1)
+        if not target.is_file() or target.stat().st_size > 2_000_000:
+            raise ValueError('FFmpeg could not make a small frame preview at this time.')
+        frame = target.read_bytes()
+    if fingerprint(media.path) != original:
+        raise ValueError('The recording changed while extracting a frame; reimport it.')
+    return frame
 
 
 def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, progress, track_job=True):
@@ -68,9 +90,17 @@ def run_pipeline(store, source, media: Media, params, job_id, ffmpeg, runner, pr
             if not segments:
                 raise ValueError('No timestamped dialogue was found. Import an SRT or check local transcription, then analyze again.')
             model = LocalModel(params["url"], params["model"]) if params.get("contextual") else None
+            personal_notes = (PersonalAIClient().preferences(runner)
+                              if model and params.get("personal_memory") else None)
             ids = analyze(store, source, segments, media.duration, runner,
                           lambda v, m: report(.65+v*.3, m), model, params.get("query", ""), diagnostics,
-                          bool(model))
+                          bool(model), personal_notes)
+            if model:
+                diagnostics['resources_after_analysis'] = resource_snapshot()
+                try:
+                    diagnostics['running_models'] = model.running_models(runner)
+                except (AttributeError, ValueError, RuntimeError):
+                    diagnostics['running_models'] = []
             for i, identifier in enumerate(ids):
                 runner.check()
                 make_thumbnail(store, store.highlight(identifier), ffmpeg, runner)

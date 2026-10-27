@@ -7,7 +7,7 @@ import time
 import urllib.parse
 
 
-def request_json(base, path, payload=None, runner=None, timeout=60):
+def request_json(base, path, payload=None, runner=None, timeout=60, headers=None, service="Local model"):
     parsed = urllib.parse.urlsplit(base)
     if (parsed.scheme not in ("http", "https") or
             parsed.hostname not in ("127.0.0.1", "localhost", "::1") or
@@ -49,16 +49,30 @@ def request_json(base, path, payload=None, runner=None, timeout=60):
         if runner:
             runner.check()
         body = None if payload is None else json.dumps(payload).encode("utf-8")
-        connection.request("GET" if payload is None else "POST", path, body,
-                           {"Content-Type": "application/json"})
+        request_headers = {"Content-Type": "application/json"}
+        if headers:
+            if (set(headers) != {"Authorization"} or not isinstance(headers["Authorization"], str)
+                    or "\r" in headers["Authorization"] or "\n" in headers["Authorization"]):
+                raise ValueError("Invalid local authorization header.")
+            request_headers.update(headers)
+        connection.request("GET" if payload is None else "POST", path, body, request_headers)
         with connection.getresponse() as response:
             if runner:
                 runner.check()
             if 300 <= response.status < 400:
                 raise ValueError("Local-model redirects are not allowed.")
             if response.status != 200:
-                raise RuntimeError(f"Local model is unavailable: HTTP {response.status}. "
-                                   "Start Ollama and select an installed model.")
+                detail = ""
+                try:
+                    problem = json.loads(response.read(4096))
+                    if isinstance(problem, dict) and isinstance(problem.get("error"), str):
+                        detail = problem["error"][:400] + " "
+                except (ValueError, OSError):
+                    pass
+                raise RuntimeError(f"{service} is unavailable: HTTP {response.status}. "
+                                   + detail
+                                   + ("Start Ollama and select an installed model." if service == "Local model"
+                                      else "Check that the local service is running and the API key is current."))
             data = response.read(2_000_001)
         if runner:
             runner.check()
@@ -74,10 +88,11 @@ def request_json(base, path, payload=None, runner=None, timeout=60):
         if runner:
             runner.check()
         if expired.is_set() or isinstance(error, TimeoutError):
-            raise RuntimeError("Local-model request timed out. Try a smaller installed model "
+            raise RuntimeError(f"{service} request timed out. Try a smaller installed model "
                                "or shorter dialogue sections; completed windows remain cached.") from error
-        raise RuntimeError(f"Local model is unavailable: {error}. "
-                           "Start Ollama and select an installed model.") from error
+        raise RuntimeError(f"{service} is unavailable: {error}. "
+                           + ("Start Ollama and select an installed model." if service == "Local model"
+                              else "Start the local service and try again.")) from error
     finally:
         finished.set()
         connection.close()

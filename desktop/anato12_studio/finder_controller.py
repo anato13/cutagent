@@ -5,13 +5,16 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QSignalBlocker, QUrl
 from PySide6.QtGui import QPixmap, QDesktopServices
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem
+from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox, QTableWidgetItem
 
-from .finder_jobs import make_thumbnail, run_pipeline, thumbnail_path
+from .finder_jobs import extract_frame, make_thumbnail, run_pipeline, thumbnail_path
 from .drafts import DraftOptions, create_bundle
 from .exchange import describe_exchange
 from .finder_ui import DraftDialog
 from .local_model import LocalModel
+from .model_policy import OFFERED, choose_model, install_model as pull_model, installation_check, \
+    model_speed, resource_snapshot
+from .personal_bridge import PersonalAIClient
 from .model import Clip, Segment, timestamp
 from .store import Store, fingerprint
 from .video import ExportPlan, export_video
@@ -30,10 +33,16 @@ class FinderController:
         p.analyze.connect(self.start)
         p.search.connect(lambda: self.start(query=p.query.text()))
         p.connect_model.connect(self.connect_model)
+        p.install_model.connect(self.install_model)
         p.refresh.connect(self.refresh_all)
         p.ask_ai.connect(self.ask_ai)
+        p.ask_frame.connect(self.ask_frame)
         self.chat_history = []
-        self.chat_model = None
+        self.installed_models = []
+        self.last_studio_model = None
+        self.personal_conversation = window.settings.value("personal_ai_conversation", None)
+        p.personal_memory.setChecked(window.settings.value("personal_ai_enabled", False, type=bool))
+        p.personal_memory.toggled.connect(lambda enabled: window.settings.setValue("personal_ai_enabled", enabled))
         p.selected.connect(self.selected)
         p.action.connect(self.action)
         p.drafts.connect(self.create_drafts)
@@ -119,21 +128,75 @@ class FinderController:
         w, p = self.w, self.w.finder
         def done(models):
             previous = p.model.currentText()
+            self.installed_models = models
             p.model.clear()
             p.model.addItems(models)
             if previous in models:
                 p.model.setCurrentText(previous)
             if models:
                 p.engine.setCurrentIndex(1)
-            p.notice.setText(f"Local endpoint connected · {len(models)} downloaded model names available. "
+            p.notice.setText(f"Local endpoint connected · {len(models)} downloaded local models available. "
                              + (f"Local Ollama ({p.model.currentText()}) is now selected for Analyze. "
-                                "Nothing has been analyzed yet."
+                                "Automatic mode may choose another installed model. Nothing has been analyzed yet."
                                 if models else "Download a local model before analyzing."))
         try:
             client = LocalModel(p.url.text())
             w.start_job(lambda runner, progress: client.models(runner), done, "Connecting to local Ollama")
         except Exception as error:
             w.fail(str(error))
+
+    def install_model(self):
+        w, p = self.w, self.w.finder
+        if w.job:
+            return
+        choices = [f"{name} · {info['purpose']} · about {info['approx_gb']} GB"
+                   for name, info in OFFERED.items()]
+        choice, accepted = QInputDialog.getItem(w, "Install a local Ollama model", "Choose one model:",
+                                                choices, 0, False)
+        if not accepted:
+            return
+        name = choice.split(" · ", 1)[0]
+        try:
+            if p.url.text().rstrip("/") != "http://127.0.0.1:11434":
+                raise ValueError("The install button uses local Ollama at 127.0.0.1:11434. "
+                                 "Set that endpoint or install with your own local Ollama command.")
+            resources = resource_snapshot()
+            note = installation_check(name, resources)
+            used = resources.get("gpu_vram_used_mb")
+            free = resources.get("gpu_vram_free_mb")
+            memory = resources.get("ram_available_gb")
+            details = (f"{note}\n\nMeasured now: {resources['disk_free_gb']} GB disk free, "
+                       f"{memory if memory is not None else 'unknown'} GB RAM available, "
+                       f"GPU VRAM {free if free is not None else 'not measured'} MB free.\n\n"
+                       "Only this model will be downloaded. qwen2.5:7b will be kept. Continue?")
+            if QMessageBox.question(w, "Download local model", details) != QMessageBox.StandardButton.Yes:
+                return
+            def operation(runner, progress):
+                installed = pull_model(name, runner, progress)
+                models = LocalModel(p.url.text()).models(runner)
+                if installed not in models:
+                    raise ValueError(f"Ollama reported a finished download, but {installed} is not in its "
+                                     "local model list. Reconnect and check 'ollama list'.")
+                return models
+            def done(models):
+                self.installed_models = models
+                p.model.clear()
+                p.model.addItems(models)
+                p.model.setCurrentText(name)
+                p.engine.setCurrentIndex(1)
+                p.notice.setText(f"{name} installed and verified in local Ollama. "
+                                 "Choose a mode or check Use selected model to run it.")
+            w.start_job(operation, done,
+                        f"Downloading {name} with Ollama")
+        except Exception as error:
+            w.fail(str(error))
+
+    def chosen_model(self, task, question=""):
+        p = self.w.finder
+        name, note = choose_model(self.installed_models, p.ai_mode.currentText(), task, question,
+                                  p.model.currentText() if p.manual_model.isChecked() else None)
+        p.model.setCurrentText(name)
+        return name, note
 
     def start(self, query="", transcribe_only=False, resume=None):
         w, p = self.w, self.w.finder
@@ -149,7 +212,12 @@ class FinderController:
                       "speech_model": w.transcript.model.currentText(),
                       "model_folder": w.settings.value("model_folder", "", type=str),
                       "contextual": p.engine.currentIndex() == 1,
-                      "url": p.url.text(), "model": p.model.currentText()}
+                      "url": p.url.text(), "model": p.model.currentText(),
+                      "personal_memory": p.personal_memory.isChecked(),
+                      "ai_mode": p.ai_mode.currentText()}
+            selection_note = ""
+            if params["contextual"] and not params["transcribe_only"] and not resume:
+                params["model"], selection_note = self.chosen_model("analysis", params["query"])
             if resume:
                 params = json.loads(resume["params"])
                 if source != resume["source"]:
@@ -158,9 +226,13 @@ class FinderController:
                 LocalModel(params["url"], params["model"])
                 if not params["model"]:
                     raise ValueError("Connect to Ollama and choose an installed local model, or select Context cues.")
+            if selection_note:
+                p.notice.setText(selection_note)
             identifier = resume["id"] if resume else self.store.create_job(source, params)
             snapshot = copy.deepcopy(media)
             def done(result):
+                if params['contextual'] and not params['transcribe_only']:
+                    self.last_studio_model = params['model']
                 media.transcript = result["segments"]
                 w.dirty = True
                 w.refresh_transcript()
@@ -190,10 +262,32 @@ class FinderController:
                 if diag.get('invalid_sections'):
                     message += (f" {len(diag['invalid_sections'])} model sections were skipped; "
                                 'these suggestions cover only validated sections. Review before editing.')
+                if params['contextual']:
+                    speed = model_speed({'eval_count': diag.get('model_eval_count'),
+                                         'eval_duration': diag.get('model_eval_duration')})
+                    resources = diag.get('resources_after_analysis', {})
+                    if speed is not None:
+                        message += f' Measured model generation: {speed} tokens/s.'
+                    if 'gpu_vram_used_mb' in resources:
+                        message += f" GPU VRAM used after analysis: {resources['gpu_vram_used_mb']} MB."
+                    if 'ram_available_gb' in resources:
+                        message += f" RAM available: {resources['ram_available_gb']} GB."
+                    loaded = diag.get('running_models', [])
+                    if loaded:
+                        message += (f" Ollama loaded {len(loaded)} model(s), "
+                                    f"{sum(m['size_vram'] for m in loaded) / 1e9:.1f} GB VRAM.")
+                    if params.get('personal_memory'):
+                        message += f" {diag.get('personal_notes', 0)} confirmed Personal AI notes supplied."
                 p.notice.setText(message)
                 w.tabs.setCurrentWidget(w.transcript if params["transcribe_only"] else p)
-            w.start_job(lambda runner, progress: run_pipeline(
-                self.store, source, snapshot, params, identifier, ffmpeg, runner, progress), done, "Analyzing recording")
+            previous_model = self.last_studio_model
+            def operation(runner, progress):
+                if (params['contextual'] and not params['transcribe_only'] and previous_model and
+                        previous_model != params['model']):
+                    LocalModel(params['url'], previous_model).unload(runner)
+                return run_pipeline(self.store, source, snapshot, params, identifier, ffmpeg, runner, progress)
+            w.start_job(operation, done,
+                f"Analyzing recording with {params['model']}" if params['contextual'] else "Analyzing recording")
         except Exception as error:
             w.fail(str(error))
 
@@ -203,24 +297,93 @@ class FinderController:
         if not question or w.job:
             return
         try:
-            client = LocalModel(p.url.text(), p.model.currentText())
-            if not client.model:
-                raise ValueError('Connect to Ollama and select a downloaded local model first.')
-            model_key = (client.base, client.model)
-            if self.chat_model != model_key:
-                self.chat_history = []
-                self.chat_model = model_key
-                p.chat_output.clear()
+            name, note = self.chosen_model("chat", question)
+            client = LocalModel(p.url.text(), name)
             history = self.chat_history[-8:]
-            p.chat_output.setPlainText(p.chat_output.toPlainText() + 'You: ' + question + '\n')
+            p.chat_output.setPlainText(p.chat_output.toPlainText() + f'You ({name}): ' + question + '\n')
             p.chat_input.clear()
-            def done(answer):
+            p.notice.setText(note)
+            personal = p.personal_memory.isChecked()
+            previous_model = self.last_studio_model
+            def operation(runner, progress):
+                if previous_model and previous_model != name:
+                    LocalModel(p.url.text(), previous_model).unload(runner)
+                if personal:
+                    result = PersonalAIClient().chat(question, name, self.personal_conversation, runner)
+                    metrics = result.get('metrics', {})
+                else:
+                    answer = client.chat(question, history, runner)
+                    result = {"answer": answer}
+                    metrics = dict(client.last_metrics)
+                try:
+                    loaded = client.running_models(runner)
+                except (ValueError, RuntimeError):
+                    loaded = []
+                return {**result, "metrics": metrics, "resources": resource_snapshot(),
+                        "running_models": loaded}
+            def done(result):
+                answer = result["answer"]
+                self.last_studio_model = name
+                if personal:
+                    self.personal_conversation = result["conversation"]
+                    w.settings.setValue("personal_ai_conversation", self.personal_conversation)
                 self.chat_history.extend([{'role': 'user', 'content': question},
                                           {'role': 'assistant', 'content': answer}])
                 self.chat_history = self.chat_history[-8:]
                 p.chat_output.setPlainText(p.chat_output.toPlainText() + 'AI: ' + answer + '\n\n')
-            w.start_job(lambda runner, progress: client.chat(question, history, runner), done,
-                        'Talking to local AI')
+                speed = model_speed(result.get("metrics", {}))
+                resources = result.get("resources", {})
+                details = [f"{speed} tokens/s" if speed is not None else "speed not measured"]
+                if "gpu_vram_used_mb" in resources:
+                    details.append(f"GPU VRAM used {resources['gpu_vram_used_mb']} MB")
+                if "ram_available_gb" in resources:
+                    details.append(f"RAM available {resources['ram_available_gb']} GB")
+                loaded = result.get('running_models', [])
+                if loaded:
+                    details.append(f"Ollama loaded {len(loaded)} model(s); "
+                                   f"VRAM {sum(m['size_vram'] for m in loaded) / 1e9:.1f} GB")
+                if personal:
+                    details.append(f"{len(result.get('used_memories', []))} Personal AI memories retrieved")
+                p.notice.setText(note + " Measured after reply: " + " · ".join(details) + ".")
+            w.start_job(operation, done, f"Talking to {name}")
+        except Exception as error:
+            w.fail(str(error))
+
+    def ask_frame(self):
+        p, w = self.w.finder, self.w
+        if w.job:
+            return
+        try:
+            media = w.current_media()
+            if not media:
+                raise ValueError('Import or select a recording before asking about a frame.')
+            name, note = self.chosen_model('visual')
+            ffmpeg, _ = w.tools()
+            second = max(0, min(media.duration - .05, w.player.player.position() / 1000))
+            question = p.chat_input.text().strip() or 'Describe this game frame. Is anything visibly unusual?'
+            client = LocalModel(p.url.text(), name)
+            previous = self.last_studio_model
+            snapshot = copy.deepcopy(media)
+            p.chat_output.setPlainText(p.chat_output.toPlainText() +
+                                       f'You (frame at {second:.1f}s): {question}\n')
+            p.chat_input.clear()
+            def operation(runner, progress):
+                if previous and previous != name:
+                    LocalModel(p.url.text(), previous).unload(runner)
+                jpeg = extract_frame(snapshot, second, ffmpeg, runner)
+                answer = client.describe_image(jpeg, question, runner)
+                return {'answer': answer, 'metrics': dict(client.last_metrics),
+                        'resources': resource_snapshot()}
+            def done(result):
+                self.last_studio_model = None  # Vision request unloads its model after the reply.
+                p.chat_output.setPlainText(p.chat_output.toPlainText() +
+                                           'AI (single frame only): ' + result['answer'] + '\n\n')
+                speed = model_speed(result['metrics'])
+                p.notice.setText(note + ' Analyzed one local frame, not the recording or audio. ' +
+                                 (f'Measured {speed} tokens/s. ' if speed is not None else '') +
+                                 ('This frame chat is not saved to Personal AI.' if p.personal_memory.isChecked()
+                                  else 'This frame chat is session-only.'))
+            w.start_job(operation, done, f'Analyzing one frame with {name}')
         except Exception as error:
             w.fail(str(error))
 

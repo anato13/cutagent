@@ -178,3 +178,17 @@ without changing the open timeline. Feedback supplies category preferences, not 
 Recommended reasoning: High for the next bounded model/evidence improvement and
 regression pass. Escalate only if a specific unresolved issue warrants it. The app
 cannot inspect Codex usage or change the selected reasoning setting.
+
+## Current next step after local AI intelligence increment
+
+Use the existing Qwen3 8B/Qwen2.5 7B installation on the user's Windows PC to
+measure GPU offload, RAM, token speed and clip evidence on one short Anato12
+recording with an imported or verified transcript. Approve/reject candidates
+against playback and compare missed jokes and duplicate ranges. Only then decide
+whether Qwen3 14B merits its estimated 9.5 GB download and slower RAM offload.
+Gemma 3 12B can be installed separately for single-frame vision; real vision
+quality and integration into autonomous editing remain NOT_TESTED.
+
+Keep voice, automatic scene humor judgments and weight training below this
+real-recording acceptance work. High remains the lowest suitable reasoning
+setting for the next bounded evaluation and correction pass.

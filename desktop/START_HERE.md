@@ -49,8 +49,9 @@ In AI Clip Finder, **Connect local model** now chooses Local Ollama for Analyze.
 The result message tells you whether the app used Ollama or basic context cues,
 how many timestamped lines and model sections it checked, and why zero results
 may need a more specific search. A connection by itself only lists models.
-Use **Ask AI** for a simple conversation with the selected local model. Chat is
-session-only and does not send your recording or transcript automatically.
+Use **Ask AI** for a simple conversation with a downloaded local model. The chat
+history now stays visible when you switch models. Without Personal AI integration,
+it remains session-only and does not send your recording or transcript automatically.
 
 For long recordings, an invalid model section is now skipped when other
 sections contain validated suggestions. The result shows how many sections were
@@ -311,6 +312,30 @@ Ollama for you, and you can keep editing without it.
    and missed exchanges. None is a validated automatic humor detector.
    A specific search can help locate an exchange, but its explanation still needs review.
 
+Choose **Automatic**, **Fast**, **Balanced**, or **Maximum intelligence** beside the
+analysis selector. Automatic uses an installed larger model for analysis and harder
+chat questions. If its preferred model is absent, Studio names the local fallback.
+Fast may use a downloaded 3B model for speed, with a quality tradeoff; Balanced
+prefers Qwen3 8B. The routing policy is a starting point, not a measured quality rank.
+Check **Use selected model** to override routing with the model shown in the list.
+The model used is displayed before processing. **Install model…** offers one
+explicit download at a time for `qwen3:8b`, `qwen3:14b`, or `gemma3:12b` and shows
+Ollama pull progress. It checks free storage first and does not remove
+`qwen2.5:7b`. You can also run `ollama pull qwen3:8b` (or another listed tag)
+in Command Prompt. Qwen3 14B may exceed 8 GB VRAM; Ollama can use system RAM,
+with slower results. If you install Gemma 3 12B, **Ask about frame** can send one
+JPEG from the current playhead to its local vision model. This does not analyze
+the whole recording or its audio. Gemma's real image output remains untested here.
+
+To use your separate ANATO12 AI memory, start that local app and check **Use
+Personal AI memory for chat and clip analysis**. Only confirmed humor/editing
+preferences are supplied to clip analysis, in a small bounded set. Studio chat
+then goes through Personal AI's local API, so the conversation and retrieved
+memories stay in its database even when you switch models or restart Studio.
+If Personal AI is stopped, Studio reports an error instead of pretending it
+retrieved memories; uncheck the box to use session-only chat. This integration
+does not retrain model weights.
+
 Ollama controls its own hardware use. The editor's FFmpeg and speech paths
 currently use CPU; RTX acceleration is not verified. If connection fails, check
 that Ollama is running and a local model has finished downloading, or use cue mode.
@@ -325,12 +350,15 @@ it or split it at real timestamps in an SRT and reimport. Long search text or
 shared notes also consume the input budget; shortening them may resolve the error.
 Studio does not silently cut a dialogue line or invent replacement times.
 
-The adapter requests 8,192 context tokens with up to 1,200 output tokens, and
+The adapter requests 8,192 context tokens for smaller models or 4,096 for
+Qwen3 14B/Gemma 3 12B, with up to 1,200 output tokens, and
 limits the combined system/transcript/search/feedback content to 6,000 UTF-8 bytes.
 For models advertising thinking support, Studio disables that mode to leave the
 output budget for clip suggestions. This is separate from Codex reasoning settings.
 This is a conservative size limit, not an exact tokenizer measurement or a
-guarantee that every model/template fits. GPU memory use remains unmeasured.
+guarantee that every model/template fits. Studio shows actual Ollama generation
+speed when token timing is returned, available host RAM, and GPU VRAM use when
+`nvidia-smi` is installed. These are measurements on your machine, not humor scores.
 Up to four earlier callback links are included when space allows. The model-check
 report lists each section's input size and omitted callback-link count, so omitted
 earlier conversational context is visible during evaluation. Dense transcripts can require
