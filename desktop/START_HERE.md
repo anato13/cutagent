@@ -5,7 +5,8 @@ limit, paid API, subscription, or account requirement. Keep your original record
 the app exports a new MP4.
 
 This is version 0.4 alpha, supplied as a Python desktop project with Windows
-launchers. It is not a prebuilt or signed Windows installer.
+launchers. A portable Windows build is available through the repository's
+Windows workflow; it is not a signed installer.
 
 ## New: Auto Edit and the learning library
 
@@ -22,7 +23,14 @@ Finish the setup steps below first. For **Auto Edit**:
    If no usable complete exchanges are found, it explains why and creates no bundle.
 
 This is an experimental editor. Its file checks do not establish that the choices
-are funny or tell a good story. Main clips stay in recording order. No video is
+are funny or tell a good story. With **Use my story-opening playbook** checked,
+Studio may add a short, timestamped dialogue bridge between two selected
+moments and put one short, complete, source-linked exchange first. Bridges
+appear only in the main video; Shorts use the selected complete moments. The
+remaining main clips stay in recording order, and the opening is not repeated.
+If the dialogue has no useful link, Studio keeps recording order and records
+why in `draft-manifest.json`. Repeated words are clues, not proof of a story
+or ending payoff. Listen to the finished video before publishing. No video is
 uploaded to YouTube. First-run operation checks and local inference can take time.
 Cancel is available; **Jobs & clip feedback → Resume** retries using analysis
 caches, with rendering starting again. See LEARNING_SYSTEM.md for recovery limits.

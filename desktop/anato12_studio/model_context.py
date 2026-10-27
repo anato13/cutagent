@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import bisect
 import json
 
-PROMPT_VERSION = "anato-personal-style-9"
+PROMPT_VERSION = "anato-story-playbook-10"
 CONTEXT_TOKENS = 8192
 OUTPUT_TOKENS = 1200
 MAX_INPUT_BYTES = 6000
@@ -16,6 +16,8 @@ PERSONAL_STYLE = (
     "playful teasing, awkward explanations, genuine confusion and someone doubling down. "
     "Value setup, escalation, payoff, timing and clarity without excessive context. "
     "Gameplay intensity is secondary to the people. Avoid forced memes, effects or fake reactions. "
+    "A recurring story may involve an absurd claim, doubt, proof and a later reveal. "
+    "Prefer exchanges advancing it; never invent missing context or a reveal. "
     "These are initial preferences, not proven humor rules; opted-in feedback may refine them. "
 )
 

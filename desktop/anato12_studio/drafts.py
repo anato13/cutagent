@@ -19,6 +19,7 @@ class DraftOptions:
     burn_captions: bool = False
     save_srt: bool = False
     render: bool = False
+    opening_id: str | None = None
 
     def validate(self):
         self.max_short_seconds = number(self.max_short_seconds, 1, 180, "Maximum Short length")
@@ -26,6 +27,9 @@ class DraftOptions:
             raise ValueError("Choose fit or fill framing.")
         if any(type(v) is not bool for v in (self.burn_captions, self.save_srt, self.render)):
             raise ValueError("Invalid draft caption/render option.")
+        if self.opening_id is not None and (not isinstance(self.opening_id, str)
+                or not 1 <= len(self.opening_id) <= 64):
+            raise ValueError('The story opening reference is invalid.')
 
 
 def assemble(media, source, highlights, options, selection="approved"):
@@ -33,12 +37,17 @@ def assemble(media, source, highlights, options, selection="approved"):
     options.validate()
     if selection not in {"approved", "automatic"}:
         raise ValueError("Unknown selection mode.")
+    if options.opening_id and selection != 'automatic':
+        raise ValueError('A story opening can only reorder an automatic draft.')
     statuses = {"approved"} if selection == "approved" else {"approved", "unreviewed"}
     approved = [h for h in highlights if h["source"] == source and h["status"] in statuses]
     if not approved:
         raise ValueError("Approve at least one highlight for this recording first.")
     if (options.burn_captions or options.save_srt) and not media.transcript:
         raise ValueError("Add captions before creating drafts with captions enabled.")
+    if selection != 'automatic' and any(h.get('context_only') for h in approved):
+        raise ValueError('Source-context bridges belong only in automatic main drafts.')
+    context_only = {h['id'] for h in approved if h.get('context_only')}
     items = []
     for item in approved:
         clip = Clip(media.id, item["start"], item["end"], item["title"])
@@ -57,6 +66,10 @@ def assemble(media, source, highlights, options, selection="approved"):
                 previous.name = (previous.name + " / " + clip.name)[:180]
         else:
             main.clips.append(copy.deepcopy(clip))
+        if identifier in context_only:
+            skipped.append({'highlight': identifier,
+                            'reason': 'Source context only; no standalone Short was requested'})
+            continue
         start, duration = clip.frame_range()
         signature = (start, duration)
         if signature in seen:
@@ -72,8 +85,21 @@ def assemble(media, source, highlights, options, selection="approved"):
         shorts.append((identifier, Project(media={media.id: copy.deepcopy(media)}, clips=[short_clip],
                          profile="Shorts · 9:16", burn_captions=options.burn_captions,
                          save_srt=options.save_srt)))
+    opening_applied = False
+    if options.opening_id:
+        opening = next((clip for clip, identifier in items if identifier == options.opening_id), None)
+        if opening is None:
+            raise ValueError('The planned opening is no longer among the selected ranges.')
+        position = next((i for i, clip in enumerate(main.clips)
+                         if (clip.start, clip.end) == (opening.start, opening.end)), None)
+        if position is None:
+            raise ValueError('The planned opening overlaps another main range; keep recording order.')
+        if position:
+            main.clips.insert(0, main.clips.pop(position))
+            opening_applied = True
     key = "approved_highlights" if selection == "approved" else "automatically_selected_highlights"
-    return main, shorts, {key: included, "shorts_skipped": skipped}
+    return main, shorts, {key: included, "shorts_skipped": skipped,
+                          "opening_applied": opening_applied}
 
 
 def create_bundle(media, source, highlights, parent, options, ffmpeg, runner, progress,
@@ -94,8 +120,11 @@ def create_bundle(media, source, highlights, parent, options, ffmpeg, runner, pr
     # Work only inside a newly owned temporary directory. Publish after all work succeeds.
     with tempfile.TemporaryDirectory(prefix=".anato12-drafts-", dir=parent) as temporary:
         working = Path(temporary)
+        assembly = ("A complete source-linked opening was moved first; remaining main ranges stay in recording order."
+                    if details['opening_applied'] else
+                    f"{selection.title()} ranges in recording order; overlapping main ranges merged.")
         manifest = {"version": 1, "source_fingerprint": source, "source_path": media.path,
-                    "assembly": f"{selection.title()} ranges in recording order; overlapping main ranges merged.",
+                    "assembly": assembly,
                     "short_framing": options.short_fit, "max_short_seconds": options.max_short_seconds,
                     **details, "outputs": [], "automation": extra_manifest or {}}
         for i, (filename, project, identifier) in enumerate(plans):

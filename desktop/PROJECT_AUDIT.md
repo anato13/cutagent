@@ -1,4 +1,20 @@
-# Project audit — 2026-10-26
+# Project audit — 2026-10-27
+
+## 0.4.0a7 — first-edit story playbook
+
+The existing Auto Edit now offers a checked-by-default, optional story-opening
+playbook. It can insert one short source-timestamped dialogue bridge between
+adjacent selected exchanges and move one short, complete linked exchange to the
+opening when review priority supports it. The opening is used once; context
+bridges appear only in the main video. Manifests retain source-line references,
+ordering reasons and explicit NOT_EVALUATED story/humor quality. This uses exact
+dialogue words and saved review preferences, not semantic narrative understanding
+or model-weight training. The prompt version changed to keep old cached model
+responses separate. Existing approved-draft behavior is preserved. See
+TEST_RESULTS.md for technical evidence and remaining real-video review needs.
+The updated prompt produced one source-valid qwen2.5:7b candidate in a focused
+genuine-dialogue check; its interpretation of the AI-photo exchange was not
+established by those citations. Semantic quality remains PARTIALLY_IMPLEMENTED.
 
 ## 0.4.0a6 — bounded recovery from invalid analysis windows
 

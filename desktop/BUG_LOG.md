@@ -1,5 +1,17 @@
 # Bug log
 
+B43 — PARTIALLY_IMPLEMENTED: automatic main edits could concatenate only
+selected highlights, losing brief dialogue that connected them. The optional
+playbook now adds a source-cited short bridge when adjacent selected exchanges
+have matching words in intervening transcript lines. It excludes the bridge
+from Shorts and records the reason. Exact word links can be coincidental;
+story quality still needs playback review.
+
+B44 — PARTIALLY_IMPLEMENTED: Auto Edit had no grounded opening choice. The
+optional playbook may move one complete linked exchange to the front, without
+repeating it, while leaving approved drafts untouched. It cannot identify a
+semantic hook or certify an ending payoff.
+
 B42 — VERIFIED_WORKING (fixture regression): a long recording could abort on
 the first all-invalid model window even though later windows had valid source
 references. Finder now continues across invalid-reference windows, records

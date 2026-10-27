@@ -9,7 +9,9 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
 
 - Experimental Auto Edit: one run from a selected recording/local model to a
   checked main MP4 and Shorts, with complete-range selection, rejected-range
-  protection, operation tests and a per-output report. Editorial quality is unverified.
+  protection, operation tests and a per-output report. An optional story
+  playbook can add source-dialogue context and reorder one linked opening.
+  Editorial quality is unverified.
 - Persistent learning library: local-video transcripts, sampled frames, possible
   scene-change measurements, timestamped references, searchable examples,
   corrections, separately shared own-video preferences and exact dialogue comparison.
@@ -133,8 +135,9 @@ acceptance still need verification.
   checks found both unsupported suggestions and missed exchanges. Review every result.
 - Add to main/Shorts appends to one editor timeline and switches its output ratio.
   The new approved-draft button creates those separate projects automatically.
-  This is chronological assembly from user decisions; story/hook selection and
-  face tracking are not implemented. The separate Personal AI app can now provide
+  This approved-draft path uses chronological assembly from user decisions;
+  semantic story/hook selection and face tracking are not implemented. Auto Edit
+  has an optional source-linked opening heuristic. The separate Personal AI app can now provide
   confirmed notes and persistent chat when explicitly enabled.
 - Feedback and shared own-video notes provide bounded ranking and prompt guidance,
   not model-weight training.

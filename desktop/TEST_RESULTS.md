@@ -1,5 +1,37 @@
 # Test results and verification history
 
+## Version 0.4.0a7 — first-edit story playbook
+
+The workspace suite passed **224 tests, 0 failed in 104.81 seconds** with
+offscreen Qt and a 240-second outer timeout. New cases cover source-linked
+opening order without repetition, context bridges excluded from Shorts,
+rejection/budget constraints, unchanged approved-draft order, and real FFmpeg
+main/Short renders with full decode checks. A longer prompt initially broke the
+single-large-transcript-row budget regression; the final bounded wording passes.
+The extracted source ZIP also passed **224 tests, 0 failed in 105.34 seconds**
+with an isolated app profile. Only this verification note was added after the
+tested extraction.
+
+Using the existing 28-minute `1024.mp4` sample and its saved earlier qwen3:8b
+candidates, a downstream render included two selected moments and a real source
+dialogue bridge at **369.87–374.90 s** (source transcript IDs 132–134). The
+main project's source ranges were 321.97–356.43, 369.87–374.90, and
+420.30–506.10 s. Its YouTube MP4 and one Short both passed full FFmpeg decode
+checks; the bridge was excluded from the Short. The playbook kept chronological
+order because it had no eligible short linked opener. This reused saved model
+candidates rather than rerunning the updated prompt over the full recording.
+Bridge relevance, semantic story quality, ending payoff, the user's current
+Windows recording and native Windows/RTX behavior are **NOT_EVALUATED** here.
+
+With the final `anato-story-playbook-10` prompt, the installed local
+`qwen2.5:7b` completed one 27-line genuine-dialogue window in **73.019 s**
+and returned one structurally valid, timestamped candidate at
+**457.108–525.308 s**. The response described a reveal about an AI photo;
+the excerpt mentions making an AI photo but does not establish that the earlier
+photo was AI-generated. Its reason therefore needs human review and is not
+evidence of correct story or humor interpretation. This was a focused model
+request, not a full-recording Auto Edit or a Windows model test.
+
 ## Version 0.4.0a6 — partial invalid-window recovery
 
 The focused Finder/Auto Edit suite passed **53 tests** from isolated app data.

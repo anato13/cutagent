@@ -305,6 +305,74 @@ def test_reserved_short_runs_through_real_checked_export(auto_source, binaries, 
     assert all(store.highlight(i)['status'] == 'approved' for i in ids)
 
 
+def test_story_playbook_reorders_checked_main_but_not_shorts(auto_source, binaries, monkeypatch):
+    store, media, source, params = auto_source
+    media.transcript = [Segment(.1, .4, 'The date sounds impossible.'),
+                        Segment(.5, .8, 'The date claim continues.'),
+                        Segment(1.3, 1.6, 'I am on a date.'),
+                        Segment(1.7, 2, 'You are not on a date.'),
+                        Segment(2.5, 2.8, 'The date claim returns.'),
+                        Segment(2.9, 3.2, 'The date gets an answer.')]
+    params['story_playbook'] = True
+    params['require_multi'] = True
+    params['auto_options'].update(burn_captions=False, save_srt=False)
+    ids = []
+    for name, start, end, rank in [('earlier', .1, .8, 10), ('opening', 1.3, 2, 40),
+                                  ('ending', 2.5, 3.2, 20)]:
+        identifier = store.upsert_highlight(source, name, start, end, name, 'banter', '', '',
+                                            [], 'manual', rank)
+        store.review(identifier, 'approved')
+        ids.append(identifier)
+    monkeypatch.setattr('anato12_studio.auto_edit.run_pipeline',
+                        lambda *a, **kw: {'segments': media.transcript, 'ids': ids})
+    job = store.create_job(source, params)
+    result = run_auto_edit(store, source, media, params, job, *binaries, Runner(), lambda *_: None)
+    folder = Path(result['directory'])
+    manifest = json.loads((folder / 'draft-manifest.json').read_text(encoding='utf-8'))
+    main = Project.load(folder / 'YouTube.anato12.json')
+    assert result['story_opening'] == ids[1] and result['main_clips'] == 3
+    assert [round(c.start, 1) for c in main.clips] == [1.3, .1, 2.5]
+    assert manifest['automation']['story_plan']['main_order'] == [ids[1], ids[0], ids[2]]
+    assert manifest['opening_applied'] and manifest['outputs'][0]['quality']['full_decode'] == 'passed'
+    assert len(manifest['outputs']) == 4
+    assert [entry['highlight'] for entry in manifest['outputs'][1:]] == ids
+
+
+def test_story_playbook_renders_source_bridge_only_in_main(auto_source, binaries, monkeypatch):
+    store, media, source, params = auto_source
+    media.transcript = [Segment(.1, .4, 'The date is real.'),
+                        Segment(.5, .8, 'You are not on a date.'),
+                        Segment(1.2, 1.4, 'I am on a date.'),
+                        Segment(1.5, 1.7, 'Do you want a photo?'),
+                        Segment(1.8, 2, 'Yes, show it.'),
+                        Segment(2.4, 2.7, 'The photo looks fake.'),
+                        Segment(2.8, 3.1, 'That photo is real.')]
+    params['story_playbook'] = True
+    params['require_multi'] = True
+    params['auto_options'].update(burn_captions=False, save_srt=True)
+    ids = []
+    for name, start, end in [('date', .1, .8), ('photo', 2.4, 3.1)]:
+        identifier = store.upsert_highlight(source, name, start, end, name, 'banter', '', '',
+                                            [], 'manual', 20)
+        store.review(identifier, 'approved')
+        ids.append(identifier)
+    monkeypatch.setattr('anato12_studio.auto_edit.run_pipeline',
+                        lambda *a, **kw: {'segments': media.transcript, 'ids': ids})
+    job = store.create_job(source, params)
+    result = run_auto_edit(store, source, media, params, job, *binaries, Runner(), lambda *_: None)
+    folder = Path(result['directory'])
+    manifest = json.loads((folder / 'draft-manifest.json').read_text(encoding='utf-8'))
+    main = Project.load(folder / 'YouTube.anato12.json')
+    assert result['context_bridges'] == 1 and result['main_clips'] == 3 and result['shorts'] == 2
+    assert result['story_opening'] is None
+    assert [round(clip.start, 1) for clip in main.clips] == [.1, 1.2, 2.4]
+    assert [entry['highlight'] for entry in manifest['outputs'][1:]] == ids
+    assert len(manifest['automation']['story_plan']['context_bridges']) == 1
+    assert sum(item['context_only'] for item in manifest['automation']['selection']) == 1
+    assert any('Source context only' in item['reason'] for item in manifest['shorts_skipped'])
+    assert all(entry['quality']['full_decode'] == 'passed' for entry in manifest['outputs'])
+
+
 @pytest.mark.parametrize('cancel', [False, True])
 def test_failed_history_write_does_not_mask_original_error_or_cancellation(auto_source, binaries, monkeypatch, cancel):
     store, media, source, params = auto_source

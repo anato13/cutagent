@@ -57,14 +57,20 @@ class LearningController:
         form.addRow('Maximum complete ranges / Shorts', self.ranges)
         form.addRow('Maximum seconds per Short', self.short_seconds)
         layout.addLayout(form)
+        self.story = QCheckBox('Use my story-opening playbook (experimental)')
+        self.story.setChecked(True)
+        layout.addWidget(self.story)
         self.burn, self.srt = QCheckBox('Burn captions into videos'), QCheckBox('Save SRT captions')
         row = QHBoxLayout()
         row.addWidget(self.burn)
         row.addWidget(self.srt)
         self.run_button = button(row, 'Auto Edit selected recording…', self.start_auto)
         layout.addLayout(row)
-        self.auto_result = QLabel('Complete exchanges stay in recording order. Space is reserved for a complete Short '
-                                 'when one fits your limits. Longer exchanges stay whole; Shorts use fit framing.')
+        self.auto_result = QLabel('The story playbook may add a short, source-timestamped context bridge '
+                                 'and move one complete linked exchange to the opening. '
+                                 'Other ranges stay in recording order. Context bridges never become Shorts. '
+                                 'A repeated word is only a possible story link. '
+                                 'Check the story against playback before publishing.')
         self.auto_result.setWordWrap(True)
         layout.addWidget(self.auto_result)
         layout.addStretch()
@@ -178,7 +184,8 @@ class LearningController:
                 options = AutoOptions(self.minutes.value()*60, self.ranges.value(), self.short_seconds.value(),
                                       self.burn.isChecked(), self.srt.isChecked())
                 params.update(kind='auto_edit', auto_options=asdict(options), output_parent=parent,
-                              require_multi=options.max_ranges > 1)
+                              require_multi=options.max_ranges > 1,
+                              story_playbook=self.story.isChecked())
                 identifier = self.store.create_job(source, params)
             snapshot = copy.deepcopy(media)
             previous = w.finder_controller.last_studio_model
@@ -195,9 +202,18 @@ class LearningController:
             w.fail(str(error))
 
     def auto_ready(self, result):
+        plan = result.get('story_plan') or {}
         self.auto_result.setText(f"Saved {result['main_clips']} main ranges and {result['shorts']} Shorts. "
             f"Skipped Shorts: {result['skipped']}. Technical checks passed.\n{result['directory']}\n"
-            'See draft-manifest.json for selections, skips and checks. Editorial quality is experimental.')
+            + ('Moved one complete linked exchange to the opening.\n' if result.get('story_opening') else
+               'Kept main ranges in recording order.\n')
+            + (f"Added {result['context_bridges']} source-dialogue bridge(s) to the main video only.\n"
+               if result.get('context_bridges') else '')
+            + (f"Possible repeated dialogue word: {plan['possible_topic_word']} (not a verified story).\n"
+               if plan.get('possible_topic_word') else
+               'No repeated dialogue topic was found in the selected clips.\n' if plan else '')
+            + 'See draft-manifest.json for the story plan, selections, skips and checks. '
+              'Editorial quality is experimental.')
         if result.get('history_warning'):
             self.auto_result.setText(self.auto_result.text() + '\n' + result['history_warning'])
         self.w.tabs.setCurrentWidget(self.auto_tab)

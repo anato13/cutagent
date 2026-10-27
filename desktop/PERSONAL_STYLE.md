@@ -23,9 +23,15 @@ silence breathe. Use restrained zooms, captions or sound effects only when they
 clarify or emphasize a real moment. An opening should use a genuine interesting
 moment. Aim for a coherent main video and suitable Shorts, not an arbitrary length.
 
-The current app uses the conversational preferences in its local clip-selection
-prompt and provisional ranking. The executable technique library handles trimming,
-portrait framing, captions and fixed zooms. Speaker identification, sound-effect
-placement, visual reaction understanding, autonomous story/hook planning, authentic
-thumbnail drafts, titles/descriptions and YouTube performance metrics remain
-experimental or not implemented. See LEARNING_SYSTEM.md and DEVELOPMENT_ROADMAP.md.
+The current app uses these preferences in its local clip-selection prompt and
+provisional ranking. Auto Edit also has a source-grounded story-opening playbook:
+look for an exact recurring dialogue term, keep complete exchanges, and move one
+short higher-priority linked exchange to the front when supported. It may insert
+a brief source-dialogue bridge between selected clips in the main video. That
+bridge is not considered funny on its own or used as a Short. It does not
+claim that a repeated word proves a coherent story or final payoff. The executable
+technique library handles trimming, portrait framing, captions and fixed zooms.
+Speaker identification, sound-effect placement, visual reaction understanding,
+semantic story planning, authentic thumbnail drafts, titles/descriptions and
+YouTube performance metrics remain experimental or not implemented. See
+LEARNING_SYSTEM.md and DEVELOPMENT_ROADMAP.md.

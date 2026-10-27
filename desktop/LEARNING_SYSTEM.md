@@ -50,8 +50,27 @@ This is **experimental editorial selection**, not reliable learned comedy or
 semantic story construction. A model can still miss good exchanges, invent a
 reason, or select material that depends on unrecognized earlier context. Source
 timestamps and successful decode checks do not establish an engaging story.
-There is no inferred confidence percentage, invented dialogue, automatic hook,
-face tracking, copied creator asset, or automatic YouTube upload.
+There is no inferred confidence percentage, invented dialogue, semantic hook
+judgment, face tracking, copied creator asset, or automatic YouTube upload.
+
+## Story-opening playbook
+
+The optional checkbox in Auto Edit applies a bounded lesson from the first edit:
+look for a recurring conversation, keep its setup and real reaction, and open
+with a short complete exchange only when the source dialogue links it to another
+selected moment. It can insert a short source-dialogue bridge between adjacent
+selected moments when transcript lines in the gap repeat a word from each. A
+bridge has its own timestamps and source-line references, is context rather than
+a humor candidate, and never becomes a standalone Short. The app checks exact
+repeated dialogue words and review priority;
+it does not infer that two scenes share a deeper theme. When supported, it moves
+one range to the front without repeating it later. Shorts keep their independent
+source ranges. The export manifest records the possible topic word, opening ID,
+main order and reason. Profanity and filler words alone cannot establish a link.
+If the source link or a suitable short exchange is missing, the main edit remains
+chronological. An ending payoff and comedy quality are **NOT_EVALUATED** until
+someone watches the result. Feedback still changes review priority through the
+existing opt-in controls; no model weights are retrained.
 
 ## Finder and local chat diagnostics
 
@@ -180,8 +199,9 @@ tables and test history. No recordings or model weights are embedded in the ZIP.
 
 ## Remaining acceptance
 
-- Reliable humor selection and semantic story/hook planning: PARTIALLY_IMPLEMENTED
-  for model suggestions; story/hook planning itself is NOT_IMPLEMENTED.
+- Reliable humor selection and story planning: PARTIALLY_IMPLEMENTED for model
+  suggestions and a source-linked opening heuristic; semantic story/hook
+  understanding and verified ending payoffs are NOT_IMPLEMENTED.
 - Tutorial/creator learning: PARTIALLY_IMPLEMENTED. Searchable evidence, sampled
   frames and technical observations exist; semantic visual demonstrations,
   sound-effect recognition, engagement analysis and novel technique synthesis

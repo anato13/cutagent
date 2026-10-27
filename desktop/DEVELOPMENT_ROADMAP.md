@@ -1,5 +1,15 @@
 # Development roadmap
 
+## 0.4.0a7 — first-edit story playbook
+
+Source-grounded opening and dialogue-bridge heuristics are implemented for
+automatic edits. Next, review the actual generated main video against Anato12's
+intended story, label links that are helpful versus coincidental, and use that
+feedback to improve selection. The current heuristic cannot infer a genuine
+ending payoff or replace a human editorial review. Full-recording recall,
+native Windows/RTX acceptance and advanced learning remain outstanding. High
+is suitable for this semantic review; Medium suits routine UI fixes.
+
 ## 0.4.0a6 — long-recording finder recovery
 
 Finder can now return later validated exchanges despite earlier malformed model

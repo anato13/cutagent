@@ -1,5 +1,14 @@
 # Engineering lessons
 
+## 0.4.0a7
+
+When teaching an editor a prior editorial method, separate executable rules
+from subjective judgments. Exact transcript words can justify a reviewable
+bridge or possible opening, but cannot establish that two jokes share a story.
+Keep bridge source IDs in the manifest, exclude context-only ranges from Shorts,
+and preserve complete source dialogue boundaries. A final playback and user
+feedback are needed to validate the narrative or ending.
+
 ## 0.4.0a6
 
 Analysis windows are independent enough to retain later valid, source-checked

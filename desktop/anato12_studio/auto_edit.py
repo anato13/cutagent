@@ -7,6 +7,7 @@ from pathlib import Path
 import time
 
 from .drafts import DraftOptions, create_bundle
+from .editorial_story import find_context_bridges, plan_story
 from .exchange import exchange_evidence
 from .finder import rows_for
 from .finder_jobs import run_pipeline
@@ -183,7 +184,8 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         media.transcript = result['segments']
         by_id = {h['id']: h for h in store.approved_for_source(source)}
         by_id.update({identifier: store.highlight(identifier) for identifier in result['ids']})
-        selected, skipped = select_ranges(media, source, list(by_id.values()), store.rejected_for_source(source),
+        rejected = store.rejected_for_source(source)
+        selected, skipped = select_ranges(media, source, list(by_id.values()), rejected,
                                            store.preferences(), options, runner)
         if not selected:
             reasons = '; '.join(dict.fromkeys(s['reason'] for s in skipped))[:1800]
@@ -201,6 +203,20 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
                              (' Selection checks: ' + reasons if reasons else ''))
         if not any(fits_short(h, options) for h in selected):
             raise ValueError('No complete range fits the Short limit. Increase the limit and rerun; no dialogue was truncated.')
+        bridges = (find_context_bridges(selected, media.transcript, source, rejected,
+                                        options.max_ranges, options.max_main_seconds,
+                                        media.duration, runner)
+                   if params.get('story_playbook') else [])
+        if bridges:
+            selected = sorted(selected + bridges, key=lambda item: (item['start'], item['end']))
+        story_plan = (plan_story(selected, media.transcript, options.max_short_seconds,
+                                 store.preferences(), runner)
+                      if params.get('story_playbook') else None)
+        if story_plan is not None:
+            story_plan['context_bridges'] = [
+                {'id': item['id'], 'start': item['start'], 'end': item['end'],
+                 'source_ids': item['exchange']['source_ids'], 'reason': item['reason']}
+                for item in bridges]
         recipes = ['trim_join', 'portrait_fit']
         if options.burn_captions or options.save_srt:
             recipes.append('captions')
@@ -209,17 +225,24 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         def check(folder, manifest):
             verify_bundle(folder, manifest, ffmpeg, ffprobe, runner, lambda v, m: report(.9+v*.09, m))
         details = {'status': 'EXPERIMENTAL', 'job': job_id, 'engine': engine, 'tested_recipes': recipes,
-                   'selection': [{k: h[k] for k in ('id', 'start', 'end', 'status', 'original_range', 'exchange')}
+                   'selection': [{**{k: h[k] for k in ('id', 'start', 'end', 'status', 'original_range', 'exchange')},
+                                  'context_only': bool(h.get('context_only'))}
                                  for h in selected],
                    'skipped': skipped, 'preferences': store.model_preferences(),
                    'analysis_diagnostics': result.get('diagnostics', {}),
                    'model': params['model'], 'model_identity': identity, 'query': params.get('query', ''),
-                   'story_strategy': 'Chronological complete exchanges; no semantic hook or narrative rewriting.',
+                   'story_strategy': ('A short source-dialogue bridge may connect selected exchanges; '
+                                      'a source-linked short opening may move first when review priority supports it. '
+                                      'No semantic payoff verification.'
+                                      if story_plan else
+                                      'Chronological complete exchanges; no semantic hook or narrative rewriting.'),
+                   'story_plan': story_plan,
                    'short_strategy': 'Preserve ranked selection when possible; otherwise reserve one complete eligible Short.',
                    'humor_quality': 'NOT_EVALUATED'}
         output = create_bundle(media, source, selected, params['output_parent'],
                                DraftOptions(options.max_short_seconds, 'fit', options.burn_captions,
-                                            options.save_srt, True), ffmpeg, runner,
+                                            options.save_srt, True,
+                                            opening_id=story_plan['opening_id'] if story_plan else None), ffmpeg, runner,
                                lambda v, m: report(.55+v*.35, m), selection='automatic',
                                before_publish=check, extra_manifest=details)
         history_warning = ''
@@ -228,7 +251,9 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         except Exception as error:
             history_warning = f'Videos were saved, but job history could not be updated: {error}'
         # Once the whole checked folder is published, late Cancel must not report a false rollback.
-        return {**output, 'committed': True, 'job_id': job_id, 'history_warning': history_warning}
+        return {**output, 'committed': True, 'job_id': job_id, 'history_warning': history_warning,
+                'story_opening': story_plan['opening_id'] if story_plan else None,
+                'story_plan': story_plan, 'context_bridges': len(bridges)}
     except Cancelled:
         try:
             store.update_job(job_id, 'cancelled', current[0], 'Cancelled; rerun uses completed analysis caches')
