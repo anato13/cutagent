@@ -1,5 +1,39 @@
 # Test results and verification history
 
+## Version 0.4.0a4 — selection, packaged-code and initial style reliability
+
+Workspace suite before the creator-style change: **188 passed**. The extracted
+0.4.0a3 package passed **192 tests in 235.76 seconds** with an isolated profile.
+Four additional unit cases cover installed-code fingerprints. A real Linux
+PyInstaller PYZ executable ran all four FFmpeg operation checks with no loose
+Python source and reused them after process restart. Native Windows remains
+NOT_TESTED.
+
+A genuine-model evaluation on the existing 28-minute recording transcript used
+qwen3:8b and the earlier prompt `evidence-roles-schema-6`. One zero-duration
+transcript row was excluded in a private evaluation copy; the source recording
+and project were not edited. In **1270.681 seconds**, 28 analysis windows produced
+three structurally usable candidates and two windows with rejected source
+references. The known photo conversation occurred in two windows but yielded no
+proposal, unlike a prior isolated sample. This identifies a context/recall issue;
+it is not a labeled humor benchmark. From a saved genuine-model response snapshot,
+selection reserved one complete 47.1-second exchange and exported checked 16:9
+and 9:16 videos with captions in 91.069 seconds. This downstream check did not
+run the full unattended Auto Edit job, and comedy/story quality is NOT_EVALUATED.
+Private reports and media stay outside the source ZIP.
+
+Version 0.4.0a4 adds Anato12's stated style to the local prompt and an optional
+model-proposed 1–5 subjective taste estimate. Source references remain required;
+malformed scores are rejected. Prompt/cache version changed, and the initial
+focused style/context/model suite passed **61 tests**. The final extracted-package suite passed **193 tests, 0 failed, 0 skipped in
+149.94 seconds** from an isolated profile. Only this results note changed after
+that extraction. With the updated
+prompt `anato-personal-style-7`, a local qwen3:8b check on the isolated genuine
+photo conversation returned one structurally valid candidate and a subjective
+4/5 taste estimate in 121.411 seconds. This is one sample with no user humor
+label; style quality remains experimental and has no calibrated confidence or
+viewer metrics.
+
 ## Version 0.4.0a2 — exchange reference checks
 
 Final extracted-package suite: **177 passed, 0 failed, 0 skipped in 81.69 seconds**.

@@ -1,5 +1,7 @@
 """Cancellable media checks and real FFmpeg tests for a fixed operation library."""
 import hashlib
+from importlib.util import find_spec
+import marshal
 from pathlib import Path
 import tempfile
 
@@ -13,8 +15,18 @@ def engine_identity(ffmpeg, ffprobe):
     for path in (Path(ffmpeg), Path(ffprobe)):
         stat = path.stat()
         digest.update(f'{path.resolve()}:{stat.st_size}:{stat.st_mtime_ns}'.encode())
-    for name in ('quality.py', 'video.py', 'model.py', 'export_files.py', 'drafts.py'):
-        digest.update(Path(__file__).with_name(name).read_bytes())
+    for name in ('quality', 'video', 'model', 'export_files', 'drafts'):
+        # PyInstaller stores modules in PYZ, so __file__ need not exist on disk.
+        # Fingerprint the installed code through its loader in both distributions.
+        module = f'{__package__}.{name}'
+        spec = find_spec(module)
+        loader = getattr(spec, 'loader', None)
+        get_code = getattr(loader, 'get_code', None)
+        code = get_code(module) if get_code else None
+        if code is None:
+            raise ValueError(f'Cannot identify installed editing code: {module}. Reinstall Studio before Auto Edit.')
+        digest.update(module.encode())
+        digest.update(marshal.dumps(code))
     return digest.hexdigest()
 
 

@@ -8,7 +8,7 @@ from .model_context import bounded_windows, HIGHLIGHT_CATEGORIES, PROMPT_VERSION
 from .exchange import ROLES, quote_title, validate_structure
 
 
-ANALYSIS_VERSION = "finder-exchange-2"
+ANALYSIS_VERSION = "finder-personal-style-3"
 CATEGORIES = set(HIGHLIGHT_CATEGORIES)
 
 
@@ -125,15 +125,19 @@ def model_proposals(raw, window, repeats, duration):
         structure['role_evidence_added'] = sorted(role_ids - set(ids))
         ids = sorted(set(ids) | role_ids)
         category = item.get("category", "other")
+        score = item.get('subjective_humor_score', 3)
+        if type(score) is not int or not 1 <= score <= 5:
+            continue
         if not isinstance(category, str) or category not in CATEGORIES:
             category = "other"
         # All displayed quotes/timestamps are copied from actual supplied segments.
         evidence = [allowed[i] for i in dict.fromkeys(ids)]
         candidate = proposal(current[first], current[last], evidence, duration, category,
-                             str(item.get("reason", ""))[:1500], 10-index, "local model order",
+                             str(item.get("reason", ""))[:1500], score*10-index, "local model order",
                              quote_title(structure, allowed))
         if candidate:
-            candidate.structure = {**structure, 'model_title': str(item.get('title', ''))[:180]}
+            candidate.structure = {**structure, 'model_title': str(item.get('title', ''))[:180],
+                                   'subjective_humor_score': score}
             proposals.append(candidate)
     return proposals
 

@@ -66,11 +66,11 @@ def test_callback_budget_excludes_unsent_evidence():
 
 
 def test_sparse_timestamps_and_single_large_row_still_progress():
-    rows = rows_for([Segment(0, 1, "a"*3800), Segment(7180, 7182, "last conversation")])
+    rows = rows_for([Segment(0, 1, "a"*3200), Segment(7180, 7182, "last conversation")])
     chunks = list(bounded_windows(rows, {}))
     assert len(chunks) == 2
     assert [c.rows[0]["start"] for c in chunks] == [0, 7180]
-    assert chunks[0].rows[0]["text"] == "a"*3800
+    assert chunks[0].rows[0]["text"] == "a"*3200
     runner = Runner()
     runner.cancel()
     with pytest.raises(Cancelled):

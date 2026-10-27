@@ -183,3 +183,131 @@ def test_quality_detects_wrong_dimensions(recording, binaries):
     project = Project(media={'m': media}, clips=[Clip('m', 0, 4)], save_srt=False)
     with pytest.raises(ValueError, match='dimensions'):
         verify_video(recording, project, *binaries, Runner())
+
+
+def ranked_ranges(media, ranges):
+    return [candidate(media, identifier=name, start=start, end=end, status='approved', rank=10-i)
+            for i, (name, start, end) in enumerate(ranges)]
+
+
+@pytest.mark.parametrize('limits', [
+    {'max_ranges': 1}, {'max_main_seconds': 85},
+])
+def test_complete_short_is_reserved_when_longer_range_would_fill_budget(limits):
+    media = Media('m', 'source.mp4', 300, 320, 180)
+    items = ranked_ranges(media, [('long', 0, 80), ('short', 100, 120)])
+    before = json.dumps(items)
+    chosen, skipped = select_ranges(media, 's', items, [], {}, AutoOptions(**limits))
+    assert [h['id'] for h in chosen] == ['short']
+    assert chosen[0]['original_range'] == [100, 120]
+    assert skipped[0]['highlight'] == 'long' and 'reserved' in skipped[0]['reason']
+    assert json.dumps(items) == before
+
+
+def test_short_reservation_refills_budget_and_keeps_recording_order():
+    media = Media('m', 'source.mp4', 300, 320, 180)
+    items = ranked_ranges(media, [('first', 100, 180), ('second', 200, 280), ('short', 0, 10)])
+    chosen, skipped = select_ranges(media, 's', items, [], {}, AutoOptions(max_ranges=2))
+    assert [h['id'] for h in chosen] == ['short', 'first']
+    assert [h['highlight'] for h in skipped] == ['second']
+
+
+def test_ordinary_ranking_is_preserved_when_it_already_contains_a_short():
+    media = Media('m', 'source.mp4', 300, 320, 180)
+    items = ranked_ranges(media, [('first', 0, 80), ('short', 100, 120), ('other', 200, 210)])
+    chosen, skipped = select_ranges(media, 's', items, [], {}, AutoOptions(max_ranges=2))
+    assert [h['id'] for h in chosen] == ['first', 'short']
+    assert len(skipped) == 1 and 'reserved' not in skipped[0]['reason']
+
+
+def test_reserved_short_still_enforces_rejections_evidence_and_expanded_boundaries():
+    media = Media('m', 'source.mp4', 300, 320, 180,
+                  transcript=[Segment(100, 170, 'A whole long line must be retained')])
+    items = ranked_ranges(media, [('long', 0, 80), ('expanded', 105, 115),
+                                 ('rejected', 180, 190), ('stale', 220, 230), ('short', 250, 260)])
+    items[3].update(status='unreviewed', structure='{}')
+    chosen, skipped = select_ranges(media, 's', items, [{'start': 185, 'end': 186}], {},
+                                   AutoOptions(max_ranges=1))
+    assert [h['id'] for h in chosen] == ['short']
+    by_id = {h['highlight']: h['reason'] for h in skipped}
+    assert 'rejected' in by_id['rejected'] and 'analyze' in by_id['stale']
+    assert 'reserved' in by_id['expanded']
+
+
+def test_short_reservation_never_creates_substantially_overlapping_outputs():
+    media = Media('m', 'source.mp4', 300, 320, 180)
+    items = ranked_ranges(media, [('long', 0, 80), ('second', 100, 180), ('short', 10, 20)])
+    chosen, skipped = select_ranges(media, 's', items, [], {}, AutoOptions(max_ranges=2))
+    assert [h['id'] for h in chosen] == ['short', 'second']
+    assert len(skipped) == 1 and 'overlaps' in skipped[0]['reason']
+
+
+def test_short_reservation_cannot_exceed_main_budget_or_truncate_dialogue():
+    media = Media('m', 'source.mp4', 300, 320, 180)
+    items = ranked_ranges(media, [('short', 100, 120)])
+    chosen, skipped = select_ranges(media, 's', items, [], {}, AutoOptions(max_main_seconds=10))
+    assert not chosen and len(skipped) == 1 and 'budget' in skipped[0]['reason']
+    items = ranked_ranges(media, [('long', 0, 80), ('second', 100, 170)])
+    chosen, _ = select_ranges(media, 's', items, [], {}, AutoOptions(max_ranges=1))
+    assert chosen[0]['id'] == 'long' and chosen[0]['end'] == 80
+
+
+def test_selection_cancellation_is_checked_during_boundary_expansion():
+    media = Media('m', 'source.mp4', 300, 320, 180,
+                  transcript=[Segment(5, 7, 'one'), Segment(7, 9, 'two')])
+    items = ranked_ranges(media, [('crossing', 6, 8)])
+    class CancelDuringScan(Runner):
+        checks = 0
+        def check(self):
+            self.checks += 1
+            if self.checks == 6:  # inside the first boundary scan, after validation
+                self.cancel()
+            super().check()
+    runner = CancelDuringScan()
+    before = asdict(media)
+    with pytest.raises(Cancelled):
+        select_ranges(media, 's', items, [], {}, AutoOptions(), runner)
+    assert runner.checks == 6 and asdict(media) == before
+    assert items[0]['start'] == 6
+
+
+def test_reserved_short_runs_through_real_checked_export(auto_source, binaries, monkeypatch):
+    store, media, source, params = auto_source
+    media.transcript = [Segment(.1, .9, 'First line'), Segment(2, 3.2, 'Second complete line')]
+    params['auto_options'].update(max_ranges=1, max_short_seconds=1.5, burn_captions=False)
+    ids = []
+    for i, (name, a, b) in enumerate([('long', 0, 3.8), ('short', 2, 3.2)]):
+        identifier = store.upsert_highlight(source, name, a, b, name, 'other', '', '', [], 'manual', 10-i)
+        store.review(identifier, 'approved')
+        ids.append(identifier)
+    monkeypatch.setattr('anato12_studio.auto_edit.run_pipeline',
+                        lambda *a, **kw: {'segments': media.transcript, 'ids': ids})
+    job = store.create_job(source, params)
+    result = run_auto_edit(store, source, media, params, job, *binaries, Runner(), lambda *_: None)
+    manifest = json.loads((Path(result['directory']) / 'draft-manifest.json').read_text())
+    assert result['shorts'] == 1 and store.jobs()[0]['status'] == 'completed'
+    assert manifest['automation']['selection'][0]['id'] == ids[1]
+    assert manifest['automation']['skipped'][0]['highlight'] == ids[0]
+    for entry in manifest['outputs']:
+        assert entry['quality']['full_decode'] == 'passed'
+        assert entry['quality']['duration_seconds'] == pytest.approx(1.2, abs=.05)
+    assert all(store.highlight(i)['status'] == 'approved' for i in ids)
+
+
+@pytest.mark.parametrize('cancel', [False, True])
+def test_failed_history_write_does_not_mask_original_error_or_cancellation(auto_source, binaries, monkeypatch, cancel):
+    store, media, source, params = auto_source
+    params['model'] = '' if not cancel else params['model']
+    job = store.create_job(source, params)
+    original = store.update_job
+    def fail_final(identifier, status, *args):
+        if status in {'failed', 'cancelled'}:
+            raise OSError('fixture history write failure')
+        return original(identifier, status, *args)
+    monkeypatch.setattr(store, 'update_job', fail_final)
+    runner = Runner()
+    if cancel:
+        runner.cancel()
+    with pytest.raises(Cancelled if cancel else ValueError, match=None if cancel else 'explicitly selected'):
+        run_auto_edit(store, source, media, params, job, *binaries, runner, lambda *_: None)
+    assert not list(Path(params['output_parent']).glob('Anato12-auto-*'))

@@ -101,3 +101,12 @@ token/duration counts are measurements of processing, never humor confidence.
 Real models can produce unsupported reasons with valid IDs; semantic acceptance
 requires separate review. Disabling a local model's advertised thinking mode is
 independent of the user's Codex reasoning setting.
+
+Auto Edit must try to reserve a complete eligible Short when ordinary ranked
+selection fills the budget with longer ranges. Preserve ordinary ranking when
+it already yields a Short, apply evidence/rejection/boundary checks first, and
+never alter saved approval decisions to reserve a range. Selection loops must
+check cancellation. Final history errors must not mask the original failure.
+Capability identity must work for archived PyInstaller modules without reading
+loose `.py` files. Fingerprint installed code via its loader; unknown identity
+must not reuse prior passes. Frozen Linux checks are not native Windows tests.

@@ -83,6 +83,9 @@ def describe_exchange(item):
                 lines.append('  Not supplied')
         if not structure:
             return 'Legacy suggestion: reanalyze to obtain setup/payoff references.'
+        score = structure.get('subjective_humor_score')
+        if type(score) is int and 1 <= score <= 5:
+            lines.append(f'Model taste estimate: {score}/5 (subjective, unverified)')
         lines.append('Additional context requested by model: ' + str(structure.get('needs_context')))
         return '\n'.join(lines)
     except (TypeError, ValueError, KeyError):

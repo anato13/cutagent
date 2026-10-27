@@ -1,5 +1,46 @@
 # Project audit — 2026-10-26
 
+## 0.4.0a4 — initial Anato12 humor profile
+
+Anato12's stated preferences are documented in PERSONAL_STYLE.md and used in
+the local model's selection prompt. Candidates may carry a provisional 1–5 taste
+estimate; it affects ordering only after the source-reference checks pass. This
+is a subjective model rating, not calibrated humor confidence or measured viewer
+engagement. Existing opted-in feedback and own-video notes remain separate and
+continue to influence future requests. No model weights are trained.
+
+Prompt/schema/cache versions changed, so old model-window responses cannot be
+reused under the new style. Source, feedback, approval, project and database
+formats are unchanged. Existing Auto Edit operations remain as documented in
+0.4.0a3 below. Speaker identification, audio/visual joke understanding,
+automatic hook/story construction, thumbnails and title/description drafting
+remain future work or experimental; see PERSONAL_STYLE.md.
+
+## 0.4.0a3 — complete Shorts and packaged capability checks
+
+Continues from da9bf15, preserved in `anato12-before-short-selection` and a
+complete local recovery bundle. No dependency, project-format, database-schema
+or model-prompt change. Existing reviewed decisions and approved-draft exports
+are preserved.
+
+Auto Edit now keeps the normal ranked selection when it can produce both
+formats; otherwise it reserves the highest-priority eligible complete Short and
+refills the remaining budget. This may displace a longer approved exchange for
+this run without altering its saved review. Evidence, rejection, whole-line,
+overlap and duration checks still apply. Skip reasons explain the reservation.
+Selection now checks cancellation during validation, boundary expansion and
+budget choice. Errors saving failed/cancelled job history no longer mask the
+original failure or cancellation.
+
+Capability identity now reads installed code through the Python module loader,
+so a PyInstaller archive does not need loose `.py` files. Code/engine changes
+still require fresh operation tests; unavailable code identity fails explicitly.
+The frozen Linux harness passed all four real operation tests and reused the
+same passes after process restart. See TEST_RESULTS.md for exact source and
+packaged verification. Native Windows/RTX
+acceptance remains NOT_TESTED. Automatic humor and story quality remain
+PARTIALLY_IMPLEMENTED; this release does not add semantic story planning.
+
 ## 0.4.0a2 — exchange references and reanalysis reliability
 
 Continues from 484b867; a pre-change branch and complete recovery bundle preserve

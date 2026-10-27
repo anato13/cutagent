@@ -1,5 +1,34 @@
 # Development roadmap
 
+## 0.4.0a4 — personal style foundation
+
+Anato12's explicit conversation and editing preferences now guide local model
+suggestions; subjective 1–5 model ratings are reviewable and do not override
+source-evidence checks. The profile is persistent in the source distribution;
+existing feedback/own-video notes remain in the local database. Effective
+personalization is NOT_EVALUATED, not learned model weights.
+
+Next: investigate full-recording missed moments and invalid windows (B39),
+label setup/payoff and explanation support against real audio, then make partial
+analysis safe and reviewable. Speaker attribution, visual/audio reaction evidence,
+a coherent hook/story planner, authentic source-frame thumbnail drafts and
+metadata suggestions remain incremental work. High suits this evidence work;
+Medium suits minor UI or documentation follow-ups.
+
+## 0.4.0a3 — selection reliability
+
+The required-Short budget conflict is fixed, selection is cancellable, original
+errors survive failed history writes, and capability identity supports archived
+Python code. Continue from this release; no model prompt or schema change.
+
+Next: use the broader genuine-transcript evaluation to investigate missed
+exchanges and unsupported explanations, with explicit source/boundary review.
+Passing a schema, operation test or frozen Linux executable does not establish
+humor accuracy or native Windows compatibility. Native Windows/RTX, labeled
+editorial acceptance and grounded hook/story planning remain outstanding.
+High remains appropriate for evidence and selection work. Medium suits routine
+UI/documentation changes; Extra High or Ultra is not needed for this milestone.
+
 ## 0.4.0a2 — grounded reference maps
 
 Reference-map validation, transcript-derived candidate labels and safe reanalysis

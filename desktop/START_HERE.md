@@ -35,6 +35,16 @@ rejections and manually changed clips stay intact. New automatic clip labels
 quote your transcript rather than using the model's headline. Transcription errors
 can still appear in those quotes.
 
+In alpha 3, Auto Edit reserves room for one complete Short if its first choices
+are all too long. This can replace a longer selected exchange when the clip count
+or main-video limit is tight. It keeps whole dialogue and records skipped choices
+in the output report. If nothing fits, it stops with an explanation.
+
+The built-in initial [humor profile](PERSONAL_STYLE.md) describes the kinds of
+conversation you enjoy. Model taste scores are subjective 1–5 suggestions, not
+proof a clip is funny. Save corrections and confirmed own-video notes in the
+Learning library to refine future suggestions.
+
 For **Learning library**, import a tutorial, authorized creator video or your own
 finished video; select its type and click **Index selected recording**. Search
 its dialogue, inspect sampled frames and possible scene changes, preview examples,

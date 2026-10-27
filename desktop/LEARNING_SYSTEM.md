@@ -1,4 +1,4 @@
-# Auto Edit and the learning library — 0.4 alpha 2
+# Auto Edit and the learning library — 0.4 alpha 3
 
 This extends the existing editor. Import, preview, trim, manual projects, clip
 review, transcription and approved draft bundles remain available.
@@ -33,8 +33,18 @@ and extends boundaries to retain intersecting transcript lines. It never cuts a
 range merely to fill a time budget. Approved ranges get priority, followed by
 model order and explicitly shared category preferences. Main ranges merge in
 recording order. Each selected range can produce one Short; overlong ranges and
-duplicates are skipped and reported. At least one complete Short must fit or the
-run stops without publishing a bundle. Output durations can be below your limit.
+duplicates are skipped and reported. If the ranked selection has no eligible
+Short, the highest-priority eligible Short is reserved first, then the remaining
+clip/time budget is filled in the usual priority order. This may displace an
+approved longer range in Auto Edit; saved approval decisions and the separate
+approved-drafts workflow do not change. Rejected overlaps, evidence checks and
+whole-line boundary expansion still apply before reservation. Skipped choices
+report the reservation. If no complete Short fits both limits, the run stops
+without publishing a bundle. Output durations can be below your limit.
+
+Selection checks cancellation during validation, boundary expansion and budget
+selection. A failure to save final error/cancellation history no longer masks
+the original result; such a history row may appear interrupted after restart.
 
 This is **experimental editorial selection**, not reliable learned comedy or
 semantic story construction. A model can still miss good exchanges, invent a
@@ -42,6 +52,16 @@ reason, or select material that depends on unrecognized earlier context. Source
 timestamps and successful decode checks do not establish an engaging story.
 There is no inferred confidence percentage, invented dialogue, automatic hook,
 face tracking, copied creator asset, or automatic YouTube upload.
+
+## Initial creator profile
+
+PERSONAL_STYLE.md records Anato12's stated taste. The local model prompt now
+considers quiet absurdity, friend chemistry, awkward explanations and genuine
+reactions ahead of gameplay intensity. A model may provide a subjective 1–5
+taste estimate, which changes ordering only after reference validation. It is
+not calibrated humor confidence or actual audience feedback. Existing confirmed
+own-video notes and opted-in corrections stay in the local database. Prompt
+changes invalidate saved model responses; no weights are retrained.
 
 ## Sources, observations and preferences
 

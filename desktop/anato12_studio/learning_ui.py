@@ -62,7 +62,8 @@ class LearningController:
         row.addWidget(self.srt)
         self.run_button = button(row, 'Auto Edit selected recording…', self.start_auto)
         layout.addLayout(row)
-        self.auto_result = QLabel('Complete exchanges stay in recording order. Shorts use fit framing; longer ranges are skipped.')
+        self.auto_result = QLabel('Complete exchanges stay in recording order. Space is reserved for a complete Short '
+                                 'when one fits your limits. Longer exchanges stay whole; Shorts use fit framing.')
         self.auto_result.setWordWrap(True)
         layout.addWidget(self.auto_result)
         layout.addStretch()

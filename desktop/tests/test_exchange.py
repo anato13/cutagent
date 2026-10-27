@@ -47,6 +47,19 @@ def test_quote_title_and_role_text_only_come_from_cited_dialogue():
     assert 'meaning has not been verified' in describe_exchange(item)
 
 
+def test_personal_taste_score_is_provisional_and_requires_valid_source_roles():
+    rows = rows_for(dialogue())
+    low = model_proposals([raw(subjective_humor_score=1)], rows, {}, 30)[0]
+    high = model_proposals([raw(subjective_humor_score=5)], rows, {}, 30)[0]
+    assert high.rank > low.rank
+    assert high.structure['subjective_humor_score'] == 5
+    assert 'subjective, unverified' in describe_exchange({
+        'structure': json.dumps(high.structure), 'evidence': json.dumps(high.evidence)})
+    assert not model_proposals([raw(subjective_humor_score=5, setup_ids=[999])], rows, {}, 30)
+    for bad in (0, 6, True, '5'):
+        assert not model_proposals([raw(subjective_humor_score=bad)], rows, {}, 30)
+
+
 @pytest.mark.parametrize('changes', [
     {'setup_ids': []}, {'payoff_ids': []}, {'reaction_ids': None}, {'setup_ids': [True]},
     {'setup_ids': [999]}, {'setup_ids': '0'}, {'payoff_ids': [0]}, {'setup_ids': [2]},

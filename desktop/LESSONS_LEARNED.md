@@ -1,5 +1,32 @@
 # Engineering lessons
 
+## 0.4.0a4
+
+The creator's stated taste is valuable initial guidance, but it must stay
+separate from confirmed examples and measured audience feedback. A model's 1–5
+taste estimate can order source-grounded proposals; it does not validate role
+meaning or humor. A prompt change must invalidate response caches and recheck
+the input-byte bound. Evaluate genuine dialogue again before claiming selection
+quality improved.
+
+## 0.4.0a3
+
+- A workflow requiring both a main video and a Short must account for both before
+  filling its range budget. Prefer the existing ranking when it works; reserve
+  a whole eligible Short only when necessary and explain skipped alternatives.
+- Boundary expansion can change whether a Short fits. Reserve after evidence,
+  rejection and whole-line checks, never before those checks or by truncation.
+- Cancellable FFmpeg/inference does not make a CPU selection loop cancellable.
+  Check cancellation inside its work too, without mutating source records.
+- History persistence is secondary to reporting the original failure. Preserve
+  the error/cancellation when best-effort final status writing also fails.
+- Frozen modules can have `__file__` values that do not name real source files.
+  Fingerprint installed code using its loader and test an actual PYZ build.
+  A minimal frozen harness must include every operation module it fingerprints.
+- Genuine transcript evaluation is separate from labeled humor acceptance and
+  from a successful export. Keep preparation details, raw model responses and
+  unreviewed quality fields; do not rewrite a zero-duration source row in place.
+
 Use structured output for shape, then independently validate source references.
 An actual model can obey the JSON schema and still misidentify the payoff or
 invent the reason. Keep raw interpretations visible as unverified, use quoted

@@ -1,5 +1,35 @@
 # Bug log
 
+B39 — OPEN: a local qwen3:8b run over 28 windows of the supplied 28-minute
+recording (previous prompt version) yielded three structurally usable candidates,
+while two windows had proposals with invalid references. A known photo dispute
+appeared in the full transcript and yielded no suggestion in its overlapping
+windows, although a smaller isolated sample yielded one. This is a recall and
+context-sensitivity concern, not a measured humor-accuracy score. Invalid model
+references still stop the current Auto Edit pipeline; safe partial-window handling
+needs separate implementation and testing. PERSONAL_STYLE.md is an initial user
+preference, not proof this problem is fixed.
+
+B35 — VERIFIED_WORKING (focused regression): a longer top-ranked range could
+fill the clip/time budget and block all Shorts even with an eligible shorter
+range available. Auto Edit now reserves one whole Short only when needed,
+refills the remaining budget and reports displaced choices. Real FFmpeg outputs
+and rejection/evidence/boundary/budget constraints are covered.
+
+B36 — VERIFIED_WORKING (focused regression): cancellation was not checked while
+Auto Edit selected and expanded ranges. Checks now occur during transcript
+validation, boundary scans and budget selection without changing input records.
+
+B37 — VERIFIED_WORKING (injected storage failure): failed/cancelled history
+writes could replace the original exception. The original actionable error or
+cancellation now survives; interrupted history is still recovered on restart.
+
+B38 — VERIFIED_WORKING (Linux frozen executable and unit checks): capability
+checks assumed loose Python source files existed beside
+`__file__`, which does not hold in a PyInstaller PYZ archive. Installed code is
+now fingerprinted through its loader. Missing code still blocks reuse of old
+passes. See TEST_RESULTS.md for packaged execution evidence and platform limits.
+
 B31 — VERIFIED_WORKING: reanalysis previously returned stale unreviewed rows even
 after the transcript/model response changed. It now refreshes only untouched
 unreviewed suggestions, keeping their IDs and preserving all reviewed or manually

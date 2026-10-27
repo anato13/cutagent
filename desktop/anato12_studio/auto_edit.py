@@ -2,6 +2,7 @@
 import copy
 from dataclasses import dataclass
 import json
+import math
 from pathlib import Path
 import time
 
@@ -43,16 +44,27 @@ def union_duration(items):
     return total
 
 
-def select_ranges(media, source, candidates, rejected, preferences, options):
+def fits_short(item, options):
+    return Clip('', item['start'], item['end']).frame_range()[1] <= options.max_short_seconds + .00001
+
+
+def select_ranges(media, source, candidates, rejected, preferences, options, runner=None):
     """No fabricated approvals; reject stale evidence and absent callback setup."""
+    def check():
+        if runner is not None:
+            runner.check()
+
+    check()
     options.validate()
     for segment in media.transcript:
-        segment.validate(media.duration)
+        check()
+        copy.copy(segment).validate(media.duration)
     rows = rows_for(media.transcript)
-    chosen, skipped = [], []
+    eligible, skipped = [], []
     ordered = sorted(candidates, key=lambda h: (h['status'] != 'approved',
         -(h['rank'] + preferences.get(h['category'], 0)), h['start'], h['id']))
     for candidate in ordered:
+        check()
         item = copy.deepcopy(candidate)
         reason = ''
         if item['source'] != source or item['status'] not in {'approved', 'unreviewed'}:
@@ -74,14 +86,18 @@ def select_ranges(media, source, candidates, rejected, preferences, options):
             item['exchange'] = {'reference_check': 'human_approved', 'semantic_quality': 'NOT_EVALUATED'}
         if not reason:
             try:
-                Clip(media.id, item['start'], item['end']).validate(media)
+                clip = Clip(media.id, item['start'], item['end'])
+                clip.validate(media)
+                item['start'], item['end'] = clip.start, clip.end
                 # Extend, never cut off a transcript line intersecting either boundary.
                 # Frame-aligned outer bounds prevent rounding into a line.
-                import math
                 changed = True
                 while changed:
+                    check()
                     a, b = item['start'], item['end']
-                    for row in rows:
+                    for i, row in enumerate(rows):
+                        if i % 256 == 0:
+                            check()
                         if row['end'] > a and row['start'] < b:
                             item['start'] = min(item['start'], row['start'])
                             item['end'] = max(item['end'], row['end'])
@@ -93,21 +109,49 @@ def select_ranges(media, source, candidates, rejected, preferences, options):
                         break
                 if any(r['start'] < item['end'] and r['end'] > item['start'] for r in rejected):
                     reason = 'Overlaps a range you rejected'
-                elif any(h['start'] <= item['start'] and h['end'] >= item['end'] for h in chosen):
-                    reason = 'Already covered by a selected range'
-                elif any(max(0, min(h['end'], item['end']) - max(h['start'], item['start'])) >
-                         .5 * min(h['end']-h['start'], item['end']-item['start']) for h in chosen):
-                    reason = 'Expanded dialogue substantially overlaps an already selected exchange'
-                elif len(chosen) >= options.max_ranges or union_duration(chosen + [item]) > options.max_main_seconds:
-                    reason = 'Would exceed the selected budget; dialogue was not truncated'
             except (ValueError, TypeError):
                 reason = 'Invalid source boundaries'
         if reason:
             skipped.append({'highlight': item['id'], 'reason': reason})
         else:
             item['original_range'] = [candidate['start'], candidate['end']]
-            chosen.append(item)
-    return sorted(chosen, key=lambda h: (h['start'], h['end'])), skipped
+            eligible.append(item)
+
+    def choose(reserved=None):
+        chosen = [reserved] if reserved is not None else []
+        excluded = []
+        for item in eligible:
+            check()
+            if item is reserved:
+                continue
+            if any(h['start'] <= item['start'] and h['end'] >= item['end'] for h in chosen):
+                reason = 'Already covered by a selected range'
+            elif any(max(0, min(h['end'], item['end']) - max(h['start'], item['start'])) >
+                     .5 * min(h['end']-h['start'], item['end']-item['start']) for h in chosen):
+                reason = 'Expanded dialogue substantially overlaps an already selected exchange'
+            elif (len(chosen) >= options.max_ranges or
+                  union_duration(chosen + [item]) > options.max_main_seconds + .00001):
+                reason = 'Would exceed the selected budget; dialogue was not truncated'
+            else:
+                chosen.append(item)
+                continue
+            if reserved is not None:
+                reason += '; space reserved for a complete Short'
+            excluded.append({'highlight': item['id'], 'reason': reason})
+        return chosen, excluded
+
+    chosen, excluded = choose()
+    if not any(fits_short(h, options) for h in chosen):
+        # Preserve the ordinary ranking whenever it can produce both formats.
+        # Otherwise reserve the highest-priority eligible Short, then refill the
+        # remaining budget. Never truncate a long exchange just to make a Short.
+        for item in eligible:
+            check()
+            if fits_short(item, options) and union_duration([item]) <= options.max_main_seconds + .00001:
+                chosen, excluded = choose(item)
+                break
+    check()
+    return sorted(chosen, key=lambda h: (h['start'], h['end'])), skipped + excluded
 
 
 def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner, progress):
@@ -140,14 +184,13 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         by_id = {h['id']: h for h in store.approved_for_source(source)}
         by_id.update({identifier: store.highlight(identifier) for identifier in result['ids']})
         selected, skipped = select_ranges(media, source, list(by_id.values()), store.rejected_for_source(source),
-                                           store.preferences(), options)
+                                           store.preferences(), options, runner)
         if not selected:
             reasons = '; '.join(dict.fromkeys(s['reason'] for s in skipped))[:1800]
             raise ValueError('No usable complete exchanges were found. No video was created. '
                              'Inspect the transcript/model results or approve a complete range and rerun.' +
                              (' Selection checks: ' + reasons if reasons else ''))
-        if not any(Clip(media.id, h['start'], h['end']).frame_range()[1] <= options.max_short_seconds
-                   for h in selected):
+        if not any(fits_short(h, options) for h in selected):
             raise ValueError('No complete range fits the Short limit. Increase the limit and rerun; no dialogue was truncated.')
         recipes = ['trim_join', 'portrait_fit']
         if options.burn_captions or options.save_srt:
@@ -162,6 +205,7 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
                    'skipped': skipped, 'preferences': store.model_preferences(),
                    'model': params['model'], 'model_identity': identity, 'query': params.get('query', ''),
                    'story_strategy': 'Chronological complete exchanges; no semantic hook or narrative rewriting.',
+                   'short_strategy': 'Preserve ranked selection when possible; otherwise reserve one complete eligible Short.',
                    'humor_quality': 'NOT_EVALUATED'}
         output = create_bundle(media, source, selected, params['output_parent'],
                                DraftOptions(options.max_short_seconds, 'fit', options.burn_captions,
@@ -176,8 +220,14 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         # Once the whole checked folder is published, late Cancel must not report a false rollback.
         return {**output, 'committed': True, 'job_id': job_id, 'history_warning': history_warning}
     except Cancelled:
-        store.update_job(job_id, 'cancelled', current[0], 'Cancelled; rerun uses completed analysis caches')
+        try:
+            store.update_job(job_id, 'cancelled', current[0], 'Cancelled; rerun uses completed analysis caches')
+        except Exception:
+            pass  # Preserve cancellation even if history storage is unavailable.
         raise
     except Exception as error:
-        store.update_job(job_id, 'failed', current[0], str(error))
+        try:
+            store.update_job(job_id, 'failed', current[0], str(error))
+        except Exception:
+            pass  # The original actionable failure must not become a history error.
         raise
