@@ -373,6 +373,45 @@ def test_story_playbook_renders_source_bridge_only_in_main(auto_source, binaries
     assert all(entry['quality']['full_decode'] == 'passed' for entry in manifest['outputs'])
 
 
+def test_group_comedy_preset_renders_one_source_cited_cold_open(auto_source, binaries, monkeypatch):
+    store, media, source, params = auto_source
+    media.transcript = [Segment(a, b, text) for a, b, text in [
+        (.1, .25, 'Where are we going?'), (.3, .45, 'Into the garage.'),
+        (.5, .65, 'That is an awful plan.'),
+        (1.1, 1.25, 'I found a disguise.'), (1.3, 1.45, 'That is a traffic cone.'),
+        (1.5, 1.65, 'You are not fooling anyone.'),
+        (2.1, 2.25, 'Do not move.'), (2.3, 2.45, 'They walked past me.'),
+        (2.5, 2.65, 'How did that work?')]]
+    params.update(editing_style='group_comedy', story_playbook=False, require_multi=True)
+    params['auto_options'].update(burn_captions=False, save_srt=False)
+    rows = rows_for(media.transcript)
+    ids = []
+    for name, first, rank, category in [('setup', 0, 10, 'gameplay'),
+                                        ('cone', 3, 40, 'misunderstanding'),
+                                        ('ending', 6, 20, 'banter')]:
+        evidence = rows[first:first+3]
+        structure = {'version': 1, 'first_id': first, 'last_id': first+2,
+                     'setup_ids': [first], 'payoff_ids': [first+1],
+                     'reaction_ids': [first+2], 'needs_context': False}
+        ids.append(store.upsert_highlight(source, name, evidence[0]['start'], evidence[-1]['end'],
+                                          name, category, '', '', evidence, 'local model order',
+                                          rank, structure))
+    monkeypatch.setattr('anato12_studio.auto_edit.run_pipeline',
+                        lambda *a, **kw: {'segments': media.transcript, 'ids': ids})
+    job = store.create_job(source, params)
+    result = run_auto_edit(store, source, media, params, job, *binaries, Runner(), lambda *_: None)
+    folder = Path(result['directory'])
+    manifest = json.loads((folder / 'draft-manifest.json').read_text(encoding='utf-8'))
+    main = Project.load(folder / 'YouTube.anato12.json')
+    assert result['story_opening'] == ids[1] and result['main_clips'] == 3
+    assert [round(clip.start, 1) for clip in main.clips] == [1.1, .1, 2.1]
+    assert manifest['automation']['editing_style'] == 'group_comedy'
+    assert manifest['automation']['group_comedy_plan']['source_reaction_ids'] == [5]
+    assert manifest['automation']['group_comedy_plan']['applied']
+    assert [entry['highlight'] for entry in manifest['outputs'][1:]] == ids
+    assert all(entry['quality']['full_decode'] == 'passed' for entry in manifest['outputs'])
+
+
 @pytest.mark.parametrize('cancel', [False, True])
 def test_failed_history_write_does_not_mask_original_error_or_cancellation(auto_source, binaries, monkeypatch, cancel):
     store, media, source, params = auto_source

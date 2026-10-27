@@ -35,3 +35,8 @@ Speaker identification, sound-effect placement, visual reaction understanding,
 semantic story planning, authentic thumbnail drafts, titles/descriptions and
 YouTube performance metrics remain experimental or not implemented. See
 LEARNING_SYSTEM.md and DEVELOPMENT_ROADMAP.md.
+
+The separate, optional [group-comedy preset](GROUP_COMEDY_STYLE.md) uses a
+sampled creator reference to favor complete group banter and a compact opening.
+It does not change this profile, approved decisions or model weights. Its
+source-cited reaction labels remain unverified interpretations.

@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 from .model_context import bounded_windows, HIGHLIGHT_CATEGORIES, PROMPT_VERSION
+from .editorial_style import STYLE_DEFAULT, STYLE_GROUP_COMEDY, validate_style
 from .model_policy import context_tokens
 from .exchange import ROLES, quote_title, validate_structure
 
@@ -186,7 +187,9 @@ def literal_search(rows, query, duration):
 
 
 def analyze(store, source, segments, duration, runner, progress, model=None, query="", diagnostics=None,
-            allow_partial=False, personal_notes=None, coverage=False, coverage_target=3):
+            allow_partial=False, personal_notes=None, coverage=False, coverage_target=3,
+            editing_style=STYLE_DEFAULT):
+    validate_style(editing_style)
     if type(coverage_target) is not int or coverage_target < 1 or coverage_target > 100:
         raise ValueError('The requested number of distinct moments must be between 1 and 100.')
     for s in segments:
@@ -199,6 +202,7 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
     if diagnostics is not None:
         diagnostics.update(lines=len(rows), windows=0, returned=0, valid=0, invalid_sections=[],
                            mode='local Ollama' if model else 'context cues',
+                           editing_style=editing_style,
                            model_eval_count=0, model_eval_duration=0,
                            coverage_windows=0, coverage_added=0, coverage_empty=0,
                            long_lines=long_lines, rejection_reasons=[])
@@ -216,7 +220,10 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
             preferences = {**preferences, "confirmed_personal_notes": personal_notes}
         if diagnostics is not None and model:
             diagnostics['personal_notes'] = len(personal_notes or [])
-        chunks = list(bounded_windows(rows, repeated, query, preferences, runner)) if model else list(windows(rows))
+        chunks = (list(bounded_windows(rows, repeated, query, preferences, runner,
+                                       editing_style=editing_style)) if model else list(windows(rows)))
+        style_kwargs = ({'editing_style': editing_style}
+                        if editing_style == STYLE_GROUP_COMEDY else {})
         invalid_sections = []
         for i, chunk in enumerate(chunks):
             runner.check()
@@ -230,12 +237,12 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
                 signature = json.dumps([ANALYSIS_VERSION, source, transcript_hash, window[0]["id"],
                                         window[-1]["id"], relevant, PROMPT_VERSION,
                                         model.base, model.model, context_tokens(model.model),
-                                        identity, query, preferences], sort_keys=True)
+                                        identity, query, preferences, editing_style], sort_keys=True)
                 key = "analysis:" + hashlib.sha256(signature.encode()).hexdigest()
                 raw = store.cache_get(key)
                 fresh = raw is None
                 if raw is None:
-                    raw = model.analyze(window, relevant, query, preferences, runner)
+                    raw = model.analyze(window, relevant, query, preferences, runner, **style_kwargs)
                     if diagnostics is not None:
                         metrics = getattr(model, 'last_metrics', {})
                         diagnostics['model_eval_count'] += metrics.get('eval_count', 0)
@@ -287,7 +294,8 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
             # Review still-uncovered conversations, without treating a requested
             # number of clips as a quota. Every addition must pass the same source
             # citation and exchange validation as the first pass.
-            extra_chunks = list(bounded_windows(rows, repeated, query, preferences, runner, focus="coverage"))
+            extra_chunks = list(bounded_windows(rows, repeated, query, preferences, runner,
+                                                 focus="coverage", editing_style=editing_style))
             def excluded(chunk):
                 return tuple(r['id'] for r in chunk.rows if any(
                     r['id'] >= item.structure['first_id'] and r['id'] <= item.structure['last_id']
@@ -305,13 +313,13 @@ def analyze(store, source, segments, duration, runner, progress, model=None, que
                 signature = json.dumps([ANALYSIS_VERSION, source, transcript_hash, window[0]['id'],
                                         window[-1]['id'], relevant, PROMPT_VERSION, 'coverage', blocked,
                                         model.base, model.model, context_tokens(model.model), identity,
-                                        preferences], sort_keys=True)
+                                        preferences, editing_style], sort_keys=True)
                 key = 'analysis:' + hashlib.sha256(signature.encode()).hexdigest()
                 raw = store.cache_get(key)
                 fresh = raw is None
                 if fresh:
                     raw = model.analyze(window, relevant, query, preferences, runner,
-                                        focus='coverage', excluded_ids=blocked)
+                                        focus='coverage', excluded_ids=blocked, **style_kwargs)
                     if diagnostics is not None:
                         metrics = getattr(model, 'last_metrics', {})
                         diagnostics['model_eval_count'] += metrics.get('eval_count', 0)

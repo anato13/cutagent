@@ -1,5 +1,5 @@
 ANATO12 STUDIO
-Version 0.3 alpha 3 - bounded dialogue analysis
+Version 0.4 alpha - local Auto Edit and optional group-comedy pacing
 
 1. Extract this entire folder from the ZIP first.
 2. Open START_HERE.html in your web browser for the beginner guide.
@@ -15,6 +15,8 @@ Sharing note text with a local model is a separate opt-in; existing notes stay p
 Jobs & clip feedback lets you edit/revoke notes and preview personalization.
 Dense dialogue is split into smaller overlapping model requests automatically.
 Oversized caption lines produce a source-time error instead of silent truncation.
+Auto Edit has an optional Group comedy approach that prioritizes complete
+friend-group exchanges; review its suggested moments before publishing.
 After approving highlights, use "Create YouTube + Shorts drafts" for separate
 editable projects and optional MP4s. The current edit remains open and unchanged.
 Context cues are limited; semantic analysis needs a downloaded Ollama model.

@@ -2,8 +2,9 @@
 from dataclasses import dataclass
 import bisect
 import json
+from .editorial_style import STYLE_DEFAULT, STYLE_GROUP_COMEDY, validate_style
 
-PROMPT_VERSION = "anato-story-playbook-10"
+PROMPT_VERSION = "anato-group-comedy-11"
 CONTEXT_TOKENS = 8192
 OUTPUT_TOKENS = 1200
 MAX_INPUT_BYTES = 6000
@@ -19,6 +20,13 @@ PERSONAL_STYLE = (
     "A recurring story may involve an absurd claim, doubt, proof and a later reveal. "
     "Prefer exchanges advancing it; never invent missing context or a reveal. "
     "These are initial preferences, not proven humor rules; opted-in feedback may refine them. "
+)
+
+GROUP_STYLE = (
+    "Anato12 wants original group-comedy pacing. Prefer complete friend exchanges: "
+    "a playful premise, misunderstanding, escalation, reaction or callback. "
+    "Let setup and banter breathe; do not select loud gameplay without a supported social beat. "
+    "Do not imitate another creator's assets or invent dialogue. Model role meaning is unverified. "
 )
 
 SYSTEM_PROMPT = (
@@ -80,7 +88,9 @@ def response_schema(rows, callbacks):
                   'additionalProperties': False}}}, 'required': ['highlights'], 'additionalProperties': False}
 
 
-def messages_for(rows, callbacks, query, preferences, focus="standard", excluded_ids=()):
+def messages_for(rows, callbacks, query, preferences, focus="standard", excluded_ids=(),
+                 editing_style=STYLE_DEFAULT):
+    validate_style(editing_style)
     if focus not in {"standard", "coverage"}:
         raise ValueError("Unknown local-model analysis focus.")
     if (focus == "standard" and excluded_ids) or any(type(i) is not int or i not in
@@ -90,7 +100,9 @@ def messages_for(rows, callbacks, query, preferences, focus="standard", excluded
             "search": query, "opted_in_feedback": preferences}
     if focus == "coverage":
         data["excluded_segment_ids"] = sorted(set(excluded_ids))
-    return [{"role": "system", "content": SYSTEM_PROMPT +
+    system = (SYSTEM_PROMPT.replace(PERSONAL_STYLE, GROUP_STYLE)
+              if editing_style == STYLE_GROUP_COMEDY else SYSTEM_PROMPT)
+    return [{"role": "system", "content": system +
              (COVERAGE_PROMPT if focus == "coverage" else "")},
             {"role": "user", "content": json.dumps(data, ensure_ascii=False, separators=(",", ":"))}]
 
@@ -100,8 +112,9 @@ def input_bytes(messages):
     return sum(len(m["content"].encode("utf-8")) for m in messages)
 
 
-def checked_messages(rows, callbacks, query, preferences, focus="standard", excluded_ids=()):
-    messages = messages_for(rows, callbacks, query, preferences, focus, excluded_ids)
+def checked_messages(rows, callbacks, query, preferences, focus="standard", excluded_ids=(),
+                     editing_style=STYLE_DEFAULT):
+    messages = messages_for(rows, callbacks, query, preferences, focus, excluded_ids, editing_style)
     if input_bytes(messages) > MAX_INPUT_BYTES:
         raise ValueError("This dialogue request exceeds the local-model input budget. "
                          "Use smaller transcript sections or shorten the search/shared notes.")
@@ -116,10 +129,11 @@ class ContextWindow:
     omitted_callback_links: int
 
 
-def bounded_windows(rows, repeats, query="", preferences=None, runner=None, focus="standard"):
+def bounded_windows(rows, repeats, query="", preferences=None, runner=None, focus="standard",
+                    editing_style=STYLE_DEFAULT):
     """Keep every row intact and cover every ID; overlap never prevents forward progress."""
     preferences = preferences or {}
-    base = input_bytes(messages_for([], {}, query, preferences, focus))
+    base = input_bytes(messages_for([], {}, query, preferences, focus, editing_style=editing_style))
     if base >= MAX_INPUT_BYTES:
         raise ValueError("Search text and shared notes exceed the input budget. Shorten them and retry.")
     starts = [r["start"] for r in rows]
@@ -163,12 +177,14 @@ def bounded_windows(rows, repeats, query="", preferences=None, runner=None, focu
                     continue
                 proposed = {k: list(v) for k, v in context.items()}
                 proposed.setdefault(row["id"], []).append(earlier)
-                if input_bytes(messages_for(window, proposed, query, preferences, focus)) > MAX_INPUT_BYTES - reserve:
+                if input_bytes(messages_for(window, proposed, query, preferences, focus,
+                                            editing_style=editing_style)) > MAX_INPUT_BYTES - reserve:
                     omitted += 1
                     continue
                 context = proposed
                 added += 1
-        size = input_bytes(checked_messages(window, context, query, preferences, focus))
+        size = input_bytes(checked_messages(window, context, query, preferences, focus,
+                                            editing_style=editing_style))
         yield ContextWindow(window, context, size, omitted)
         if end == len(rows):
             break

@@ -8,6 +8,8 @@ import time
 
 from .drafts import DraftOptions, create_bundle
 from .editorial_story import find_context_bridges, plan_story
+from .editorial_style import (STYLE_DEFAULT, STYLE_GROUP_COMEDY, plan_group_opening,
+                              selection_priority, validate_style)
 from .exchange import exchange_evidence
 from .finder import rows_for
 from .finder_jobs import run_pipeline
@@ -49,8 +51,10 @@ def fits_short(item, options):
     return Clip('', item['start'], item['end']).frame_range()[1] <= options.max_short_seconds + .00001
 
 
-def select_ranges(media, source, candidates, rejected, preferences, options, runner=None):
+def select_ranges(media, source, candidates, rejected, preferences, options, runner=None,
+                  editing_style=STYLE_DEFAULT):
     """No fabricated approvals; reject stale evidence and absent callback setup."""
+    validate_style(editing_style)
     def check():
         if runner is not None:
             runner.check()
@@ -63,7 +67,7 @@ def select_ranges(media, source, candidates, rejected, preferences, options, run
     rows = rows_for(media.transcript)
     eligible, skipped = [], []
     ordered = sorted(candidates, key=lambda h: (h['status'] != 'approved',
-        -(h['rank'] + preferences.get(h['category'], 0)), h['start'], h['id']))
+        -selection_priority(h, preferences, editing_style), h['start'], h['id']))
     for candidate in ordered:
         check()
         item = copy.deepcopy(candidate)
@@ -167,6 +171,7 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
     store.update_job(job_id, 'running', 0, 'Starting Auto Edit')
     try:
         options.validate()
+        editing_style = validate_style(params.get('editing_style', STYLE_DEFAULT))
         if not params.get('contextual') or not params.get('model') or params.get('transcribe_only'):
             raise ValueError('Auto Edit needs an explicitly selected local model in AI Clip Finder.')
         runner.check()
@@ -186,7 +191,7 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
         by_id.update({identifier: store.highlight(identifier) for identifier in result['ids']})
         rejected = store.rejected_for_source(source)
         selected, skipped = select_ranges(media, source, list(by_id.values()), rejected,
-                                           store.preferences(), options, runner)
+                                           store.preferences(), options, runner, editing_style)
         if not selected:
             reasons = '; '.join(dict.fromkeys(s['reason'] for s in skipped))[:1800]
             raise ValueError('No usable complete exchanges were found. No video was created. '
@@ -217,6 +222,23 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
                 {'id': item['id'], 'start': item['start'], 'end': item['end'],
                  'source_ids': item['exchange']['source_ids'], 'reason': item['reason']}
                 for item in bridges]
+        group_plan = (plan_group_opening(selected, options.max_short_seconds,
+                                         store.preferences(), runner)
+                      if editing_style == STYLE_GROUP_COMEDY else None)
+        opening_id = story_plan['opening_id'] if story_plan else None
+        if group_plan and not opening_id:
+            opening_id = group_plan['opening_id']
+        if group_plan:
+            group_plan['applied'] = bool(opening_id and opening_id == group_plan['opening_id'])
+            if opening_id and not group_plan['applied']:
+                group_plan['reason'] += ' The source-linked story opening took precedence.'
+        if story_plan and group_plan and group_plan['opening_id'] == opening_id:
+            story_plan['opening_id'] = opening_id
+            story_plan['main_order'] = ([opening_id] + [item['id'] for item in selected
+                                         if item['id'] != opening_id] if opening_id else
+                                        [item['id'] for item in selected])
+            if opening_id:
+                story_plan['reason'] = group_plan['reason']
         recipes = ['trim_join', 'portrait_fit']
         if options.burn_captions or options.save_srt:
             recipes.append('captions')
@@ -231,18 +253,22 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
                    'skipped': skipped, 'preferences': store.model_preferences(),
                    'analysis_diagnostics': result.get('diagnostics', {}),
                    'model': params['model'], 'model_identity': identity, 'query': params.get('query', ''),
-                   'story_strategy': ('A short source-dialogue bridge may connect selected exchanges; '
-                                      'a source-linked short opening may move first when review priority supports it. '
-                                      'No semantic payoff verification.'
-                                      if story_plan else
-                                      'Chronological complete exchanges; no semantic hook or narrative rewriting.'),
-                   'story_plan': story_plan,
+                   'story_strategy': (
+                       'A short source-dialogue bridge may connect selected exchanges; '
+                       'a source-linked short opening may move first. No semantic payoff verification.'
+                       if story_plan else
+                       'Group-comedy priority may move a source-cited model reaction to the opening; '
+                       'the rest stays chronological. Reaction meaning is unverified.'
+                       if group_plan else
+                       'Chronological complete exchanges; no semantic hook or narrative rewriting.'),
+                   'story_plan': story_plan, 'editing_style': editing_style,
+                   'group_comedy_plan': group_plan,
                    'short_strategy': 'Preserve ranked selection when possible; otherwise reserve one complete eligible Short.',
                    'humor_quality': 'NOT_EVALUATED'}
         output = create_bundle(media, source, selected, params['output_parent'],
                                DraftOptions(options.max_short_seconds, 'fit', options.burn_captions,
                                             options.save_srt, True,
-                                            opening_id=story_plan['opening_id'] if story_plan else None), ffmpeg, runner,
+                                            opening_id=opening_id), ffmpeg, runner,
                                lambda v, m: report(.55+v*.35, m), selection='automatic',
                                before_publish=check, extra_manifest=details)
         history_warning = ''
@@ -252,8 +278,8 @@ def run_auto_edit(store, source, media, params, job_id, ffmpeg, ffprobe, runner,
             history_warning = f'Videos were saved, but job history could not be updated: {error}'
         # Once the whole checked folder is published, late Cancel must not report a false rollback.
         return {**output, 'committed': True, 'job_id': job_id, 'history_warning': history_warning,
-                'story_opening': story_plan['opening_id'] if story_plan else None,
-                'story_plan': story_plan, 'context_bridges': len(bridges)}
+                'story_opening': opening_id, 'story_plan': story_plan,
+                'group_comedy_plan': group_plan, 'context_bridges': len(bridges)}
     except Cancelled:
         try:
             store.update_job(job_id, 'cancelled', current[0], 'Cancelled; rerun uses completed analysis caches')

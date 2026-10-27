@@ -4,7 +4,8 @@
 limit, paid API, subscription, or account requirement. Keep your original recording:
 the app exports a new MP4.</p>
 <p>This is version 0.4 alpha, supplied as a Python desktop project with Windows
-launchers. It is not a prebuilt or signed Windows installer.</p>
+launchers. The repository's Windows workflow also provides a portable build;
+neither option is a signed installer.</p>
 <h2>New: Auto Edit and the learning library</h2>
 <p>Finish the setup steps below first. For <strong>Auto Edit</strong>:</p>
 <ol>
@@ -12,14 +13,20 @@ launchers. It is not a prebuilt or signed Windows installer.</p>
 <li>In <strong>AI Clip Finder</strong>, connect to your local Ollama installation and select a
 downloaded model. Install the optional speech tools below if you need automatic
 transcription. An existing transcript or imported SRT also works.</li>
-<li>Open <strong>Auto Edit</strong>, choose maximum lengths, clip count and optional captions,
+<li>Open <strong>Auto Edit</strong>, choose an editing approach, maximum lengths, clip count and optional captions,
 then click <strong>Auto Edit selected recording</strong> and choose an output folder.</li>
 <li>Studio selects and exports without asking you to mark clips. The finished
 folder contains a YouTube MP4, Shorts MP4s, editable projects and a check report.
 If no usable complete exchanges are found, it explains why and creates no bundle.</li>
 </ol>
 <p>This is an experimental editor. Its file checks do not establish that the choices
-are funny or tell a good story. Main clips stay in recording order. No video is
+are funny or tell a good story. The optional story playbook can insert a short
+source-dialogue bridge and move one linked opening. The optional
+<strong>Group comedy (experimental)</strong> approach favors complete friend-group
+exchanges and may move a short source-cited reaction to the opening. The other
+ranges stay in recording order. A model's reaction label needs playback review.
+See <a href="GROUP_COMEDY_STYLE.md">GROUP_COMEDY_STYLE.md</a> for the inspected
+reference and limits. No video is
 uploaded to YouTube. First-run operation checks and local inference can take time.
 Cancel is available; <strong>Jobs &amp; clip feedback → Resume</strong> retries using analysis
 caches, with rendering starting again. See LEARNING_SYSTEM.md for recovery limits.</p>

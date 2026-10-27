@@ -1,5 +1,16 @@
 # Engineering lessons
 
+## 0.4.0a8
+
+A creator reference should be inspected before describing its edit patterns.
+Sampled visuals and embedded captions from the shared Gmod example support a
+playful opening and sustained friend-group dialogue; they do not justify copying
+assets, constant effects or a claim of measured humor quality. Implement an
+optional, explainable selection policy, preserve complete ranges and approved
+decisions, separate model prompts and caches by approach, and record every
+reaction source ID. Keep model role meaning subject
+to playback review.
+
 ## 0.4.0a7
 
 When teaching an editor a prior editorial method, separate executable rules

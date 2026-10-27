@@ -12,6 +12,9 @@ install Python 3.12/3.13, run `SETUP.bat`, then `START_ANATO12.bat`.
   protection, operation tests and a per-output report. An optional story
   playbook can add source-dialogue context and reorder one linked opening.
   Editorial quality is unverified.
+- Optional [group-comedy pacing preset](GROUP_COMEDY_STYLE.md): modestly favors
+  complete social exchanges and may use a source-cited reaction as a cold open.
+  It does not copy creator assets or claim verified humor understanding.
 - Persistent learning library: local-video transcripts, sampled frames, possible
   scene-change measurements, timestamped references, searchable examples,
   corrections, separately shared own-video preferences and exact dialogue comparison.

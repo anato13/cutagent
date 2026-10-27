@@ -55,6 +55,12 @@ judgment, face tracking, copied creator asset, or automatic YouTube upload.
 
 ## Story-opening playbook
 
+Auto Edit also has an optional **Group comedy (experimental)** approach; see
+[GROUP_COMEDY_STYLE.md](GROUP_COMEDY_STYLE.md) for the inspected reference,
+executable ranking rules and their limits. It affects this Auto Edit run's
+selection and possible opening. It does not train the local model or alter
+saved approvals.
+
 The optional checkbox in Auto Edit applies a bounded lesson from the first edit:
 look for a recurring conversation, keep its setup and real reaction, and open
 with a short complete exchange only when the source dialogue links it to another

@@ -1,5 +1,28 @@
 # Project audit — 2026-10-27
 
+## 0.4.0a8 — optional group-comedy pacing
+
+The user-shared 25:36 Gmod Prop Hunt MP4 became accessible after its sharing
+setting changed. This milestone inspected its embedded English captions and
+sampled frames from the opening, middle and late sections; the complete video
+was not watched continuously or labeled for humor. See GROUP_COMEDY_STYLE.md.
+No reference footage or assets enter the app, repository or exports.
+
+Auto Edit now offers a separate Group comedy approach. It gives modest priority
+to complete social exchanges and compact ranges after existing source-evidence
+checks, and may place one short cited model reaction first when at least three
+distinct moments survive. Approved clips retain priority, and the source-linked
+story opening wins when both approaches propose different openings. A second
+coverage pass may seek up to four distinct candidates, without inventing a
+quota. Local-model guidance and response caches are separated by approach;
+prompt version is `anato-group-comedy-11`. The manifest records the selected
+style and source IDs. Comedy, reaction
+meaning and audience engagement are PARTIALLY_IMPLEMENTED/NOT_EVALUATED; these
+rules do not train the model or certify editorial similarity to the reference.
+In a focused check on 27 lines of Anato12's earlier photo conversation, the
+installed qwen2.5:7b returned one source-valid candidate under the new prompt;
+whole-recording recall and actual editing quality remain NOT_EVALUATED.
+
 ## 0.4.0a7 — first-edit story playbook
 
 The existing Auto Edit now offers a checked-by-default, optional story-opening

@@ -16,7 +16,7 @@ Finish the setup steps below first. For **Auto Edit**:
 2. In **AI Clip Finder**, connect to your local Ollama installation and select a
    downloaded model. Install the optional speech tools below if you need automatic
    transcription. An existing transcript or imported SRT also works.
-3. Open **Auto Edit**, choose maximum lengths, clip count and optional captions,
+3. Open **Auto Edit**, choose an editing approach, maximum lengths, clip count and optional captions,
    then click **Auto Edit selected recording** and choose an output folder.
 4. Studio selects and exports without asking you to mark clips. The finished
    folder contains a YouTube MP4, Shorts MP4s, editable projects and a check report.
@@ -34,6 +34,14 @@ or ending payoff. Listen to the finished video before publishing. No video is
 uploaded to YouTube. First-run operation checks and local inference can take time.
 Cancel is available; **Jobs & clip feedback → Resume** retries using analysis
 caches, with rendering starting again. See LEARNING_SYSTEM.md for recovery limits.
+
+**Group comedy (experimental)** is an optional approach inspired by the
+user-shared Gmod Prop Hunt example. It favors complete friend-group exchanges
+and may move a short, source-cited reaction to the opening. It uses your own
+recording and does not copy another creator's footage or graphics. The local
+model's reaction label still needs your review; see [GROUP_COMEDY_STYLE.md](GROUP_COMEDY_STYLE.md).
+The updated selection prompt reruns local-model analysis instead of using an
+older cached response. Your approved and rejected clips remain saved.
 
 In alpha 2, **AI Clip Finder** shows the quoted setup, payoff and reaction behind
 new suggestions. Model explanations are labeled unverified. Auto Edit skips

@@ -1,5 +1,6 @@
 """Real Qt learning/Auto Edit workflow in an isolated, hard-timeout process."""
 from dataclasses import asdict
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -64,6 +65,9 @@ def run_learning(recording, output, url):
         before = asdict(w.project)
         was_dirty = w.dirty
         w.tabs.setCurrentWidget(learning.auto_tab)
+        learning.editing_style.setCurrentIndex(1)
+        assert learning.editing_style.currentData() == 'group_comedy'
+        assert w.settings.value('edit_style') == 'group_comedy'
         learning.ranges.setValue(1)  # This four-second fixture has one complete exchange.
         learning.burn.setChecked(True)
         learning.srt.setChecked(True)
@@ -72,6 +76,9 @@ def run_learning(recording, output, url):
         assert not failures, failures
         assert 'Technical checks passed' in learning.auto_result.text()
         assert len(list(output.glob('Anato12-auto-*'))) == 1
+        bundle = next(output.glob('Anato12-auto-*'))
+        assert json.loads((bundle / 'draft-manifest.json').read_text(encoding='utf-8'))[
+            'automation']['editing_style'] == 'group_comedy'
         assert asdict(w.project) == before and w.dirty == was_dirty
         assert learning.store.jobs()[0]['status'] == 'completed'
         w.finder_controller.refresh_all()

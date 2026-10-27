@@ -1,5 +1,15 @@
 # Development roadmap
 
+## 0.4.0a8 — group-comedy preset
+
+The optional group-comedy priority and source-cited opening are implemented.
+Next, review a complete edit of Anato12 footage alongside the intended group
+humor and mark which recommendations actually work. Improve speaker/context
+understanding and visually grounded emphasis only after that review; the sampled
+creator video alone cannot determine personal taste. Native Windows build and
+full-recording quality need separate checks. High suits this semantic review;
+Medium suits small interface fixes.
+
 ## 0.4.0a7 — first-edit story playbook
 
 Source-grounded opening and dialogue-bridge heuristics are implemented for

@@ -1,5 +1,32 @@
 # Test results and verification history
 
+## Version 0.4.0a8 — group-comedy pacing
+
+The final workspace suite passed **231 tests, 0 failed in 110.05 seconds** with
+an isolated app-data profile and offscreen Qt under a 260-second outer timeout.
+The extracted source ZIP passed **231 tests, 0 failed in 111.31 seconds**
+under the same isolation and timeout. Only this verification note was changed
+after that tested extraction.
+New regressions cover a separate group-style model request/cache, complete
+source rows under the input-byte budget, modest social-category priority,
+source-cited opening constraints, an actual Qt style selection, and real FFmpeg
+YouTube/Shorts exports with full decode checks. A focused Auto Edit/style suite
+passed **35 tests** and a Finder/context/style suite passed **45 tests**.
+
+The shared 25:36 Gmod reference was inspected from a local copy outside the
+repository: embedded captions and sampled frames from the opening, middle and
+late sections. See GROUP_COMEDY_STYLE.md for the exact observation scope. The
+reference media and its subtitle file are absent from the source package.
+
+With prompt `anato-group-comedy-11`, the installed local `qwen2.5:7b` processed
+27 genuine timestamped lines from Anato12's older photo conversation in
+**90.371 seconds** and returned **one raw, one source-valid** candidate at
+**457.108–525.308 s**. Its explanation described the timing dispute over a
+photo; the previous default prompt's focused check over the same lines had
+asserted a more questionable AI-photo reveal. This single response has no human
+humor label. Whole-recording recall, narrative quality, viewer response and
+performance on Anato12's current Windows project remain **NOT_EVALUATED**.
+
 ## Version 0.4.0a7 — first-edit story playbook
 
 The workspace suite passed **224 tests, 0 failed in 104.81 seconds** with

@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from .auto_edit import AutoOptions, run_auto_edit
+from .editorial_style import STYLE_DEFAULT, STYLE_GROUP_COMEDY
 from .local_model import LocalModel
 from .knowledge import RECIPES, compare_transcripts, run_learning_job
 from .model import Media, Segment, timestamp
@@ -56,6 +57,14 @@ class LearningController:
         form.addRow('Maximum main-video minutes', self.minutes)
         form.addRow('Maximum complete ranges / Shorts', self.ranges)
         form.addRow('Maximum seconds per Short', self.short_seconds)
+        self.editing_style = QComboBox()
+        self.editing_style.addItem('My story style', STYLE_DEFAULT)
+        self.editing_style.addItem('Group comedy (experimental)', STYLE_GROUP_COMEDY)
+        saved_style = window.settings.value('edit_style', STYLE_DEFAULT, type=str)
+        self.editing_style.setCurrentIndex(max(0, self.editing_style.findData(saved_style)))
+        self.editing_style.currentIndexChanged.connect(
+            lambda: window.settings.setValue('edit_style', self.editing_style.currentData()))
+        form.addRow('Editing approach', self.editing_style)
         layout.addLayout(form)
         self.story = QCheckBox('Use my story-opening playbook (experimental)')
         self.story.setChecked(True)
@@ -68,6 +77,8 @@ class LearningController:
         layout.addLayout(row)
         self.auto_result = QLabel('The story playbook may add a short, source-timestamped context bridge '
                                  'and move one complete linked exchange to the opening. '
+                                 'Group comedy favors compact friend exchanges and may use a cited reaction '
+                                 'as a cold open. Model reaction labels need your review. '
                                  'Other ranges stay in recording order. Context bridges never become Shorts. '
                                  'A repeated word is only a possible story link. '
                                  'Check the story against playback before publishing.')
@@ -185,7 +196,10 @@ class LearningController:
                                       self.burn.isChecked(), self.srt.isChecked())
                 params.update(kind='auto_edit', auto_options=asdict(options), output_parent=parent,
                               require_multi=options.max_ranges > 1,
-                              story_playbook=self.story.isChecked())
+                              story_playbook=self.story.isChecked(),
+                              editing_style=self.editing_style.currentData(),
+                              coverage_target=min(4 if self.editing_style.currentData() == STYLE_GROUP_COMEDY
+                                                  else 3, options.max_ranges))
                 identifier = self.store.create_job(source, params)
             snapshot = copy.deepcopy(media)
             previous = w.finder_controller.last_studio_model
@@ -203,6 +217,7 @@ class LearningController:
 
     def auto_ready(self, result):
         plan = result.get('story_plan') or {}
+        group = result.get('group_comedy_plan') or {}
         self.auto_result.setText(f"Saved {result['main_clips']} main ranges and {result['shorts']} Shorts. "
             f"Skipped Shorts: {result['skipped']}. Technical checks passed.\n{result['directory']}\n"
             + ('Moved one complete linked exchange to the opening.\n' if result.get('story_opening') else
@@ -212,6 +227,7 @@ class LearningController:
             + (f"Possible repeated dialogue word: {plan['possible_topic_word']} (not a verified story).\n"
                if plan.get('possible_topic_word') else
                'No repeated dialogue topic was found in the selected clips.\n' if plan else '')
+            + (f"Group-comedy pacing: {group['reason']}\n" if group else '')
             + 'See draft-manifest.json for the story plan, selections, skips and checks. '
               'Editorial quality is experimental.')
         if result.get('history_warning'):

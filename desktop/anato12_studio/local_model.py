@@ -76,14 +76,16 @@ class LocalModel:
     def cloud_name(name):
         return name.casefold().endswith(("-cloud", ":cloud"))
 
-    def analyze(self, rows, callbacks, query, preferences, runner, focus="standard", excluded_ids=()):
+    def analyze(self, rows, callbacks, query, preferences, runner, focus="standard", excluded_ids=(),
+                editing_style="anato"):
         self.last_metrics = {}
         if not self.model:
             raise ValueError("Connect to Ollama and select an installed model first.")
         runner.check()
         if self.cloud_name(self.model):
             raise ValueError("Cloud-backed Ollama models are not enabled.")
-        messages = checked_messages(rows, callbacks, query, preferences, focus, excluded_ids)
+        messages = checked_messages(rows, callbacks, query, preferences, focus, excluded_ids,
+                                    editing_style)
         details = self.request("/api/show", {"model": self.model}, runner)
         if details.get("remote_host") or details.get("remote_model"):
             raise ValueError("This model declares a remote backend. Only downloaded local models are enabled.")

@@ -1,5 +1,11 @@
 # Bug log
 
+B45 — PARTIALLY_IMPLEMENTED: Auto Edit previously had one fixed editorial
+priority for every recording. The optional group-comedy preset now changes only
+this run's unreviewed clip priority and can choose a source-cited reaction-led
+opening. Existing approvals outrank model suggestions. The user's shared example
+was sampled, but style quality on Anato12's own full recordings is still open.
+
 B43 — PARTIALLY_IMPLEMENTED: automatic main edits could concatenate only
 selected highlights, losing brief dialogue that connected them. The optional
 playbook now adds a source-cited short bridge when adjacent selected exchanges
